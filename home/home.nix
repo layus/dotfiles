@@ -25,4 +25,9 @@
     userEmail = "guillaume.maudoux@tweag.io";
     includes = [ { path = ./gitconfig.inc; } ];
   };
+
+  wayland.windowManager.sway = {
+    enable = true;
+    extraConfig = import ./sway.nix;
+  }
 }

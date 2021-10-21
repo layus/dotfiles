@@ -6,6 +6,14 @@ nixpkgs.lib.nixosSystem {
   modules = [
     (./machines + "/${name}/configuration.nix")
     (./machines + "/${name}/hardware-configuration.nix")
+
+    # pin NIX_PATH and flake registry
+    {
+      nix.nixPath = [
+        "nixpkgs=${nixpkgs}"
+      ];
+      nix.registry.nixpkgs.flake = nixpkgs;
+    }
   ];
 
 }
