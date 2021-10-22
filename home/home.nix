@@ -1,11 +1,6 @@
 { config, pkgs, lib, ... }:
 
-let
-  nixpkgs-config = {
-    allowUnfree = true;
-  };
-
-in {
+{
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
@@ -43,13 +38,8 @@ in {
     (import ./packages.nix)
   ];
 
-  # todo: move to separate file
-  nixpkgs.config = nixpkgs-config;
-  xdg.configFile."nixpkgs/config.nix".text = ''
-    {
-      allowUnfree = true;
-    }
-  '';
+  nixpkgs.config = import ./dotfiles/nixpkgs-config.nix;
+  xdg.configFile."nixpkgs/config.nix".text = builtins.readFile ./dotfiles/nixpkgs-config.nix;
 
   home.packages = with pkgs; [
     all
