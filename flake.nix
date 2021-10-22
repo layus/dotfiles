@@ -9,7 +9,7 @@
       nixpkgs.lib.attrsets.mapAttrs
         (machine: _: import ./nixos args machine)
         (builtins.readDir ./nixos/machines)
-	;
+        ;
 
     homeConfigurations = {
       "layus@uberwald"     = import ./home args "layus" "uberwald";

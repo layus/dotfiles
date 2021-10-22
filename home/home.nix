@@ -125,7 +125,12 @@ in {
 
   programs.firefox.enable = true;
   programs.firefox.profiles.default = {
-    userChome = builtins.readFile ./dotfiles/userChome.css;
+    userChrome = builtins.readFile ./dotfiles/userChrome.css;
   };
+
+  xdg.mime.enable = true;
+  xdg.mimeApps.enable = true;
+  xdg.configFile."mimeapps.list".source = ./dotfiles/mimeapps.list;
+
 
 }

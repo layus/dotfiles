@@ -8,6 +8,10 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      ../../common/fonts.nix
+      ../../common/screencast.nix
+      ../../common/sound.nix
+      ../../common/bluetooth.nix
     ];
 
   # Use the systemd-boot EFI boot loader.
@@ -16,7 +20,7 @@
   #boot.cleanTmpDir = true;
   #boot.tmpOnTmpfd = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
-  
+
   nix = {
     package = pkgs.nixUnstable;
     extraOptions = ''
@@ -41,17 +45,23 @@
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
+  hardware.bluetooth.enable = true;
+
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
   console = {
-    font = "Lat2-Terminus16";
-    keyMap = "us";
+    #font = "Lat2-Terminus16";
+    # HiDPi
+    font = "${pkgs.terminus_font}/share/consolefonts/ter-u28n.psf.gz";
+    keyMap = "be-latin1";
   };
 
   environment.variables = {
     LC_TIME = "fr_BE.UTF-8";
     LC_COLLATE = "fr_BE.UTF-8";
   };
+
+  nixpkgs.config.allowUnfree = true;
 
   programs.sway.enable = true;
 
@@ -103,5 +113,7 @@
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "21.11"; # Did you read the comment?
 
+  programs.wireshark.enable = true;
+  programs.adb.enable = true;
 }
 

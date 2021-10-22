@@ -49,6 +49,7 @@
       #vistafonts
       noto-fonts
       font-awesome
+      mplus-outline-fonts
       #nerdfonts
       #(nerdfonts.override { fonts = [ "Vollkorn" "FiraCode" "DroidSansMono" ]; })
     ];
