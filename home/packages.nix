@@ -60,7 +60,7 @@ in {
       zim
       skype
       texmaker
-      typora
+      #typora # error: Newer versions of typora use anti-user encryption and refuse to start.
       inkscape
       yed
       hexchat
@@ -81,10 +81,7 @@ in {
       # }}}
       # {{{ Desktop environment
       gnome3.gnome_themes_standard        # For firefox and thunderbird theming.
-      conky dmenu scrot                  # for i3.
-      volumeicon pavucontrol              # for i3.
-      networkmanagerapplet
-      termite                             # for i3
+      pavucontrol
       keychain
       xclip
       imagemagickBig
@@ -100,10 +97,7 @@ in {
       gitg
       wget
 
-      mypkgs.i3-config
-      mypkgs.sway-config
       kanshi
-      (sway.override { withBaseWrapper = true; withGtkWrapper = true; })
 
       # }}}
       # {{{ Console
@@ -119,8 +113,6 @@ in {
       editorconfig-core-c # Was is das ?
       neovim
       emacs
-      gitFull 
-      git-lfs
       #(mercurialFull.overrideAttrs (oldAttrs: {
       #  propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or []) ++ [ pythonPackages.simplejson ]; # for mozilla pushtree
       #}))
@@ -173,20 +165,20 @@ in {
       #(lib.lowPrio remake)
       (lib.lowPrio moreutils)
       pandoc
-      (lib.lowPrio (                      # conflicts wit ghostscript
-        texlive.combine { 
-          inherit (texlive) scheme-full;
-          #inherit (default) auctex;
-          pkgFilter = pkg: pkg.tlType == "run" || pkg.tlType == "bin" || pkg.pname == "pgf";
-        }
-      ))
+      #(lib.lowPrio (                      # conflicts wit ghostscript
+      #  texlive.combine { 
+      #    inherit (texlive) scheme-full;
+      #    #inherit (default) auctex;
+      #    pkgFilter = pkg: pkg.tlType == "run" || pkg.tlType == "bin" || pkg.pname == "pgf";
+      #  }
+      #))
       qtikz
       biber
       patchelf binutils
       gdb
-      mypkgs.EMV-CAP
-      readlinks
-      mypkgs.monitormonitors
+      #mypkgs.EMV-CAP
+      #readlinks
+      #mypkgs.monitormonitors
       meld
       sqlite-interactive
       inotify-tools

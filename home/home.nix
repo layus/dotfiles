@@ -1,6 +1,11 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
-{
+let
+  nixpkgs-config = {
+    allowUnfree = true;
+  };
+
+in {
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
@@ -26,8 +31,27 @@
     includes = [ { path = ./gitconfig.inc; } ];
   };
 
-  wayland.windowManager.sway = {
-    enable = true;
-    extraConfig = import ./sway.nix;
-  }
+  wayland.windowManager.sway.enable = true;
+  xdg.configFile."sway/config".source = lib.mkForce "${pkgs.sway-config}/etc/sway/config";
+
+  nixpkgs.overlays = [
+    (self: super: {
+      sway-config = super.callPackage ./sway.nix {};
+      lockimage = "/missing"; #TODO
+    })
+    (import ./packages.nix)
+  ];
+
+  # todo: move to separate file
+  nixpkgs.config = nixpkgs-config;
+  xdg.configFile."nixpkgs/config.nix".text = ''
+    {
+      allowUnfree = true;
+    }
+  '';
+
+  home.packages = with pkgs; [
+    all
+  ];
+
 }

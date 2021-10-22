@@ -465,6 +465,15 @@ input * {
     tap_button_map lmr
 }
 
+# Thinkpad keyboard: 1:1:AT_Translated_Set_2_keyboard
+# Dell wireless mouse: 1133:16425:Logitech_Dell_WM514
+# Sun USB Keyboard: 1072:162:Sun_USB_Keyboard
+# Thinkpad trackpoint: 2:10:TPPS/2_Elan_TrackPoint
+# Thinkpad touchpad: 1267:12679:ELAN0672:00_04F3:3187_Touchpad
+# Thinkpad mouse:    1267:12679:ELAN0672:00_04F3:3187_Mouse
+# One by Wacom: 1386:884:Wacom_Intuos_S_Pen
+
+
 input "1386:884:Wacom_Intuos_S_Pen" {
     map_to_region 31 553 1168 826
 }

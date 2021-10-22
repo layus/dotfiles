@@ -5,12 +5,10 @@
   inputs.homeManager.inputs.nixpkgs.follows = "nixpkgs";
 
   outputs = { self, homeManager, nixpkgs }@args: {
-    nixosConfigurations = {
-      uberwald     = import ./nixos args "uberwald";
-      klatch       = import ./nixos args "klatch";
-      ankh-morpork = import ./nixos args "ankh-morpork";
-      sto-helit    = import ./nixos args "sto-helit";
-    };
+    nixosConfigurations =
+      nixpkgs.lib.attrsets.mapAttrs
+        (builtins.readDir ./nixos/machines)
+        (machine: _: import ./nixos args machine);
 
     homeConfigurations = {
       "layus@uberwald"     = import ./home args "layus" "uberwald";
