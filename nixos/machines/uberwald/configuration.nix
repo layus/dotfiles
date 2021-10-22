@@ -15,6 +15,7 @@
   boot.loader.efi.canTouchEfiVariables = true;
   #boot.cleanTmpDir = true;
   #boot.tmpOnTmpfd = true;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
   
   nix = {
     package = pkgs.nixUnstable;
