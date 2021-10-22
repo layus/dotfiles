@@ -182,11 +182,12 @@ in {
       meld
       sqlite-interactive
       inotify-tools
-      
+
       # }}}
       # {{{ Admin
       xorg.xrandr arandr autorandr        # display management
       xorg.xev
+      wev
       htop
       xorg.xkill
       (lib.lowPrio openssl)
@@ -194,7 +195,7 @@ in {
 
       # }}}
       # {{{ Courses
-      #dafny 
+      #dafny
       #vscode mono # mono explicitly required by VSCode to run dafny
       bazel
       #(if true then (lib.hiPrio gcc6) else gcc)

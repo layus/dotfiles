@@ -118,11 +118,14 @@ in {
   };
 
   home.file.".bash_aliases".source = ./dotfiles/bash_aliases;
+  home.file.".bash_aliases.git".source = ./dotfiles/bash_aliases.git;
 
   programs.termite.enable = true;
   xdg.configFile."termite/config".source = ./dotfiles/termite;
 
   programs.firefox.enable = true;
-  programs.firefox.profiles.default = {};
+  programs.firefox.profiles.default = {
+    userChome = builtins.readFile ./dotfiles/userChome.css;
+  };
 
 }

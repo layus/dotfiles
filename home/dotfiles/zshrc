@@ -84,6 +84,7 @@ case "$(hostname)" in
     klatch*)       host_color=yellow ;;
     sto-lat*)      host_color=magenta ;;
     ankh-morpork*) host_color=cyan ;;
+    uberwald*)     host_color=blue ;;
 esac
 autoload -U promptinit
 promptinit
