@@ -1,0 +1,88 @@
+
+# enable color support of ls and also add handy aliases
+color=""
+if hash dircolors; then
+    color='--color=auto'
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto -v'
+    alias dir='dir --color=auto'
+    alias vdir='vdir --color=auto'
+
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+else 
+    alias ls="ls -v"
+fi
+export color
+alias la="ls $color -A"
+alias ll="ls $color -lh"
+alias lll="ls $color -lh | less"
+alias rl=readlinks
+
+# marre de se faire corriger par zsh ;)
+alias xs='cd'
+alias vf='cd'
+alias sl='ls'
+alias acl='ack'
+
+alias cd.='cd ..'
+alias cd..='cd ../..'
+alias cd...='cd ../../..'
+alias cd....='cd ../../../..'
+alias cd.....='cd ../../../../..'
+alias -g ...=../..          &>/dev/null || true
+alias -g ....=../../..      &>/dev/null || true
+alias -g .....=../../../..  &>/dev/null || true
+
+alias gdiff="git diff --no-index"
+alias open=xdg-open
+alias o=open
+alias mv="mv -i"
+alias filetrace="strace -ff -e trace=%file -s1000"
+
+# supress outpout of uselessly verbose commands
+alias evince='evince &>/dev/null'
+ev() {
+    evince "$@" &!
+}
+
+#nicer vim ;-)
+alias vim=nvim
+alias v=nvim
+alias sv=sudoedit
+alias gv=gvim
+
+alias javar='java -jar'
+
+cd() {
+  builtin cd $@ && ls
+}
+
+mcdir () {
+    mkdir -p "$1" && cd "$1";
+}
+alias mcd=mcdir
+
+withSize () {
+    xargs du -s | sort -n "$@" | cut -f 2 | xargs du -shc
+}
+
+# systemd list processes
+alias psc='ps xawf -eo pid,user,cgroup,args'
+
+alias sysd='sudo systemctl'
+
+nman () {
+    nix-shell -p $1 --run "man $1"
+}
+
+detach () {
+    bg && disown
+}
+
+# A whole section for git
+source ~/.bash_aliases.git
+
+
+# vim:filetype=sh
