@@ -122,4 +122,7 @@ in {
   programs.termite.enable = true;
   xdg.configFile."termite/config".source = ./dotfiles/termite;
 
+  programs.firefox.enable = true;
+  programs.firefox.profiles.default = {};
+
 }
