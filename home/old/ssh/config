@@ -1,0 +1,115 @@
+
+#CanonicalizeHostname no
+#CanonicalDomains info.ucl.ac.be discworld.maudoux.be
+#CanonicalizeMaxDots 0
+#CanonicalizeFallbackLocal yes
+
+
+# maudoux.be
+
+Host sto-lat sto-lat.maudoux.be
+Hostname sto-lat.maudoux.be
+    User layus
+    Port 3248
+    SendEnv LANG LC_*
+
+Host sto-helit sto-helit.maudoux.be maudoux.be
+Hostname sto-helit.maudoux.be
+    User layus
+    Port 3248
+    SendEnv LANG LC_*
+
+Host ankh-morpork ankh-morpork.discworld.maudoux.be
+    User layus
+    ForwardX11 yes
+    forwardx11Trusted yes
+    ProxyCommand ssh sto-helit.maudoux.be -W localhost:3249
+
+Host klatch klatch.discworld.maudoux.be
+    User gmaudoux
+    ForwardX11 yes
+    forwardx11Trusted yes
+    ProxyCommand ssh sto-helit.maudoux.be -W localhost:3250
+
+Host papy.family.maudoux.be
+Hostname papy.family.maudoux.be
+    User oxfam
+    ProxyCommand ssh sto-lat.discworld.maudoux.be -W localhost:3251
+    ForwardX11 yes
+    Compression no
+
+
+# CÉCI
+
+Host gwceci.cism.ucl.ac.be
+    ProxyCommand none
+
+Host lemmaitre3.cism.ucl.ac.be dragon1.umons.ac.be hercules.ptci.unamur.be vega.ulb.ac.be nic4.segi.ulg.ac.be hmem.cism.ucl.ac.be
+    User gmaudoux
+    ForwardX11 yes
+    IdentityFile ~/.ssh/ceci_rsa
+    ProxyJump gwceci.cism.ucl.ac.be
+
+
+# UCL - INGI
+
+Host ssh?.info.ucl.ac.be studssh.info.ucl.ac.be sirius.info.ucl.ac.be phabricator.info.ucl.ac.be phabricator.student.info.ucl.ac.be
+    StrictHostKeyChecking yes
+    UserKnownHostsFile ~/.ssh/known_hosts
+    ForwardX11 no
+
+Host ssh?.info.ucl.ac.be studssh.info.ucl.ac.be sirius.info.ucl.ac.be 
+    ProxyCommand none
+    #loglevel INFO
+    Compression no
+
+Host BuildFarm
+    Hostname 130.104.229.46
+    #Hostname 2001:6a8:308f:9:0:82ff:fe68:e52e
+    User root
+    ProxyJump ssh1.info.ucl.ac.be
+
+Host *.info.ucl.ac.be
+    User gmaudoux
+    ForwardX11 yes
+    IdentityFile ~/.ssh/studssh_rsa
+    # Host keys change all the time. Ignore the noise.
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    #loglevel INFO
+
+    #Match host *.info.ucl.ac.be !exec "ip addr | grep '130\.104\.228\.1\?.\?./25'"
+    #"dig AXFR info.ucl.ac.be >/dev/null"
+    #ProxyJump ssh1.info.ucl.ac.be
+
+Host phabricator.info.ucl.ac.be phabricator.student.info.ucl.ac.be
+    User vcs
+    Port 2222
+
+
+# Dev
+
+Host github.com gitlab.gnome.org git.assembla.com scm.info.ucl.ac.be phabricator.info.ucl.ac.be phabricator.student.info.ucl.ac.be
+    User git
+    ForwardX11 no
+
+Host bitbucket.org
+    IdentityFile ~/.ssh/dark-vador_rsa
+
+Host *.mozilla.org
+    User layus.on@gmail.com
+    IdentityFile ~/.ssh/misc/mozilla_try_rsa
+    IdentitiesOnly=yes
+
+Host aur4.archlinux.org
+    IdentityFile ~/.ssh/aur_rsa
+    User aur
+
+
+# WARN: This tampers with CanonicalizeHostname (deactivated for now)
+Host *
+    StrictHostKeyChecking yes
+    ForwardAgent no
+    ForwardX11 no
+    Compression = yes
+

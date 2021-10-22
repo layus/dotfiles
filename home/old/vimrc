@@ -1,0 +1,421 @@
+
+""""""""""""""""""""
+"=> General
+""""""""""""""""""""
+
+set nocompatible
+filetype off
+
+" set the runtime path to include Vundle and initialize
+call plug#begin()
+
+" Vim motion on speed!
+"
+" Type <leader><leader><move> for easy moves around following the pattern.
+" For example, use \\f to find a letter and jump to the right occurrence.
+Plug 'Lokaltog/vim-easymotion'
+
+
+" Switch code according to patterns
+"
+" Use 'gs' to perform the switch.
+" Intended for swapping between true and false
+Plug 'AndrewRadev/switch.vim'
+
+
+" Use <Tab> for completion
+"Plug 'vim-scripts/supertab'
+
+
+" Git and github support
+Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-rhubarb'
+
+
+" Detection of buffer options (tabs, sw, etc.)
+"Plug 'tpope/vim-sleuth'
+
+
+" Directory tree
+Plug 'scrooloose/nerdtree'
+
+
+" GVim color schemes
+"Plug 'godlygeek/csapprox'
+
+" Solarized color theme (is this needed ?)
+Plug 'altercation/vim-colors-solarized'
+
+
+" Manipulate 'surroundings': parentheses, brackets, quotes, XML tags, and more.
+"
+" The plugin provides mappings to easily
+" - delete (ds", dst, ...);
+" - change (cs'", cst", ...) and
+" - add  (ysiw", yssb, yss}, ...) such surroundings in pairs.
+Plug 'tpope/vim-surround'
+
+
+" Pairs of handy bracket mappings
+" ]p, [p (cnext, cprev)
+" see :help unimpaired.txt
+Plug 'tpope/vim-unimpaired'
+
+
+" A status bar for Vim
+let g:airline_theme='solarized'
+let g:airline_solarized_bg='dark'
+let g:airline#extensions#whitespace#enabled = 0
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+
+" Comment / uncomment.
+" Comment functions so powerful—no comment necessary.
+"
+" \cc \cn \c<space>, etc...
+Plug 'scrooloose/nerdcommenter'
+
+
+" Formatting for many langauges
+Plug 'sbdchd/neoformat'
+
+""" Misclaneneous language support plugins
+Plug 'elehack/vim-oz'                     " OZ
+Plug 'runoshun/vim-alloy'                 " Alloy
+Plug 'chemzqm/jsonc.vim'                  " JSON with comments
+Plug 'moon-musick/vim-i3-config-syntax'   " i3
+Plug 'terminalnode/sway-vim-syntax'       " sway
+Plug 'mlr-msft/vim-loves-dafny'           " Dafny
+"Plug 'lighttpd-syntax'                    " Lighttpd
+Plug 'derekwyatt/vim-scala'               " Scala
+Plug 'LnL7/vim-nix'                       " Nix
+Plug 'joanrivera/vim-zimwiki-syntax'      " Zim wiki
+Plug 'thanethomson/vim-jenkinsfile'       " Jenkinsfile
+Plug 'mustache/vim-mustache-handlebars'   " mustache templating
+Plug 'rdolgushin/groovy.vim'              " Groovy
+
+
+" Pandoc integration and markup highlighting
+Plug 'vim-pandoc/vim-pandoc'
+Plug 'vim-pandoc/vim-pandoc-syntax'
+let g:pandoc#syntax#codeblocks#embeds#langs =
+    \[ "python"
+    \, "haskell"
+    \, "bash=sh"
+    \, "json"
+    \, "nix"
+    \]
+au FileType lhaskell let g:pandoc#syntax#codeblocks#embeds#langs = g:pandoc#syntax#codeblocks#embeds#langs + [ "literatehaskell=lhaskell" ]
+"Plug 'jalvesaq/zotcite'
+"let g:pandoc#biblio#sources = ""
+let g:pandoc#biblio#bibs = ['~/releng/thesis/bibliography.bib']
+
+
+Plug 'junegunn/limelight.vim'
+Plug 'junegunn/goyo.vim'
+let g:limelight_conceal_ctermfg = 'gray'
+let g:limelight_conceal_ctermfg = 240
+let g:limelight_conceal_guifg = 'DarkGray'
+let g:limelight_conceal_guifg = '#777777'
+
+" Unicode utilities
+"
+" :UnicodeSearch to start a symbol search by name
+Plug 'chrisbra/unicode.vim'
+
+
+" Highlight syntax ranges
+"
+" Provides the :call SyntaxRange#Include('@begin=c@', '@end=c@', 'c', 'NonText') api
+Plug 'inkarkat/vim-ingo-library'  " common library functions
+Plug 'inkarkat/vim-SyntaxRange'   " actual plugin
+
+" Automatic insertion of block endings
+" like `end`, `endfunction` and such.
+"Plug 'tpope/vim-endwise'
+
+
+nnoremap Q <Nop>
+
+" Haskell
+"
+" ----- neovimhaskell/haskell-vim -----
+
+
+" Align 'then' two spaces after 'if'
+let g:haskell_indent_if = 2
+" Indent 'where' block two spaces under previous body
+let g:haskell_indent_before_where = 2
+" Allow a second case indent style (see haskell-vim README)
+let g:haskell_indent_case_alternative = 1
+" Only next under 'let' if there's an equals sign
+let g:haskell_indent_let_no_in = 0
+
+" ----- hindent & stylish-haskell -----
+
+" Indenting on save is too aggressive for me
+let g:hindent_on_save = 0
+
+" Helper function, called below with mappings
+function! HaskellFormat(which) abort
+  if a:which ==# 'hindent' || a:which ==# 'both'
+    :Hindent
+  endif
+  if a:which ==# 'stylish' || a:which ==# 'both'
+    silent! exe 'undojoin'
+    silent! exe 'keepjumps %!stylish-haskell'
+  endif
+endfunction
+
+" Key bindings
+augroup haskellStylish
+  au!
+  " Just hindent
+  au FileType haskell nnoremap <leader>hi :Hindent<CR>
+  " Just stylish-haskell
+  au FileType haskell nnoremap <leader>hs :call HaskellFormat('stylish')<CR>
+  " First hindent, then stylish-haskell
+  au FileType haskell nnoremap <leader>hf :call HaskellFormat('both')<CR>
+augroup END
+
+" ----- w0rp/ale -----
+
+"let g:ale_linters.haskell = ['stack-ghc-mod', 'hlint']
+
+" ----- parsonsmatt/intero-neovim -----
+
+" Prefer starting Intero manually (faster startup times)
+let g:intero_start_immediately = 0
+" Use ALE (works even when not using Intero)
+let g:intero_use_neomake = 0
+
+augroup interoMaps
+  au!
+
+  au FileType haskell nnoremap <silent> <leader>io :InteroOpen<CR>
+  au FileType haskell nnoremap <silent> <leader>iov :InteroOpen<CR><C-W>H
+  au FileType haskell nnoremap <silent> <leader>ih :InteroHide<CR>
+  au FileType haskell nnoremap <silent> <leader>is :InteroStart<CR>
+  au FileType haskell nnoremap <silent> <leader>ik :InteroKill<CR>
+
+  au FileType haskell nnoremap <silent> <leader>wr :w \| :InteroReload<CR>
+  au FileType haskell nnoremap <silent> <leader>il :InteroLoadCurrentModule<CR>
+  au FileType haskell nnoremap <silent> <leader>if :InteroLoadCurrentFile<CR>
+
+  au FileType haskell map <leader>t <Plug>InteroGenericType
+  au FileType haskell map <leader>T <Plug>InteroType
+  au FileType haskell nnoremap <silent> <leader>it :InteroTypeInsert<CR>
+
+  au FileType haskell nnoremap <silent> <leader>jd :InteroGoToDef<CR>
+  au FileType haskell nnoremap <silent> <leader>iu :InteroUses<CR>
+  au FileType haskell nnoremap <leader>ist :InteroSetTargets<SPACE>
+augroup END
+
+if has('nvim')
+  Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+else
+  Plug 'Shougo/deoplete.nvim'
+  Plug 'roxma/nvim-yarp'
+  Plug 'roxma/vim-hug-neovim-rpc'
+endif
+let g:deoplete#enable_at_startup = 1
+
+" Enable autocompletion from vim2hs
+"Plug 'Shougo/neocomplcache'
+"let g:neocomplcache_enable_at_startup = 1
+"let g:neocomplcache_enable_ignore_case = 0
+"let g:neocomplcache_enable_smart_case = 1
+"Plug 'ujihisa/neco-ghc'
+
+" EditorConfig files support
+let g:EditorConfig_exclude_patterns = ['fugitive://.*']
+let g:EditorConfig_exec_path = '~/.nix-profile/bin/editorconfig'
+Plug 'editorconfig/editorconfig-vim'
+
+
+" Syntax completion
+"
+" Isn't that amazing ?
+Plug 'vim-syntastic/syntastic'
+
+
+" LaTeX
+Plug 'vim-latex/vim-latex'
+let g:Tex_GotoError = 0
+let g:Tex_ShowErrorContext = 0
+
+
+""" Rust
+Plug 'rust-lang/rust.vim'
+let g:syntastic_rust_checkers = ['rustc']
+Plug 'racer-rust/vim-racer'
+"set hidden " will do it later on.
+"let g:racer_cmd = "RUST_SRC_PATH=$HOME/projets/rust/src racer"
+let g:racer_experimental_completer = 1
+let g:racer_insert_paren = 1
+au BufReadPost "!cargo test *" set bufhidden=delete
+au FileType rust nmap gd <Plug>(rust-def)
+au FileType rust nmap gs <Plug>(rust-def-split)
+au FileType rust nmap gx <Plug>(rust-def-vertical)
+au FileType rust nmap <leader>gd <Plug>(rust-doc)
+
+
+" All of your Plugins must be added before the following line
+call plug#end()            " required
+filetype plugin indent on    " required
+" To ignore plugin indent changes, instead use:
+"filetype plugin on
+"
+" Brief help
+" :PluginList       - lists configured plugins
+" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
+" :PluginSearch foo - searches for foo; append `!` to refresh local cache
+" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
+"
+" see :h vundle for more details or wiki for FAQ
+" Put your non-Plugin stuff after this line
+
+syntax on
+
+call deoplete#custom#var('omni', 'input_patterns', {'pandoc': '@\w*'})
+
+" solarized
+set background=dark
+"let g:solarized_termtrans=1
+"let g:solarized_termcolors=256
+"let g:solarized_contrast="high"
+"let g:solarized_visibility="high"
+colorscheme solarized
+"autocmd ColorScheme * highlight Folded cterm=bold term=bold
+"set t_Co=256
+" export TERM="xterm-256color"
+
+" Provide space for status line (vim-airline)
+set laststatus=2
+
+" Do not fold when opening file
+set nofoldenable
+set foldmethod=marker
+set fillchars="fold: "
+autocmd BufNewFile,BufRead *.md setlocal formatoptions+=aw
+
+if has("autocmd")
+    au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+    autocmd BufReadPost fugitive://* set bufhidden=delete
+endif
+
+inoremap <M-Space> <Esc>
+inoremap <S-Space> <Esc>
+
+" The following are commented out as they cause vim to behave a lot
+" differently from regular Vi. They are highly recommended though.
+set showcmd         " Show (partial) command in status line.
+set showmatch       " Show matching brackets.
+"set ignorecase      " Do case insensitive matching
+set smartcase       " Do smart case matching
+set incsearch       " Incremental search
+set hlsearch        " highlight search patterns
+set autowrite       " Automatically save before commands like :next and :make
+set hidden          " Hide buffers when they are abandoned
+set noautoread
+set nowrap
+
+if exists("$SSH_CONNECTION")
+    set mouse=      " Disable mouse usage (all modes)
+else
+    set mouse=a     " Enable mouse usage (all modes)
+    vmap <LeftRelease> "*ygv
+endif
+
+
+"au BufNewFile,BufReadPost *.md set filetype=markdown
+"augroup pandoc_syntax
+"    au! BufNewFile,BufFilePre,BufRead *.md set filetype=markdown.pandoc
+"    au! BufNewFile,BufFilePre,BufRead *.lhs set filetype=markdown.pandoc
+"augroup END
+au BufRead,BufNewFile *.co        set filetype=cpp
+
+vnoremap <C-r> "hy:%s/<C-r>h//gc<left><left><left>
+
+set history=10000
+
+"set shellcmdflag=-ic
+
+map <ESC>Od <C-Left>
+map <ESC>Oc <C-Right>
+map <C-Left> :bprev<CR>
+map <C-Right> :bnext<CR>
+
+set autowrite
+set autowriteall
+" Backups do not work. All the backups end up in the same path
+set nobackup
+set nowritebackup
+"set backupdir=~/.cache/vim/backup//
+set swapfile
+set directory=~/.cache/vim/swp//
+set undofile
+set undodir=~/.cache/vim/undo//
+
+set spelllang=en spell
+
+cmap w!! w !sudo tee % >/dev/null
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Text, tab and indent related
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set expandtab
+set shiftwidth=4
+set tabstop=4
+set smarttab
+set backspace=indent,eol,start
+"set scrolloff=999
+
+set lbr
+"set tw=80
+
+"set ai "Auto indent
+"set si "Smart indet
+"set wrap "Wrap lines
+
+vnoremap <silent> * :<C-U>
+            \let old_reg=getreg('"')<Bar>let old_regtype=getregtype('"')<CR>
+            \gvy/<C-R><C-R>=substitute(
+            \escape(@", '/\.*$^~['), '\_s\+', '\\_s\\+', 'g')<CR><CR>
+            \gV:call setreg('"', old_reg, old_regtype)<CR>
+
+" Octave syntax
+augroup filetypedetect
+    au! BufRead,BufNewFile *.m,*.oct set filetype=octave
+augroup END
+
+set listchars=tab:\|\ ,nbsp:␣,trail:·,extends:»,precedes:«
+set list
+set showbreak=↪\    " trailing space on purpose
+" first is vim, second is neovim
+hi SpecialKey ctermbg=8 ctermfg=0
+hi Whitespace ctermbg=8 ctermfg=0
+
+"""""""""""""""""""""
+"=> -- LaTeX related
+"""""""""""""""""""""
+
+" OPTIONAL: Starting with Vim 7, the filetype of empty .tex files defaults to
+" 'plaintex' instead of 'tex', which results in vim-latex not being loaded.
+" The following changes the default filetype back to 'tex':
+let g:tex_flavor='latex'
+
+au FileType tex setl spell
+au FileType tex set tw=120
+au FileType tex set shiftwidth=2
+au FileType tex set tabstop=2
+au FileType tex set expandtab
+
+let g:Tex_DefaultTargetFormat='pdf'
+let g:Tex_CompileRule_pdf='pdflatex -interaction=nonstopmode $*'
+
+imap <buffer> <M>it <Plug>Tex_InsertItemOnThisLine
+
+"" Oz/ mozart
+au Filetype oz setl ts=8
+
