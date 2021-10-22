@@ -7,8 +7,9 @@
   outputs = { self, homeManager, nixpkgs }@args: {
     nixosConfigurations =
       nixpkgs.lib.attrsets.mapAttrs
+        (machine: _: import ./nixos args machine)
         (builtins.readDir ./nixos/machines)
-        (machine: _: import ./nixos args machine);
+	;
 
     homeConfigurations = {
       "layus@uberwald"     = import ./home args "layus" "uberwald";
