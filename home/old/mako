@@ -1,0 +1,15 @@
+default-timeout=5000
+#default-timeout=0
+max-visible=5
+#max-visible=-1
+anchor=bottom-right
+group-by=app-name
+#ignore-timeout=1
+
+[hidden]
+format=(and %h more)
+text-color=#777777
+
+[urgency=high]
+background-color=#c00000
+border-color=#ff0000
