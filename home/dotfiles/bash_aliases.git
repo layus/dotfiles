@@ -1,0 +1,29 @@
+
+# raw commands
+alias ga='git add'
+alias gp='git push'
+alias gb='git branch'
+alias gc='git checkout'
+alias gu='git pull'
+
+# status
+alias gs='git status -s'
+alias gst='git status'
+
+# log, graph
+alias gl='git log --decorate'
+alias gg='git log --graph --decorate --oneline'
+alias gga='git log --graph --decorate --oneline --all'
+
+# diff
+alias gd='git diff'
+alias gdc='git diff --cached'
+alias gds='git diff --staged'
+
+# commit
+alias gca='git commit -a'
+alias gcm='git commit -m'
+alias gm='git commit -m'
+alias gam='git commit -am'
+alias gcam='git commit -am'
+
