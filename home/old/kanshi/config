@@ -1,0 +1,15 @@
+profile presentation {
+    output HDMI-A-1 mode 1920x1080 position 0,0
+    output eDP-1 mode 1920x1080 position 0,0
+    exec bash -c "echo 'Xft.dpi: 96' | xrdb -merge"
+}
+profile docked {
+    output "Dell Inc. DELL U2415 7MT0196H25AS" enable mode 1920x1200 transform 90 position 0,0
+    output eDP-1 enable mode 1920x1080 position 1200,840
+    exec bash $HOME/.config/kanshi/docked.sh
+    exec bash -c "echo 'Xft.dpi: 96' | xrdb -merge"
+}
+profile undocked {
+    output eDP-1 enable mode 1920x1080 position 0,0
+    exec bash -c "echo 'Xft.dpi: 96' | xrdb -merge"
+}

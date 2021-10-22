@@ -1,0 +1,186 @@
+// vim: ft=jsonc
+{
+    "layer": "top", // Waybar at top layer
+    "position": "bottom", // Waybar position (top|bottom|left|right)
+    "height": 25, // Waybar height (to be removed for auto height)
+    // "width": 1280, // Waybar width
+    // Choose the order of the modules
+    "modules-left":
+        [ "sway/workspaces"
+        , "sway/mode"
+        //, "custom/media"
+        ],
+    "modules-center": [], // ["sway/window"],
+    "modules-right":
+        [ "idle_inhibitor"
+        , "pulseaudio"
+        , "network"
+        , "disk"
+        , "cpu"
+        , "memory"
+        , "temperature"
+        , "backlight"
+        , "battery"
+        , "clock"
+        , "tray"
+        ],
+    // Modules configuration
+    // "sway/workspaces": {
+    //     "disable-scroll": true,
+    //     "all-outputs": true,
+    //     "format": "{name}: {icon}",
+    //     "format-icons": {
+    //         "1": "",
+    //         "2": "",
+    //         "3": "",
+    //         "4": "",
+    //         "5": "",
+    //         "urgent": "",
+    //         "focused": "",
+    //         "default": ""
+    //     }
+    // },
+    "sway/mode": {
+        "format": "<span style=\"italic\">{}</span>"
+    },
+    //"mpd": {
+    //    "format": "{stateIcon} {consumeIcon}{randomIcon}{repeatIcon}{singleIcon}{artist} - {album} - {title} ({elapsedTime:%M:%S}/{totalTime:%M:%S}) ",
+    //    "format-disconnected": "Disconnected ",
+    //    "format-stopped": "{consumeIcon}{randomIcon}{repeatIcon}{singleIcon}Stopped ",
+    //    "unknown-tag": "N/A",
+    //    "interval": 2,
+    //    "consume-icons": {
+    //        "on": " "
+    //    },
+    //    "random-icons": {
+    //        "off": "<span color=\"#f53c3c\"></span> ",
+    //        "on": " "
+    //    },
+    //    "repeat-icons": {
+    //        "on": " "
+    //    },
+    //    "single-icons": {
+    //        "on": "1 "
+    //    },
+    //    "state-icons": {
+    //        "paused": "",
+    //        "playing": ""
+    //    },
+    //    "tooltip-format": "MPD (connected)",
+    //    "tooltip-format-disconnected": "MPD (disconnected)"
+    //},
+    "idle_inhibitor": {
+        "format": "{icon}",
+        "format-icons": {
+            "activated": "",
+            "deactivated": ""
+        }
+    },
+    "tray": {
+        // "icon-size": 21,
+        "spacing": 5
+    },
+    "clock": {
+        "interval": 1,
+        "format": "{:%a %d %b %EY %T}",
+        "tooltip-format": "{:%Z}"
+    },
+    "cpu": {
+        "interval": 1,
+        "format": "<span font=\"Font Awesome 5 Free\"></span> {usage:3}%",
+        "tooltip": false
+    },
+    "disk": {
+        "interval": 1,
+        "path": "/",
+        "format": "<span font=\"Font Awesome 5 Free\"></span> {free:>}{path}", // hdd:    db:
+        "tooltip-format": "{used}/{total} used ({percentage_used}%)"
+    },
+    "memory": {
+        "interval": 1,
+        "format": "<span font=\"Font Awesome 5 Free\"></span> {:>3}%" // 
+    },
+    "temperature": {
+        "interval": 1,
+        // "thermal-zone": 1,
+        "hwmon-path": "/sys/class/hwmon/hwmon4/temp1_input",
+        "critical-threshold": 80,
+        // "format-critical": "{temperatureC:2}°C {icon}",
+        "format": "{icon} {temperatureC:2}°C",
+        "format-icons":["<span font=\"Font Awesome 5 Free\"></span>", "<span font=\"Font Awesome 5 Free\"></span>", "<span font=\"Font Awesome 5 Free\"></span>"] //["", "", ""]
+    },
+    "backlight": {
+        // "device": "acpi_video1",
+        "format": "{icon} {percent:>3}%",
+        "format-icons": ["<span font=\"Font Awesome 5 Free\"></span>", "<span font=\"Font Awesome 5 Free\"></span>"],
+        "on-scroll-up": "light -A 10",
+        "on-scroll-down": "light -U 10",
+        "tooltip": false
+    },
+    "battery": {
+        "states": {
+            "good": 95,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{icon} {capacity}%",
+        "format-charging": "<span font=\"Font Awesome 5 Free\"></span> {capacity:3}%",
+        "format-plugged": "<span font=\"Font Awesome 5 Free\"></span> {capacity:3}%",
+        "format-alt": "{icon} {time}",
+        "format-good": "<span font=\"Font Awesome 5 Free\"></span> {capacity:3}%",
+        "format-full": "<span font=\"Font Awesome 5 Free\"></span> full",
+        "format-icons": ["<span font=\"Font Awesome 5 Free\"></span>", "<span font=\"Font Awesome 5 Free\"></span>", "<span font=\"Font Awesome 5 Free\"></span>", "<span font=\"Font Awesome 5 Free\"></span>", "<span font=\"Font Awesome 5 Free\"></span>"]
+    },
+    "network": {
+        "interval": 1,
+        //"interface": "eno1", // (Optional) To force the use of this interface
+        "format-ethernet": "<span font=\"Font Awesome 5 Free\"></span> {bandwidthDownBits:>9} {bandwidthUpBits:>9}",
+        "format-wifi": "<span font=\"Font Awesome 5 Free\"></span> {bandwidthDownBits:>} {bandwidthUpBits:>} {signalStrength:>2}%",
+        "format-linked": "",
+        "format-disconnected": "",
+        "tooltip": false
+    },
+    "clock#london": {
+        "timezone": "Europe/London",
+        "interval": 1,
+        "format": "{:%a %d %b %Y %T}",
+        "tooltip-format": "{:%Z}"
+    },
+    "clock#brussels": {
+        "timezone": "Europe/Brussels",
+        "interval": 1,
+        "format": "{:%a %d %b %Y %T}",
+        "tooltip-format": "{:%Z}"
+    },
+    "pulseaudio": {
+        "scroll-step": 5, // %, can be a float
+        "format": "{icon} {volume:3}%  {format_source}",
+        "format-bluetooth": "{volume}% {icon} {format_source}",
+        "format-bluetooth-muted": " {icon} {format_source}",
+        "format-muted": "<span font=\"Font Awesome 5 Free\"></span> {format_source}",
+        "format-source": "<span font=\"Font Awesome 5 Free\"></span> {volume:3}%",
+        "format-source-muted": "<span font=\"Font Awesome 5 Free\"></span>",
+        "format-icons": {
+            "headphones": "<span font=\"Font Awesome 5 Free\"></span>",
+            "handsfree": "<span font=\"Font Awesome 5 Free\"></span>",
+            "headset": "<span font=\"Font Awesome 5 Free\"></span>",
+            "phone": "<span font=\"Font Awesome 5 Free\"></span>",
+            "portable": "<span font=\"Font Awesome 5 Free\"></span>",
+            "car": "<span font=\"Font Awesome 5 Free\"></span>",
+            "default": ["<span font=\"Font Awesome 5 Free\"></span>", "<span font=\"Font Awesome 5 Free\"></span>", "<span font=\"Font Awesome 5 Free\"></span>"]
+        },
+        "on-click": "pavucontrol"
+    }
+    //"custom/media": {
+    //    "format": "{icon} {}",
+    //    "return-type": "json",
+    //    "max-length": 40,
+    //    "format-icons": {
+    //        "spotify": "",
+    //        "default": "🎜"
+    //    },
+    //    "escape": true,
+    //    "exec": "$HOME/.config/waybar/mediaplayer.py 2> /dev/null" // Script in resources folder
+    //    // "exec": "$HOME/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
+    //}
+}
