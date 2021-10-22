@@ -26,6 +26,7 @@ in {
 
   programs.git = {
     enable = true;
+    package = pkgs.gitFull;
     userName = "Guillaume Maudoux";
     userEmail = "guillaume.maudoux@tweag.io";
     includes = [ { path = ./gitconfig.inc; } ];
@@ -53,5 +54,75 @@ in {
   home.packages = with pkgs; [
     all
   ];
+
+  programs.direnv.enable = true;
+  programs.dircolors.enable = true;
+  programs.keychain.enable = true;
+  programs.zsh.enable = true;
+  home.file.".zshrc".source = ./dotfiles/zshrc;
+
+  programs.neovim.enable = true;
+  programs.neovim.plugins = with pkgs.vimPlugins; [
+    vim-easymotion
+    #switch.vim
+    supertab
+    vim-fugitive
+    vim-rhubarb
+    vim-sleuth
+    nerdtree
+    csapprox
+    vim-colors-solarized
+    vim-surround
+    vim-unimpaired
+    vim-airline
+    vim-airline-themes
+    nerdcommenter
+    neoformat
+    #vim-oz
+    #vim-alloy
+    #jsonc.vim
+    #vim-i3-config-syntax
+    #sway-vim-syntax
+    vim-loves-dafny
+    vim-scala
+    vim-nix
+    #vim-zimwiki-syntax
+    #vim-jenkinsfile
+    #vim-mustache-handlebars
+    #groovy.vim
+    vim-pandoc
+    vim-pandoc-syntax
+    #zotcite
+    #limelight.vim
+    goyo
+    #unicode
+    #vim-ingo-library
+    vim-SyntaxRange
+    vim-endwise
+    deoplete-nvim
+    nvim-yarp
+    #vim-hug-neovim-rpc
+    #neocomplcache
+    neco-ghc
+    editorconfig-vim
+    syntastic
+    #vim-latex
+    rust-vim #rust.vim
+    vim-racer
+  ];
+  programs.neovim.extraConfig = builtins.readFile ./dotfiles/vimrc;
+  #home.file.".vimrc".source = ./dotfiles/vimrc;
+  #xdg.configFile."nvim/init.vim".text = ''
+  #  set runtimepath^=~/.vim runtimepath+=~/.vim/after
+  #  let &packpath = &runtimepath
+  #  source ~/.vimrc
+  #'';
+
+  xdg.configFile."waybar" = {
+    source = ./dotfiles/waybar;
+    recursive = true;
+  };
+
+  home.file.".bash_aliases".source = ./dotfiles/bash_aliases;
 
 }
