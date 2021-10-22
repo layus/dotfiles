@@ -282,7 +282,7 @@ call deoplete#custom#var('omni', 'input_patterns', {'pandoc': '@\w*'})
 " solarized
 set background=dark
 "let g:solarized_termtrans=1
-"let g:solarized_termcolors=256
+let g:solarized_termcolors=256
 "let g:solarized_contrast="high"
 "let g:solarized_visibility="high"
 colorscheme solarized

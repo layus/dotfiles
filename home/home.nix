@@ -62,6 +62,7 @@ in {
   home.file.".zshrc".source = ./dotfiles/zshrc;
 
   programs.neovim.enable = true;
+  programs.neovim.extraConfig = builtins.readFile ./dotfiles/vimrc;
   programs.neovim.plugins = with pkgs.vimPlugins; [
     vim-easymotion
     #switch.vim
@@ -93,7 +94,7 @@ in {
     vim-pandoc
     vim-pandoc-syntax
     #zotcite
-    #limelight.vim
+    limelight-vim
     goyo
     #unicode
     #vim-ingo-library
@@ -110,13 +111,6 @@ in {
     rust-vim #rust.vim
     vim-racer
   ];
-  programs.neovim.extraConfig = builtins.readFile ./dotfiles/vimrc;
-  #home.file.".vimrc".source = ./dotfiles/vimrc;
-  #xdg.configFile."nvim/init.vim".text = ''
-  #  set runtimepath^=~/.vim runtimepath+=~/.vim/after
-  #  let &packpath = &runtimepath
-  #  source ~/.vimrc
-  #'';
 
   xdg.configFile."waybar" = {
     source = ./dotfiles/waybar;
@@ -124,5 +118,8 @@ in {
   };
 
   home.file.".bash_aliases".source = ./dotfiles/bash_aliases;
+
+  programs.termite.enable = true;
+  xdg.configFile."termite/config".source = ./dotfiles/termite;
 
 }
