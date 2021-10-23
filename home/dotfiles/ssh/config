@@ -31,10 +31,16 @@ Host klatch klatch.discworld.maudoux.be
     forwardx11Trusted yes
     ProxyCommand ssh sto-helit.maudoux.be -W localhost:3250
 
+Host uberwald uberwald.discworld.maudoux.be
+    User layus
+    ForwardX11 yes
+    forwardx11Trusted yes
+    ProxyCommand ssh sto-helit.maudoux.be -W localhost:3252
+
 Host papy.family.maudoux.be
 Hostname papy.family.maudoux.be
     User oxfam
-    ProxyCommand ssh sto-lat.discworld.maudoux.be -W localhost:3251
+    ProxyCommand ssh sto-helit.discworld.maudoux.be -W localhost:3251
     ForwardX11 yes
     Compression no
 
@@ -58,7 +64,7 @@ Host ssh?.info.ucl.ac.be studssh.info.ucl.ac.be sirius.info.ucl.ac.be phabricato
     UserKnownHostsFile ~/.ssh/known_hosts
     ForwardX11 no
 
-Host ssh?.info.ucl.ac.be studssh.info.ucl.ac.be sirius.info.ucl.ac.be 
+Host ssh?.info.ucl.ac.be studssh.info.ucl.ac.be sirius.info.ucl.ac.be
     ProxyCommand none
     #loglevel INFO
     Compression no
