@@ -13,6 +13,9 @@
   boot.kernelModules = [ ];
   boot.extraModulePackages = [ ];
 
+  boot.resumeDevice = config.fileSystems."/".device;
+  boot.kernelParams = [ "resume_offset=17993728" ]; # location of swap in its partition
+
   fileSystems."/" = {
     device = "/dev/disk/by-uuid/a0f47bce-6649-4076-9e63-aa6cea63be28";
     fsType = "ext4";

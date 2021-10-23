@@ -4,7 +4,9 @@
 
 { config, pkgs, ... }:
 
-{
+let
+  cfg = config.custom;
+in {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
@@ -12,6 +14,7 @@
       ../../common/screencast.nix
       ../../common/sound.nix
       ../../common/bluetooth.nix
+      ../../common/ssh.nix
     ];
 
   # Use the systemd-boot EFI boot loader.
@@ -76,6 +79,13 @@
   users.users.layus = {
     isNormalUser = true;
     extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
+    openssh.authorizedKeys.keys = builtins.attrValues {
+      inherit (cfg.ssh.pubkeys)
+        "ankh-morpork_ecdsa.pub"
+        "klatch_ecdsa.pub"
+        "uberwald_ecdsa.pub"
+        ;
+    };
   };
 
   # List packages installed in system profile. To search, run:

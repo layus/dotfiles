@@ -122,5 +122,10 @@
   xdg.mimeApps.enable = true;
   xdg.configFile."mimeapps.list".source = ./dotfiles/mimeapps.list;
 
+  home.file.".ssh/pubkeys" = {
+    source = ./dotfiles/ssh/pubkeys;
+    recursive = true;
+  };
+  home.file.".ssh/id_ecdsa.pub".source = ./dotfiles/ssh/pubkeys/uberwald_ecdsa.pub;
 
 }
