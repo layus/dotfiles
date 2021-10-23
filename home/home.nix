@@ -122,6 +122,8 @@
   xdg.mimeApps.enable = true;
   xdg.configFile."mimeapps.list".source = ./dotfiles/mimeapps.list;
 
+  programs.ssh.enable = true;
+  home.file.".ssh/config".source = ./dotfiles/ssh/config;
   home.file.".ssh/pubkeys" = {
     source = ./dotfiles/ssh/pubkeys;
     recursive = true;
