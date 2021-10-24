@@ -113,9 +113,17 @@
   programs.termite.enable = true;
   xdg.configFile."termite/config".source = ./dotfiles/termite;
 
-  programs.firefox.enable = true;
-  programs.firefox.profiles.default = {
-    userChrome = builtins.readFile ./dotfiles/userChrome.css;
+  programs.firefox = {
+    enable = true;
+    profiles.default = {
+      userChrome = builtins.readFile ./dotfiles/userChrome.css;
+    };
+    package = pkgs.wrapFirefox pkgs.firefox-unwrapped {
+      forceWayland = true;
+      extraPolicies = {
+        ExtensionSettings = {};
+      };
+    };
   };
 
   xdg.mime.enable = true;
@@ -129,5 +137,8 @@
     recursive = true;
   };
   home.file.".ssh/id_ecdsa.pub".source = ./dotfiles/ssh/pubkeys/uberwald_ecdsa.pub;
+
+  programs.mako.enable = true;
+  xdg.configFile."mako/config".source = ./old/mako;
 
 }
