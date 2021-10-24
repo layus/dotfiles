@@ -50,12 +50,11 @@ in {
 
   hardware.bluetooth.enable = true;
 
+  hardware.video.hidpi.enable = true;
+
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
   console = {
-    #font = "Lat2-Terminus16";
-    # HiDPi
-    font = "${pkgs.terminus_font}/share/consolefonts/ter-u28n.psf.gz";
     keyMap = "be-latin1";
   };
 

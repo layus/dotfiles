@@ -37,7 +37,6 @@ in {
     extraOutputsToInstall = [ "man" "info" "docdev" ];
     ignoreCollisions = true;
     paths = with self; [
-      
 
       # {{{ special
       #converted to plugins: obs-wlrobs obs-studio
@@ -49,7 +48,7 @@ in {
       # }}}
 
       # {{{ Graphical applications
-      firefox/*-bin*/ thunderbird-78 chromium
+      firefox/*-bin*/ thunderbird chromium
       libreoffice # Not yet cached...
       gnumeric
       gimp #gimp-with-plugins
@@ -191,7 +190,11 @@ in {
       htop
       xorg.xkill
       (lib.lowPrio openssl)
+      waypipe
+      wl-clipboard
+      helvum
       ydotool
+      wdisplays
 
       # }}}
       # {{{ Courses

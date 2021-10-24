@@ -28,7 +28,17 @@
   };
 
   wayland.windowManager.sway.enable = true;
+  wayland.windowManager.sway.wrapperFeatures = {
+    base = true; # not too sure.
+    gtk = true;
+  };
   xdg.configFile."sway/config".source = lib.mkForce "${pkgs.sway-config}/etc/sway/config";
+
+  # Kanshi exists only as a systemd user service.
+  # I prefer to start it from sway config, as it ensures a proper restart/reload
+  #services.kanshi.enable = true;
+  # Kanshi config only works with klatch... Ignore for now
+  #xdg.configFile."kanshi" = { source = ./dotfiles/kanshi; recursive = true; };
 
   nixpkgs.overlays = [
     (self: super: {
@@ -102,10 +112,7 @@
     vim-racer
   ];
 
-  xdg.configFile."waybar" = {
-    source = ./dotfiles/waybar;
-    recursive = true;
-  };
+  xdg.configFile."waybar" = { source = ./dotfiles/waybar; recursive = true; };
 
   home.file.".bash_aliases".source = ./dotfiles/bash_aliases;
   home.file.".bash_aliases.git".source = ./dotfiles/bash_aliases.git;
@@ -132,13 +139,28 @@
 
   programs.ssh.enable = true;
   home.file.".ssh/config".source = ./dotfiles/ssh/config;
-  home.file.".ssh/pubkeys" = {
-    source = ./dotfiles/ssh/pubkeys;
-    recursive = true;
-  };
+  home.file.".ssh/pubkeys" = { source = ./dotfiles/ssh/pubkeys; recursive = true; };
   home.file.".ssh/id_ecdsa.pub".source = ./dotfiles/ssh/pubkeys/uberwald_ecdsa.pub;
 
   programs.mako.enable = true;
   xdg.configFile."mako/config".source = ./old/mako;
 
+
+  xdg.userDirs = let
+    home = "$HOME/";
+  in {
+    enable = true;
+    createDirectories = true;
+    desktop     = "$HOME";
+    documents   = "$HOME/documents";
+    download    = "$HOME/downloads";
+    music       = "$HOME/documents/music";
+    pictures    = "$HOME/images";
+    publicShare = "$HOME/documents/public";
+    templates   = "$HOME/documents/templates";
+    videos      = "$HOME/documents";
+    extraConfig = {
+      XDG_PROJECTS_DIR = "$HOME/projects";
+    };
+  };
 }
