@@ -49,8 +49,11 @@ in {
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   hardware.bluetooth.enable = true;
-
   hardware.video.hidpi.enable = true;
+  hardware.opengl.enable = true;
+  hardware.opengl.driSupport32Bit = true;
+  hardware.opengl.extraPackages = with pkgs; [ vaapiIntel vaapiVdpau libvdpau-va-gl intel-media-driver ];
+
 
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
