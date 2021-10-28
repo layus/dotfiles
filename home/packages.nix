@@ -79,7 +79,9 @@ in {
 
       # }}}
       # {{{ Desktop environment
-      gnome3.gnome_themes_standard        # For firefox and thunderbird theming.
+      gnome.gnome_themes_standard        # For firefox and thunderbird theming.
+      gnome.evince
+      gnome.eog
       pavucontrol
       keychain
       xclip
@@ -95,6 +97,12 @@ in {
       gtkspell3
       gitg
       wget
+
+
+      # support both 32- and 64-bit applications
+      wineWowPackages.stable
+      # winetricks and other programs depending on wine need to use the same wine version
+      (winetricks.override { wine = wineWowPackages.stable; })
 
       kanshi
 
@@ -195,6 +203,7 @@ in {
       helvum
       ydotool
       wdisplays
+      xdg-utils
 
       # }}}
       # {{{ Courses

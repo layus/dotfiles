@@ -23,6 +23,8 @@ in {
   #boot.cleanTmpDir = true;
   #boot.tmpOnTmpfd = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
+  # buggy panel self refresh...
+  boot.kernelParams = [ "i915.enable_psr=0" ];
 
   nix = {
     package = pkgs.nixUnstable;

@@ -56,6 +56,9 @@
   ];
 
   programs.direnv.enable = true;
+  programs.direnv.nix-direnv.enable = true;
+  programs.direnv.nix-direnv.enableFlakes = true;
+
   programs.dircolors.enable = true;
   programs.keychain.enable = true;
   programs.zsh.enable = true;
@@ -161,6 +164,7 @@
     videos      = "$HOME/documents";
     extraConfig = {
       XDG_PROJECTS_DIR = "$HOME/projects";
+      XDG_PRINT_SCREEN_DIR = "$HOME/images/captures";
     };
   };
 }
