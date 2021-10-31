@@ -43,7 +43,7 @@
   nixpkgs.overlays = [
     (self: super: {
       sway-config = super.callPackage ./sway.nix {};
-      lockimage = "/missing"; #TODO
+      lockimage = ./dotfiles/wall-hidpi.png;
     })
     (import ./packages.nix)
   ];

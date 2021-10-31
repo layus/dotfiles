@@ -16,11 +16,11 @@ zstyle :compinstall filename "$HOME/.zshrc"
 # add custom completion scripts
 
 # fix path of man files in NixOS
-if [ -n "$NIX_PROFILES" ]; then
-    manpath=( $^path/../{share/,}man(N:a:-/) )
-    manpath=( ${(u)manpath} )
-    export manpath
-fi
+#if [ -n "$NIX_PROFILES" ]; then
+#    manpath=( $^path/../{share/,}man(N:a:-/) )
+#    manpath=( ${(u)manpath} )
+#    export manpath
+#fi
 
 autoload -Uz compinit
 compinit
@@ -41,6 +41,7 @@ zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p
 # des couleurs pour la complétion
 zmodload zsh/complist
 setopt extendedglob
+alias nix="noglob nix"
 zstyle ':completion:*:*:kill:*:processes' list-colors "=(#b) #([0-9]#)*=36=31"
 
 if [ -f ~/.profile ]; then
