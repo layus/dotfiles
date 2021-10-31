@@ -37,7 +37,6 @@ in {
     extraOutputsToInstall = [ "man" "info" "docdev" ];
     ignoreCollisions = true;
     paths = with self; [
-      
 
       # {{{ special
       #converted to plugins: obs-wlrobs obs-studio
@@ -49,7 +48,7 @@ in {
       # }}}
 
       # {{{ Graphical applications
-      firefox/*-bin*/ thunderbird-78 chromium
+      firefox/*-bin*/ thunderbird chromium
       libreoffice # Not yet cached...
       gnumeric
       gimp #gimp-with-plugins
@@ -80,7 +79,9 @@ in {
 
       # }}}
       # {{{ Desktop environment
-      gnome3.gnome_themes_standard        # For firefox and thunderbird theming.
+      gnome.gnome_themes_standard        # For firefox and thunderbird theming.
+      gnome.evince
+      gnome.eog
       pavucontrol
       keychain
       xclip
@@ -96,6 +97,12 @@ in {
       gtkspell3
       gitg
       wget
+
+
+      # support both 32- and 64-bit applications
+      wineWowPackages.stable
+      # winetricks and other programs depending on wine need to use the same wine version
+      (winetricks.override { wine = wineWowPackages.stable; })
 
       kanshi
 
@@ -191,7 +198,12 @@ in {
       htop
       xorg.xkill
       (lib.lowPrio openssl)
+      waypipe
+      wl-clipboard
+      helvum
       ydotool
+      wdisplays
+      xdg-utils
 
       # }}}
       # {{{ Courses

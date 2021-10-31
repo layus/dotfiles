@@ -23,6 +23,8 @@ in {
   #boot.cleanTmpDir = true;
   #boot.tmpOnTmpfd = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
+  # buggy panel self refresh...
+  boot.kernelParams = [ "i915.enable_psr=0" ];
 
   nix = {
     package = pkgs.nixUnstable;
@@ -49,13 +51,15 @@ in {
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   hardware.bluetooth.enable = true;
+  hardware.video.hidpi.enable = true;
+  hardware.opengl.enable = true;
+  hardware.opengl.driSupport32Bit = true;
+  hardware.opengl.extraPackages = with pkgs; [ vaapiIntel vaapiVdpau libvdpau-va-gl intel-media-driver ];
+
 
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
   console = {
-    #font = "Lat2-Terminus16";
-    # HiDPi
-    font = "${pkgs.terminus_font}/share/consolefonts/ter-u28n.psf.gz";
     keyMap = "be-latin1";
   };
 

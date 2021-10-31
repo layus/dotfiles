@@ -1,17 +1,17 @@
 {config, pkgs, lib, ...}:
 {
-  # needed because bluetooth chipset is not broadcom, and we need at least 5.12 
+  # needed because bluetooth chipset is not broadcom, and we need at least 5.12
   # latest is 5.13 as of now (aout 2021)
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   # High quality BT calls
   hardware.bluetooth.enable = true;
-  hardware.bluetooth.hsphfpd.enable = true;
 
-  # See sound.nix
+  # For a PulseAudio bluetooth Stack, maybe already outdated.
   #hardware.pulseaudio.enable = true;
   #hardware.pulseaudio.package = pkgs.pulseaudioFull;
   #hardware.pulseaudio.extraModules = [ pkgs.pulseaudio-modules-bt ];
+  #hardware.bluetooth.hsphfpd.enable = true;
 
   # Pipewire config
   hardware.pulseaudio.enable = false;
@@ -20,7 +20,7 @@
     enable = true;
     alsa.enable = true;
     # No idea if I need this
-    alsa.support32Bit = true;
+    #alsa.support32Bit = true;
     pulse.enable = true;
 
     # High quality BT calls
@@ -38,6 +38,7 @@
           };
         };
       }
+      # Copy over default config, as these rules override everything.
       {
         matches = [
           # Matches all sources

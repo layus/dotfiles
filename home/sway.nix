@@ -478,6 +478,9 @@ input "1386:884:Wacom_Intuos_S_Pen" {
     map_to_region 31 553 1168 826
 }
 
+# HiDPi screen needs bigger cursor :-).
+seat * xcursor_theme Adwaita 24
+
 workspace  0 output       $main
 workspace  1 output $dell $main
 workspace  2 output $dell $main
