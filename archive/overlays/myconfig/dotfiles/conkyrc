@@ -1,0 +1,89 @@
+-- vim: ts=4 sw=4 noet ai cindent syntax=lua
+--[[
+my conky config -- layus.
+
+use `conky -C` to generate default config
+]]
+
+conky.config = {
+    --alignment = 'top_left',
+    --background = false,
+    --border_width = 1,
+    --cpu_avg_samples = 2,
+	--default_color = 'white',
+    --default_outline_color = 'white',
+    --default_shade_color = 'white',
+    --draw_borders = false,
+    --draw_graph_borders = true,
+    --draw_outline = false,
+    --draw_shades = false,
+    --use_xft = true,
+    --font = 'DejaVu Sans Mono:size=12',
+    --gap_x = 5,
+    --gap_y = 60,
+    --minimum_height = 5,
+	--minimum_width = 5,
+    --net_avg_samples = 2,
+    --no_buffers = true,
+    --out_to_console = false,
+    --out_to_stderr = false,
+    out_to_console = true,
+    out_to_stderr = false,
+    out_to_x = false,
+    --extra_newline = false,
+    --own_window = true,
+    --own_window_class = 'Conky',
+    --own_window_type = 'desktop',
+    --stippled_borders = 0,
+    --update_interval = 1.0,
+    update_interval = 1.0,
+    --uppercase = false,
+    --use_spacer = 'none',
+    use_spacer = 'left',
+    --show_graph_scale = false,
+    --show_graph_range = false
+}
+--out_to_x=no
+--background no
+--short_units yes
+
+conky.text = [[\
+${if_match "${nodename}" == "klatch"}\
+${fs_free /}/ \
+|\
+${if_up eno1} eno1${if_match "${addr eno1}"!="No Address"}: ${downspeed eno1} ${upspeed eno1}${else} --${endif}${endif}\
+${if_up wlp2s0} wlp2s0${if_match "${addr wlp2s0}"!="No Address"}: ${downspeed wlp2s0} ${upspeed wlp2s0}${else} --${endif}${endif}\
+ \
+|\
+${acpitemp}°C \
+|\
+ ${battery BAT0} \
+|\
+ ${loadavg} \
+|\
+ ram: ${memperc}% \
+|\
+ ${time %a %d %b %Y} ${time %T}\
+${endif}\
+\
+${if_match "${nodename}" == "ankh-morpork"}\
+${fs_free /}/ \
+${fs_free /home}/home \
+${fs_free /tmp}/tmp \
+|\
+ lo: ${downspeed lo} ${upspeed lo} --\
+${if_up enp3s0} eth${if_match "${addr enp3s0}"!="No Address"}: ${downspeed enp3s0} ${upspeed enp3s0}${else} --${endif}${endif}\
+${if_up wlp2s0} wlan${if_match "${addr wlp2s0}"!="No Address"}: ${downspeed wlp2s0} ${upspeed wlp2s0}${else} --${endif}${endif}\
+ \
+|\
+${acpitemp}°C \
+|\
+ ${battery BAT1} \
+|\
+ ${loadavg} \
+|\
+ ram: ${memperc}% \
+|\
+ ${time %a %d %b %Y} ${time %T}\
+${endif}\
+]]

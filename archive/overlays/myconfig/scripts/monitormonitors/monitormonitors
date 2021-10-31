@@ -1,0 +1,65 @@
+#!/usr/bin/python3 -u
+
+import pyudev
+import subprocess
+from pprint import pprint
+import threading
+import time
+
+
+class Timeout(threading.Thread):
+    def __init__(self, timeout, userHandler):
+        super(Timeout, self).__init__()
+        self.daemon = True
+
+        self.handler = userHandler
+        self.timeout = timeout
+        self.event = threading.Event()
+        self.lastReset = time.time()
+
+        self.reset(timeout)
+        self.start()
+
+    def reset(self, timeout=None):
+        # Print delay:
+        delay = time.time() - self.lastReset
+        self.lastReset = time.time()
+        if delay < self.timeout:
+            print("Reset called after {0:.3f}s.".format(delay))
+        else:
+            print("Restarting timeout after {0:.3f}s idle.".format(delay))
+
+        # restart timeout
+        if timeout: self.timeout = timeout
+        self.event.set()
+
+
+    def wait(self, delay = None):
+        return self.event.wait(delay)
+    
+    def run(self):
+        while self.wait():
+            #print("Watchdog enabled")
+            while self.wait(float(self.timeout)):
+                self.event.clear()
+                print("Watchdog restarted")
+            print("Watchdog firing")
+            self.handler()
+        
+def main():
+    call = lambda *args: subprocess.call(list(args))
+    autorandr = lambda: call('/usr/bin/env', 'autorandr', '-c', '--default', 'presentation')
+
+    monitor = pyudev.Monitor.from_netlink(pyudev.Context())
+    monitor.filter_by(subsystem='drm')
+
+    timer = Timeout(4, autorandr)
+    timer.wait(4)
+
+    for device in iter(monitor.poll, None):
+        print('{0.action} on {0.device_path}'.format(device))
+        timer.reset(4)
+
+
+if __name__ == '__main__':
+    main()
