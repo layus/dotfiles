@@ -43,7 +43,9 @@
   nixpkgs.overlays = [
     (self: super: {
       sway-config = super.callPackage ./sway.nix {};
-      lockimage = ./dotfiles/wall-hidpi.png;
+      lockimage = pkgs.runCommand "background.jpg" {} ''
+        ${pkgs.imagemagick}/bin/convert ${./dotfiles/background.webp} -resize "3840x2400^" -gravity Center -extent 3840x2400+250 $out
+      '';
     })
     (import ./packages.nix)
   ];
@@ -166,5 +168,10 @@
       XDG_PROJECTS_DIR = "$HOME/projects";
       XDG_PRINT_SCREEN_DIR = "$HOME/images/captures";
     };
+  };
+
+  programs.obs-studio = {
+    enable = true;
+    plugins = [ pkgs.obs-studio-plugins.wlrobs ];
   };
 }

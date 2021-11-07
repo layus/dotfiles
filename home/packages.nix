@@ -39,7 +39,7 @@ in {
     paths = with self; [
 
       # {{{ special
-      #converted to plugins: obs-wlrobs obs-studio
+      #converted to plugins: obs-wlrobs obs-studio // see home manager
       xournal
       wf-recorder
       poppler_utils

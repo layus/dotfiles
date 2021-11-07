@@ -90,6 +90,7 @@ esac
 autoload -U promptinit
 promptinit
 prompt adam2 cyan green $host_color white
+setopt prompt_sp # Fixes overriding previous outputs without a newline: https://stackoverflow.com/questions/47061766
 
 unsetopt beep
 
