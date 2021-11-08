@@ -1,9 +1,9 @@
-default-timeout=5000
-#default-timeout=0
+#default-timeout=5000
+default-timeout=0
 max-visible=5
 #max-visible=-1
 anchor=bottom-right
-group-by=app-name
+#group-by=app-name
 #ignore-timeout=1
 
 [hidden]

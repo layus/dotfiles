@@ -148,7 +148,7 @@
   home.file.".ssh/id_ecdsa.pub".source = ./dotfiles/ssh/pubkeys/uberwald_ecdsa.pub;
 
   programs.mako.enable = true;
-  xdg.configFile."mako/config".source = ./old/mako;
+  xdg.configFile."mako/config".source = ./dotfiles/mako;
 
 
   xdg.userDirs = let
