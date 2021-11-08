@@ -46,6 +46,12 @@
       lockimage = pkgs.runCommand "background.jpg" {} ''
         ${pkgs.imagemagick}/bin/convert ${./dotfiles/background.webp} -resize "3840x2400^" -gravity Center -extent 3840x2400+250 $out
       '';
+      zim = super.zim.overrideAttrs (oldAttrs: {
+        propagatedBuildInputs = oldAttrs.propagatedBuildInputs or [] ++ [ self.python3Packages.Babel ];
+        preFixup = oldAttrs.preFixup or "" + ''
+          export makeWrapperArgs+=" --set LC_ALL=fr_BE.UTF-8"
+        '';
+      });
     })
     (import ./packages.nix)
   ];
