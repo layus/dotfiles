@@ -359,6 +359,11 @@ bindsym $mod+Shift+R restart
 # exit i3 (logs you out of your X session)
 bindsym $mod+Shift+E exit
 
+### Shortcuts for scratchpad easy access ###
+
+# Priviledged zim shortcut
+bindsym $mod+z ${zimSelector} scratchpad show
+
 mode "scratch" {
     bindsym z ${zimSelector}        scratchpad show, mode "default"
     bindsym s ${slackSelector}      scratchpad show, mode "default"
