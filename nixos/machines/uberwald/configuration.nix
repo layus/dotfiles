@@ -59,13 +59,12 @@ in {
 
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
-  console = {
-    keyMap = "be-latin1";
-  };
-
-  environment.variables = {
+  i18n.extraLocaleSettings = {
     LC_TIME = "fr_BE.UTF-8";
     LC_COLLATE = "fr_BE.UTF-8";
+  };
+  console = {
+    keyMap = "be-latin1";
   };
 
   nixpkgs.config.allowUnfree = true;
