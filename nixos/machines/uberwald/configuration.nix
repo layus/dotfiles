@@ -142,6 +142,9 @@ in {
       };
     };
   };
+  systemd.services.greetd.restartIfChanged = false;
+  systemd.services.greetd.stopIfChanged = false;
+  systemd.services.greetd.reloadIfChanged = true;
 
 }
 
