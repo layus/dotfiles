@@ -17,6 +17,15 @@ in {
       ../../common/ssh.nix
     ];
 
+  security.pam.loginLimits = [
+    {
+      domain = "*";
+      item = "nofile";
+      type = "soft";
+      value = "unlimited";
+    }
+  ];
+
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -145,5 +154,6 @@ in {
   systemd.services.greetd.stopIfChanged = false;
   systemd.services.greetd.reloadIfChanged = true;
 
+  # services.thinkfan.enable = true; not really needed. Same as defaults.
 }
 

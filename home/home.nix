@@ -52,6 +52,14 @@
           export makeWrapperArgs+=" --set LC_ALL=fr_BE.UTF-8"
         '';
       });
+      sway = super.sway.overrideAttrs (_: {
+        src = self.fetchFromGitHub {
+          owner = "swaywm";
+          repo = "sway";
+          rev = "master";
+          hash = "sha256-0gZP2Pe2LsMzScKKRL/q98ERJQuqxa1Swwi9DY/KCvg=";
+        };
+      });
     })
     (import ./packages.nix)
   ];
