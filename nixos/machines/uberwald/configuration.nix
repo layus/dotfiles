@@ -91,7 +91,15 @@ in {
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.layus = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [
+      "wheel"           # sudo super-user
+      "networkmanager"  # set system-wide networks
+      "docker"          # start and use docker
+      "wireshark"       # root-less network captures
+      "vboxusers"       # vbox-related
+      "adbusers"        # Andoid debug bridge pivileges
+      "input" "video"   # brightness and leds control (brightnessctl)
+    ];
     openssh.authorizedKeys.keys = builtins.attrValues {
       inherit (cfg.ssh.pubkeys)
         "ankh-morpork_ecdsa.pub"
@@ -156,5 +164,7 @@ in {
   systemd.services.greetd.reloadIfChanged = true;
 
   # services.thinkfan.enable = true; not really needed. Same as defaults.
+
+  virtualisation.docker.enable = true;
 }
 
