@@ -15,6 +15,7 @@ in {
       ../../common/sound.nix
       ../../common/bluetooth.nix
       ../../common/ssh.nix
+      ../../common/epson.nix
     ];
 
   security.pam.loginLimits = [
