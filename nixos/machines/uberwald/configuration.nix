@@ -2,21 +2,23 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
+with lib;
 
 let
   cfg = config.custom;
-in {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-      ../../common/fonts.nix
-      ../../common/screencast.nix
-      ../../common/sound.nix
-      ../../common/bluetooth.nix
-      ../../common/ssh.nix
-      ../../common/epson.nix
-    ];
+in
+{
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+    ../../common/fonts.nix
+    ../../common/screencast.nix
+    ../../common/sound.nix
+    ../../common/bluetooth.nix
+    ../../common/ssh.nix
+    ../../common/epson.nix
+  ];
 
   security.pam.loginLimits = [
     {
@@ -39,13 +41,15 @@ in {
   nix = {
     package = pkgs.nixUnstable;
     extraOptions = ''
-      experimental-features = nix-command flakes
+      experimental-features = nix-command flakes ca-derivations
+      substituters = https://cache.ngi0.nixos.org/
+      trusted-public-keys = cache.ngi0.nixos.org-1:KqH5CBLNSyX184S9BKZJo1LxrxJ9ltnY2uAs5c/f1MA=
     '';
   };
 
   networking.hostName = "uberwald"; # Define your hostname.
   networking.networkmanager.enable = true;
-  networking.wireless.enable = false;  # Enables wireless support via wpa_supplicant.
+  networking.wireless.enable = false; # Enables wireless support via wpa_supplicant.
 
   # Set your time zone. `null` allows dynamic changes.
   time.timeZone = null;
@@ -92,13 +96,14 @@ in {
   users.users.layus = {
     isNormalUser = true;
     extraGroups = [
-      "wheel"           # sudo super-user
-      "networkmanager"  # set system-wide networks
-      "docker"          # start and use docker
-      "wireshark"       # root-less network captures
-      "vboxusers"       # vbox-related
-      "adbusers"        # Andoid debug bridge pivileges
-      "input" "video"   # brightness and leds control (brightnessctl)
+      "wheel" # sudo super-user
+      "networkmanager" # set system-wide networks
+      "docker" # start and use docker
+      "wireshark" # root-less network captures
+      "vboxusers" # vbox-related
+      "adbusers" # Andoid debug bridge pivileges
+      "input"
+      "video" # brightness and leds control (brightnessctl)
     ];
     openssh.authorizedKeys.keys = builtins.attrValues {
       inherit (cfg.ssh.pubkeys)
