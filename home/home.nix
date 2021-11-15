@@ -37,8 +37,7 @@
   # Kanshi exists only as a systemd user service.
   # I prefer to start it from sway config, as it ensures a proper restart/reload
   #services.kanshi.enable = true;
-  # Kanshi config only works with klatch... Ignore for now
-  #xdg.configFile."kanshi" = { source = ./dotfiles/kanshi; recursive = true; };
+  xdg.configFile."kanshi" = { source = ./dotfiles/kanshi; recursive = true; };
 
   nixpkgs.overlays = [
     (self: super: {
