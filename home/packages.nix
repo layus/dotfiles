@@ -148,6 +148,7 @@ in {
       hyperfine
       jq yq
       tmux
+      nixpkgs-fmt
 
 
       # }}}
