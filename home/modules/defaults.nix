@@ -8,8 +8,8 @@
 
       # Home Manager needs a bit of information about you and the
       # paths it should manage.
-      home.username = "layus";
-      home.homeDirectory = "/home/layus";
+      home.username = lib.mkDefault "layus";
+      home.homeDirectory = lib.mkDefault "/home/layus";
 
       # This value determines the Home Manager release that your
       # configuration is compatible with. This helps avoid breakage
@@ -19,7 +19,7 @@
       # You can update Home Manager without changing this value. See
       # the Home Manager release notes for a list of state version
       # changes in each release.
-      home.stateVersion = "21.11";
+      home.stateVersion = lib.mkDefault "21.11";
 
       programs.git = {
         enable = true;
@@ -32,10 +32,6 @@
 
       nixpkgs.config = import ../dotfiles/nixpkgs-config.nix;
       xdg.configFile."nixpkgs/config.nix".text = builtins.readFile ../dotfiles/nixpkgs-config.nix;
-
-      home.packages = with pkgs; [
-        all
-      ];
 
       programs.direnv.enable = true;
       programs.direnv.nix-direnv.enable = true;
@@ -157,6 +153,7 @@
               export makeWrapperArgs+=" --set LC_ALL=fr_BE.UTF-8"
             '';
           });
+          # TODO: do not use pinned versions without version checks !
           sway = super.sway.overrideAttrs (_: {
             src = self.fetchFromGitHub {
               owner = "swaywm";
@@ -166,7 +163,6 @@
             };
           });
         })
-        (import ../packages.nix)
       ];
 
       xdg.configFile."waybar" = { source = ../dotfiles/waybar; recursive = true; };

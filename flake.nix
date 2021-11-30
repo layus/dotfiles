@@ -20,6 +20,7 @@
       "layus@ankh-morpork" = import ./home args "layus" "ankh-morpork";
       "layus@sto-helit"    = import ./home args "layus" "sto-helit";
       "gmaudoux@klatch"    = import ./home args "gmaudoux" "klatch";
+      "gmaudoux"           = import ./home args "gmaudoux" "headless";
     };
   };
 
