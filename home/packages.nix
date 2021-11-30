@@ -1,17 +1,18 @@
 self: super:
 let
 
-in {
+in
+{
   firefox = super.wrapFirefox super.firefox-unwrapped { forceWayland = true; };
   #thunderbird = super.thunderbird-78;
   jotta-cli = super.jotta-cli.overrideAttrs (oldAttrs: rec {
     arch = "amd64";
-    version = "0.8.36055";
+    version = "0.12.51202";
     pname = "jotta-cli";
     name = "${pname}-${version}";
     src = super.fetchzip {
       url = "https://repo.jotta.us/archives/linux/amd64/jotta-cli-${version}_linux_amd64.tar.gz";
-      sha256 = "1ql34lmvgchccdk53pdidgirphhdyycj25v1kqchkl03yfrpwp0z";
+      hash = "sha256-B7Rn/0hFVUsEK2Wo8KbqAnzOwQmMKkAssfmaN3dPAUY=";
       stripRoot = false;
     };
   });
@@ -48,9 +49,12 @@ in {
       # }}}
 
       # {{{ Graphical applications
-      firefox/*-bin*/ thunderbird chromium
+      firefox /*-bin*/
+      thunderbird
+      chromium
       libreoffice # Not yet cached...
       gnumeric
+      calibre
       gimp #gimp-with-plugins
       slack
       element-desktop
@@ -58,6 +62,7 @@ in {
       #(builtins.storePath /nix/store/8i227iqjsaq7g4ddbrav6jn6w2lbxs9l-mozart2-2.0.0-beta.1)
       zim
       skype
+      zoom-us
       texmaker
       #typora # error: Newer versions of typora use anti-user encryption and refuse to start.
       inkscape
@@ -79,9 +84,11 @@ in {
 
       # }}}
       # {{{ Desktop environment
-      gnome.gnome_themes_standard        # For firefox and thunderbird theming.
+      gnome.gnome_themes_standard # For firefox and thunderbird theming.
       gnome.evince
       gnome.eog
+      gnome.nautilus
+      gnome.file-roller
       pavucontrol
       keychain
       xclip
@@ -97,6 +104,26 @@ in {
       gtkspell3
       gitg
       wget
+      networkmanagerapplet
+
+      (
+        assert builtins.compareVersions citrix_workspace.version "21.11.0.10" <= 0;
+        citrix_workspace.overrideAttrs (oldAttrs: rec {
+          version = "21.11.0.10";
+          #name = "$citrix_workspace-${version}";
+          buildInputs = oldAttrs.buildInputs or [ ] ++ [
+            (runCommand "libunwind-faked" { } ''
+              mkdir -p $out/lib
+              ln -s ${libunwind}/lib/libunwind.so $out/lib/libunwind.so.1
+            '')
+            glib-networking
+          ];
+          src = fetchurl {
+            url = "https://downloads.citrix.com/20098/linuxx64-21.11.0.20.tar.gz";
+            sha256 = "1595pm5nhw7bjrns7q75ibd1b2kb0w28v699y1gcy7i8p8a5pwqy";
+          };
+        })
+      )
 
 
       # support both 32- and 64-bit applications
@@ -123,31 +150,41 @@ in {
       #(mercurialFull.overrideAttrs (oldAttrs: {
       #  propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or []) ++ [ pythonPackages.simplejson ]; # for mozilla pushtree
       #}))
-      subversion            # VCS
+      subversion # VCS
       gitAndTools.hub
       gitAndTools.gh
-      ack tree ripgrep fd
+      ack
+      tree
+      ripgrep
+      fd
       ctags
       file
-      zip unzip
+      zip
+      unzip
       jshon
+      fzf
       lynx
-      screen tmux
-      ghostscript     # Why is this needed ? conflicts with texlive.
-                      # => Maybe for converting pdf to text.
-      diffutils colordiff wdiff
+      screen
+      ghostscript # Why is this needed ? conflicts with texlive.
+      # => Maybe for converting pdf to text.
+      diffutils
+      colordiff
+      wdiff
       graphviz
       #nixUnstable
       niv
       ffmpeg
       # fails - diffoscope
       pdfgrep
-      rsync borgbackup
+      rsync
+      borgbackup
       direnv
       bat
       hyperfine
-      jq yq
+      jq
+      yq
       tmux
+      tmate
       nixpkgs-fmt
 
 
@@ -158,9 +195,9 @@ in {
       #eid-viewer # does not exist anymore ?
       parallel
       pv
-      psmisc                              # contains `killall`
-      dnsutils                            # contains `dig`
-      vcsh                                # To manage dotfiles
+      psmisc # contains `killall`
+      dnsutils # contains `dig`
+      vcsh # To manage dotfiles
       #tup
       gnuplot
       gawk
@@ -173,6 +210,7 @@ in {
       #(lib.lowPrio remake)
       (lib.lowPrio moreutils)
       pandoc
+      woof # file transfer with trivial http server
       #(lib.lowPrio (                      # conflicts wit ghostscript
       #  texlive.combine { 
       #    inherit (texlive) scheme-full;
@@ -182,7 +220,8 @@ in {
       #))
       qtikz
       biber
-      patchelf binutils
+      patchelf
+      binutils
       gdb
       #mypkgs.EMV-CAP
       #readlinks
@@ -190,10 +229,13 @@ in {
       meld
       sqlite-interactive
       inotify-tools
+      jotta-cli
 
       # }}}
       # {{{ Admin
-      xorg.xrandr arandr autorandr        # display management
+      xorg.xrandr
+      arandr
+      autorandr # display management
       xorg.xev
       wev
       htop
@@ -209,7 +251,7 @@ in {
       # }}}
       # {{{ Courses
       #dafny
-      #vscode mono # mono explicitly required by VSCode to run dafny
+      #vscode # mono # mono explicitly required by VSCode to run dafny
       bazel
       #(if true then (lib.hiPrio gcc6) else gcc)
       #jre
