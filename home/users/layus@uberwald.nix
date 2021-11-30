@@ -1,8 +1,32 @@
+{ config, pkgs, lib, ... }:
+
 {
-  configuration = import ../home.nix;
-  system = "x86_64-linux";
-  username = "layus";
-  homeDirectory = "/home/layus";
-  stateVersion = "21.11";
+  home.username = "layus";
+  home.homeDirectory = "/home/layus";
+  home.stateVersion = "21.11";
+
+  custom.graphical = true;
+
+  programs.git = {
+    userName = "Guillaume Maudoux";
+    userEmail = "guillaume.maudoux@tweag.io";
+  };
+
+  systemd.user.services = {
+    jottacloud-daemon = {
+      Unit = {
+        Description = "Jottacloud sync daemon";
+      };
+      Service = {
+        ExecStart = "${pkgs.jotta-cli}/bin/jottad stdoutlog datadir .config/jottad";
+        RestartSec = 300;
+        Restart = "always";
+      };
+      Install = {
+        WantedBy = [ "default.target" ];
+      };
+    };
+  };
 }
+
 
