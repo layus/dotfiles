@@ -199,7 +199,7 @@ if [ -z "$SSH_AUTH_SOCK" ]; then
     ## Eval keychain
     eval $(
       setopt nullglob
-      keychain --eval --agents ssh -Q --quiet $HOME/.ssh/{id_ecdsa,dark-vador_rsa}
+      keychain --eval --systemd --agents ssh -Q --quiet $HOME/.ssh/{id_ecdsa,dark-vador_rsa}
     )
 fi
 

@@ -25,6 +25,7 @@
     userName = "Guillaume Maudoux";
     userEmail = "guillaume.maudoux@tweag.io";
     includes = [ { path = ./gitconfig.inc; } ];
+    lfs.enable = true;
   };
 
   wayland.windowManager.sway.enable = true;
@@ -76,6 +77,7 @@
 
   programs.dircolors.enable = true;
   programs.keychain.enable = true;
+  programs.keychain.extraFlags = [ "--systemd" ];
   programs.zsh.enable = true;
   home.file.".zshrc".source = ./dotfiles/zshrc;
 
@@ -186,5 +188,34 @@
   programs.obs-studio = {
     enable = true;
     plugins = [ pkgs.obs-studio-plugins.wlrobs ];
+  };
+
+  programs.vscode = {
+    enable = true;
+    #package = pkgs.vscodium;
+    extensions = with pkgs.vscode-extensions; [
+      # Some example extensions...
+      vscodevim.vim
+      yzhang.markdown-all-in-one
+      jnoortheen.nix-ide
+      brettm12345.nixfmt-vscode
+      ms-vsliveshare.vsliveshare
+    ];
+  };
+
+  systemd.user.services = {
+    jottacloud-daemon = {
+      Unit = {
+        Description = "Jottacloud sync daemon";
+      };
+      Service = {
+        ExecStart = "${pkgs.jotta-cli}/bin/jottad stdoutlog datadir .config/jottad";
+        RestartSec = 300;
+        Restart = "always";
+      };
+      Install = {
+        WantedBy = [ "default.target" ];
+      };
+    };
   };
 }
