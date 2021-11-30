@@ -4,6 +4,11 @@
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
+  # Include local / secret module
+  imports = [
+    ../local-home.nix
+  ];
+
   # Home Manager needs a bit of information about you and the
   # paths it should manage.
   home.username = "layus";
@@ -158,7 +163,7 @@
   xdg.configFile."mimeapps.list".source = ./dotfiles/mimeapps.list;
 
   programs.ssh.enable = true;
-  home.file.".ssh/config".source = ./dotfiles/ssh/config;
+  home.file.".ssh/config".text = lib.mkOrder (/* lib.defaultOrder - 1 = */ 999) (builtins.readFile ./dotfiles/ssh/config);
   home.file.".ssh/pubkeys" = { source = ./dotfiles/ssh/pubkeys; recursive = true; };
   home.file.".ssh/id_ecdsa.pub".source = ./dotfiles/ssh/pubkeys/uberwald_ecdsa.pub;
 
