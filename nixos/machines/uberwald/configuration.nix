@@ -41,9 +41,9 @@ in
   nix = {
     package = pkgs.nixUnstable;
     extraOptions = ''
-      experimental-features = nix-command flakes ca-derivations
-      substituters = https://cache.ngi0.nixos.org/
-      trusted-public-keys = cache.ngi0.nixos.org-1:KqH5CBLNSyX184S9BKZJo1LxrxJ9ltnY2uAs5c/f1MA=
+      extra-experimental-features = nix-command flakes ca-derivations
+      extra-substituters = https://cache.ngi0.nixos.org/
+      extra-trusted-public-keys = cache.ngi0.nixos.org-1:KqH5CBLNSyX184S9BKZJo1LxrxJ9ltnY2uAs5c/f1MA=
     '';
   };
 
