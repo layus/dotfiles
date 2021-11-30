@@ -20,6 +20,23 @@
         "type": "github"
       }
     },
+    "localConfig": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 0,
+        "narHash": "sha256-Ip4LBCxHrYI17b6jvunzMyaTLyHVZJiNeeKAUqenSQE=",
+        "type": "git",
+        "url": "file:///home/layus/.config/nixpkgs/local"
+      },
+      "original": {
+        "type": "git",
+        "url": "file:///home/layus/.config/nixpkgs/local"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1636267212,
@@ -39,6 +56,7 @@
     "root": {
       "inputs": {
         "homeManager": "homeManager",
+        "localConfig": "localConfig",
         "nixpkgs": "nixpkgs"
       }
     }

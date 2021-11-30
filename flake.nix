@@ -1,10 +1,14 @@
 
 {
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
   inputs.homeManager.url = "github:nix-community/home-manager";
   inputs.homeManager.inputs.nixpkgs.follows = "nixpkgs";
 
-  outputs = { self, homeManager, nixpkgs }@args: {
+  inputs.localConfig.url = "/home/layus/.config/nixpkgs/local";
+  inputs.localConfig.inputs.nixpkgs.follows = "nixpkgs";
+
+  outputs = { self, homeManager, nixpkgs, localConfig }@args: {
     nixosConfigurations =
       nixpkgs.lib.attrsets.mapAttrs
         (machine: _: import ./nixos args machine)
