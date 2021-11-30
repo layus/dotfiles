@@ -52,7 +52,7 @@ let
   # They need to be named like the wrapped executable to make the pkill trick in execAlwaysScript work.
   swaylockScript = writeShellScriptBin "swaylock" ''
     # Make it look like i3lock
-    exec ${swaylock}/bin/swaylock --ignore-empty-password --daemonize --image ${lockimage} --tiling --indicator-radius 100
+    exec ${swaylock}/bin/swaylock --ignore-empty-password --daemonize --image ${lockimage} --scaling=fill --indicator-radius 100
   '';
 
   swayidleScript = writeShellScriptBin "swayidle" ''
@@ -114,7 +114,7 @@ let
 
       ${scratchOnce} "$filter" | { read; exec "$@"; } &
     }
-    
+
     # default is 5700:3500
     exec ${gammastep}/bin/gammastep -l 50.6:4.32 -t 5700:4500
     execAndScratch Slack        ${slack}/bin/slack
@@ -150,7 +150,7 @@ let
     # It is a bit redundant to call swaymsg here, but it ensures that the app starts in background.
     function exec_always () {
       local bin=$1; shift
-    
+
       echo "Running $bin"
       pkill "$(basename "$bin")"
       swaymsg -- exec_always "$bin" "$@"
@@ -189,8 +189,8 @@ default_floating_border normal 1
 #font -ibm-courier-medium-r-normal-*-*-120-100-100-m-0-iso10646-1
 
 # Use "Pause" as locking action
-bindsym Pause           exec ${swaylockScript}/bin/swaylock
-bindsym XF86Sleep       exec ${swaylockScript}/bin/swaylock
+bindsym Pause           exec "${swaylockScript}/bin/swaylock"
+bindsym XF86Sleep       exec "${swaylockScript}/bin/swaylock"
 bindsym Shift+Pause     exec "${swaylockScript}/bin/swaylock; exec ${systemd}/bin/systemctl hibernate"
 bindsym Shift+XF86Sleep exec "${swaylockScript}/bin/swaylock; exec ${systemd}/bin/systemctl hibernate"
 bindsym $mod+w          exec $HOME/bin/nm_toggle
@@ -271,7 +271,10 @@ bindsym $mod+Return exec ${termite}/bin/termite
 bindsym $mod+Shift+C kill
 
 # start dmenu (a program launcher)
-bindsym $mod+p exec "pkill dmenu; exec ${dmenu}/bin/dmenu_run -f -i"
+#bindsym $mod+p exec "pkill dmenu; exec ${dmenu}/bin/dmenu_run -f -i"
+bindsym $mod+p exec termite --name=launcher -e "bash -c 'compgen -c | sort -u | fzf --no-extended --print-query | tail -n1 | xargs -r swaymsg -t command exec'"
+for_window [app_id="^launcher$"] floating enable, border pixel 5
+
 
 # change focus
 bindsym $mod+h focus left
