@@ -28,7 +28,7 @@
     fsType = "vfat";
   };
 
-  swapDevices = [ ];
+  swapDevices = [ { device = "/swapfile"; } ];
 
   powerManagement.cpuFreqGovernor = lib.mkDefault "powersave";
   hardware.video.hidpi.enable = lib.mkDefault true;
