@@ -1,4 +1,3 @@
-
 {
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
@@ -8,7 +7,11 @@
   inputs.localConfig.url = "/home/layus/.config/nixpkgs/local";
   inputs.localConfig.inputs.nixpkgs.follows = "nixpkgs";
 
-  outputs = { self, homeManager, nixpkgs, localConfig }@args: {
+  #inputs.dwarffs.url = "github:edolstra/dwarffs";
+  #inputs.dwarffs.inputs.nixpkgs.follows = "nixpkgs";
+  #inputs.dwarffs.inputs.nix.inputs.nixpkgs.follows = "nixpkgs";
+
+  outputs = { self, homeManager, nixpkgs, localConfig, ... }@args: {
     nixosConfigurations =
       nixpkgs.lib.attrsets.mapAttrs
         (machine: _: import ./nixos args machine)

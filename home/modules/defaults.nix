@@ -35,17 +35,18 @@
 
       programs.direnv.enable = true;
       programs.direnv.nix-direnv.enable = true;
-      programs.direnv.nix-direnv.enableFlakes = true;
 
       programs.dircolors.enable = true;
       programs.keychain.enable = true;
       programs.keychain.extraFlags = [ "--systemd" ];
+      programs.fish.enable = true;
       programs.zsh.enable = true;
       home.file.".zshrc".source = ../dotfiles/zshrc;
 
       programs.neovim.enable = true;
       programs.neovim.extraConfig = builtins.readFile ../dotfiles/vimrc;
       programs.neovim.plugins = with pkgs.vimPlugins; [
+        ale
         vim-easymotion
         #switch.vim
         supertab
@@ -86,12 +87,13 @@
         nvim-yarp
         #vim-hug-neovim-rpc
         #neocomplcache
-        neco-ghc
+        #neco-ghc -- needs more of ghc installed
         editorconfig-vim
         syntastic
         #vim-latex
         rust-vim #rust.vim
         vim-racer
+        fzf-vim
       ];
 
       home.file.".bash_aliases".source = ../dotfiles/bash_aliases;
@@ -154,14 +156,14 @@
             '';
           });
           # TODO: do not use pinned versions without version checks !
-          sway = super.sway.overrideAttrs (_: {
-            src = self.fetchFromGitHub {
-              owner = "swaywm";
-              repo = "sway";
-              rev = "master";
-              hash = "sha256-0gZP2Pe2LsMzScKKRL/q98ERJQuqxa1Swwi9DY/KCvg=";
-            };
-          });
+          #sway = super.sway.overrideAttrs (_: {
+          #  src = self.fetchFromGitHub {
+          #    owner = "swaywm";
+          #    repo = "sway";
+          #    rev = "master";
+          #    hash = "sha256-0gZP2Pe2LsMzScKKRL/q98ERJQuqxa1Swwi9DY/KCvg=";
+          #  };
+          #});
         })
       ];
 
@@ -192,18 +194,20 @@
         plugins = [ pkgs.obs-studio-plugins.wlrobs ];
       };
 
-      programs.vscode = {
-        enable = true;
-        #package = pkgs.vscodium;
-        extensions = with pkgs.vscode-extensions; [
-          # Some example extensions...
-          vscodevim.vim
-          yzhang.markdown-all-in-one
-          jnoortheen.nix-ide
-          brettm12345.nixfmt-vscode
-          ms-vsliveshare.vsliveshare
-        ];
-      };
+      #programs.vscode = {
+      #  enable = true;
+      #  package = {pname = "vscodium"; } // pkgs.vscode-with-extensions.override {
+      #    vscode = pkgs.vscodium;
+      #    vscodeExtensions = with pkgs.vscode-extensions; [
+      #      # Some example extensions...
+      #      vscodevim.vim
+      #      yzhang.markdown-all-in-one
+      #      jnoortheen.nix-ide
+      #      brettm12345.nixfmt-vscode
+      #      ms-vsliveshare.vsliveshare
+      #    ];
+      #  };
+      #};
 
     })
   ];

@@ -266,6 +266,7 @@ mouse_warping none
 # start a terminal
 #bindsym $mod+Return exec i3-sensible-terminal
 bindsym $mod+Return exec ${termite}/bin/termite
+bindsym $mod+o exec ${termite}/bin/termite -e "bash -c 'vim $(fd . $HOME --hidden | fzf)'"
 
 # kill focused window
 bindsym $mod+Shift+C kill
@@ -342,6 +343,19 @@ bindcode $mod+17 workspace 8
 bindcode $mod+18 workspace 9
 bindcode $mod+19 workspace 10
 
+#bindcode $mod+F? workspace "0'"
+bindsym $mod+F1 workspace "1'"
+bindsym $mod+F2 workspace "2'"
+bindsym $mod+F3 workspace "3'"
+bindsym $mod+F4 workspace "4'"
+bindsym $mod+F5 workspace "5'"
+bindsym $mod+F6 workspace "6'"
+bindsym $mod+F7 workspace "7'"
+bindsym $mod+F8 workspace "8'"
+bindsym $mod+F9 workspace "9'"
+bindsym $mod+F10 workspace "10'"
+
+
 # Move to Workspaces
 bindsym  $mod+Shift+twosuperior move workspace 0
 bindcode $mod+Shift+10 move workspace 1
@@ -354,6 +368,19 @@ bindcode $mod+Shift+16 move workspace 7
 bindcode $mod+Shift+17 move workspace 8
 bindcode $mod+Shift+18 move workspace 9
 bindcode $mod+Shift+19 move workspace 10
+
+#bindcode $mod+Shift+F? workspace "0'"
+bindsym $mod+Shift+F1 move workspace "1'"
+bindsym $mod+Shift+F2 move workspace "2'"
+bindsym $mod+Shift+F3 move workspace "3'"
+bindsym $mod+Shift+F4 move workspace "4'"
+bindsym $mod+Shift+F5 move workspace "5'"
+bindsym $mod+Shift+F6 move workspace "6'"
+bindsym $mod+Shift+F7 move workspace "7'"
+bindsym $mod+Shift+F8 move workspace "8'"
+bindsym $mod+Shift+F9 move workspace "9'"
+bindsym $mod+Shift+F10 move workspace "10'"
+
 
 # reload the configuration file
 #bindsym $mod+Shift+W reload
@@ -439,6 +466,7 @@ bindsym $mod+r mode "resize"
 
 #set $HP "Hewlett Packard LA2405 CZ40022966"
 set $dell "Dell Inc. DELL U2415 7MT0196H25AS"
+set $eizo "Eizo Nanao Corporation EV2480 43440041"
 set $main eDP-1
 
 #bar {
@@ -489,17 +517,29 @@ input "1386:884:Wacom_Intuos_S_Pen" {
 # HiDPi screen needs bigger cursor :-).
 seat * xcursor_theme Adwaita 24
 
-workspace  0 output       $main
-workspace  1 output $dell $main
-workspace  2 output $dell $main
-workspace  3 output $dell $main
-workspace  4 output $dell $main
-workspace  5 output $dell $main
-workspace  6 output $dell $main
-workspace  7 output $dell $main
-workspace  8 output $dell $main
-workspace  9 output $dell $main
-workspace 10 output $dell $main
+workspace  0 output $main
+workspace  1 output $main
+workspace  2 output $main
+workspace  3 output $main
+workspace  4 output $main
+workspace  5 output $main
+workspace  6 output $main
+workspace  7 output $main
+workspace  8 output $main
+workspace  9 output $main
+workspace 10 output $main
+
+workspace  "0'" output $eizo
+workspace  "1'" output $eizo
+workspace  "2'" output $eizo
+workspace  "3'" output $eizo
+workspace  "4'" output $eizo
+workspace  "5'" output $eizo
+workspace  "6'" output $eizo
+workspace  "7'" output $eizo
+workspace  "8'" output $eizo
+workspace  "9'" output $eizo
+workspace "10'" output $eizo
 '';
 
 in writeTextFile {

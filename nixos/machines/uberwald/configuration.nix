@@ -89,6 +89,7 @@ in
   # sound.enable = true;
   # hardware.pulseaudio.enable = true;
 
+  programs.fish.enable = true;
   programs.zsh.enable = true;
   users.defaultUserShell = "/var/run/current-system/sw/bin/zsh";
 

@@ -119,6 +119,7 @@
         gnome.eog
         gnome.nautilus
         gnome.file-roller
+        gnome.gedit
         pavucontrol
         keychain
         xclip
@@ -140,8 +141,7 @@
 
         # support both 32- and 64-bit applications
         wineWowPackages.stable
-        # winetricks and other programs depending on wine need to use the same wine version
-        (winetricks.override { wine = wineWowPackages.stable; })
+        winetricks
 
         kanshi
 
@@ -199,10 +199,11 @@
       subversion # VCS
       gitAndTools.hub
       gitAndTools.gh
-      ack
       tree
       ripgrep
       fd
+      fzf
+      exa
       ctags
       file
       zip
@@ -283,6 +284,19 @@
       # {{{ Courses
       #dafny
       #vscode # mono # mono explicitly required by VSCode to run dafny
+
+      (pkgs.vscode-with-extensions.override {
+          #vscode = pkgs.vscodium;
+          vscodeExtensions = with pkgs.vscode-extensions; [
+            # Some example extensions...
+            vscodevim.vim
+            yzhang.markdown-all-in-one
+            jnoortheen.nix-ide
+            brettm12345.nixfmt-vscode
+            ms-vsliveshare.vsliveshare
+          ];
+        }
+      )
       bazel
       #(if true then (lib.hiPrio gcc6) else gcc)
       #jre

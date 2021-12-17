@@ -180,7 +180,8 @@ augroup END
 "" 
 "" " ----- w0rp/ale -----
 "" 
-"" "let g:ale_linters.haskell = ['stack-ghc-mod', 'hlint']
+"let g:ale_linters.haskell = ['stack-ghc-mod', 'hlint']
+"let g:ale_linters.python = ['add_blank_lines_for_python_control_statements', 'autopep8', 'reorder-python-imports']
 "" 
 "" " ----- parsonsmatt/intero-neovim -----
 "" 
