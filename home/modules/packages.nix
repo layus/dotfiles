@@ -273,6 +273,7 @@
       sqlite-interactive
       inotify-tools
       jotta-cli
+      rnix-hashes
 
       # }}}
       # {{{ Admin
