@@ -180,7 +180,7 @@ autoload -U add-zsh-hook
 # rehash on SIGUSR1
 TRAPUSR1() { rehash };
 # anything newly intalled from last command?
-precmd_install() { [[ $history[$[ HISTCMD -1 ]] == *(yaourt|pacman|pip|gem|nix-env|nixos-rebuild)* ]] && killall -USR1 zsh || true }
+precmd_install() { [[ $history[$[ HISTCMD -1 ]] == *(yaourt|pacman|pip|gem|nix-env|nixos-rebuild|home-manager)* ]] && killall -USR1 zsh || true }
 # do this on precmd
 add-zsh-hook precmd precmd_install
 
