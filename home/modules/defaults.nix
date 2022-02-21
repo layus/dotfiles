@@ -45,6 +45,15 @@
 
       programs.neovim.enable = true;
       programs.neovim.extraConfig = builtins.readFile ../dotfiles/vimrc;
+      programs.neovim.withPython3 = true;
+      programs.neovim.extraPackages = [
+        pkgs.nodejs
+        (pkgs.python3.withPackages (ps: with ps; [
+          pep8
+          black
+        ]))
+
+      ];
       programs.neovim.plugins = with pkgs.vimPlugins; [
         ale
         vim-easymotion
@@ -84,6 +93,7 @@
         vim-SyntaxRange
         vim-endwise
         deoplete-nvim
+        nvim-lspconfig
         nvim-yarp
         #vim-hug-neovim-rpc
         #neocomplcache

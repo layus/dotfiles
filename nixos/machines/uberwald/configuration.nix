@@ -9,6 +9,7 @@ let
   cfg = config.custom;
 in
 {
+
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -18,6 +19,7 @@ in
     ../../common/bluetooth.nix
     ../../common/ssh.nix
     ../../common/epson.nix
+    ./fail.nix
   ];
 
   security.pam.loginLimits = [
@@ -115,6 +117,13 @@ in
     };
   };
 
+  users.users.demo = {
+    isNormalUser = true;
+    extraGroups = [
+      "wheel" "networkmanager" "input" "video"
+    ];
+  };
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
@@ -172,5 +181,8 @@ in
   # services.thinkfan.enable = true; not really needed. Same as defaults.
 
   virtualisation.docker.enable = true;
+
+  virtualisation.virtualbox.host.enable = true;
+  virtualisation.virtualbox.guest.enable = true;
 }
 

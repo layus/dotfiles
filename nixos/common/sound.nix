@@ -30,11 +30,12 @@
         matches = [{ "device.name" = "~bluez_card.*"; }];
         actions = {
           "update-props" = {
-            "bluez5.auto-connect" = [ "hfp_hf" "hsp_hs" "a2dp_sink" ];
+             "bluez5.auto-connect" = [ "hfp_hf" "hsp_hs" "a2dp_sink" ];
              # mSBC is not expected to work on all headset + adapter combinations.
              "bluez5.msbc-support" = true;
              # SBC-XQ is not expected to work on all headset + adapter combinations.
              "bluez5.sbc-xq-support" = true;
+             "bluez5.autoswitch-profile" = true;
           };
         };
       }

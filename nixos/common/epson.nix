@@ -18,6 +18,9 @@
 
   hardware.sane = {
     enable = true;
-    extraBackends = [ pkgs.epson-escpr pkgs.utsushi ];
+    extraBackends = [
+      pkgs.epson-escpr
+      # pkgs.utsushi # broken for now, an possibly not needed.
+    ];
   };
 }

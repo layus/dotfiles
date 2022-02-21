@@ -31,24 +31,23 @@
       #   '';
       # });
 
-      citrix_workspace_custom = (
-        assert builtins.compareVersions super.citrix_workspace.version "21.11.0.10" <= 0;
-        super.citrix_workspace.overrideAttrs (oldAttrs: rec {
-          version = "21.11.0.10";
-          #name = "$citrix_workspace-${version}";
-          buildInputs = oldAttrs.buildInputs or [ ] ++ [
-            (super.runCommand "libunwind-faked" { } ''
-              mkdir -p $out/lib
-              ln -s ${self.libunwind}/lib/libunwind.so $out/lib/libunwind.so.1
-            '')
-            self.glib-networking
-          ];
-          src = super.fetchurl {
-            url = "https://downloads.citrix.com/20098/linuxx64-21.11.0.20.tar.gz";
-            sha256 = "1595pm5nhw7bjrns7q75ibd1b2kb0w28v699y1gcy7i8p8a5pwqy";
+      slurp = assert builtins.compareVersions "1.3.2" super.slurp.version <= 0;
+        super.slurp.overrideAttrs (oldAttrs: {
+          #patches = oldAttrs.patches or [] ++ [(
+          #  super.fetchpatch {
+          #    url = "https://patch-diff.githubusercontent.com/raw/emersion/slurp/pull/77.patch";
+          #    sha256 = "sha256-tXB9SbYucXFxVpwlh2G+GC/f7Ihebhe00Oqfd0F89H4=";
+          #  }
+          #)];
+          src = super.fetchFromGitHub {
+            #owner = "emersion";
+            owner = "wisp3rwind";
+            repo = "slurp";
+            rev = "fixed_aspect_ratio";
+#            hash = "sha256-4/J9YHDf7V9YzT2CrvHy8WlLZpuGixFEcUo9mW4h7Nc=";
+            hash = "sha256-3OVHZl0NhzOlbiGR6k5NnBhWBDDTj94ccZg99ZsGIV0=";
           };
-        })
-      );
+        });
 
     })
   ];
@@ -114,7 +113,7 @@
 
         # }}}
         # {{{ Desktop environment
-        gnome.gnome_themes_standard # For firefox and thunderbird theming.
+        gnome.gnome-themes-extra # For firefox and thunderbird theming.
         gnome.evince
         gnome.eog
         gnome.nautilus
@@ -137,7 +136,7 @@
         wget
         networkmanagerapplet
 
-        citrix_workspace_custom
+        citrix_workspace
 
         # support both 32- and 64-bit applications
         wineWowPackages.stable
@@ -164,6 +163,9 @@
         gnome3.zenity
         qtikz
         gnome3.gnome-settings-daemon
+
+        slurp
+        grim
 
         # }}}
 

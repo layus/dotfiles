@@ -14,6 +14,7 @@
 , kanshi
 , lockimage
 , networkmanagerapplet
+, pasystray
 , pulseaudio
 , skype
 , slack
@@ -148,6 +149,7 @@ let
 
     # These apps are restarted on each sway startup
     # It is a bit redundant to call swaymsg here, but it ensures that the app starts in background.
+    # Does it ? This script already starts in background itself...
     function exec_always () {
       local bin=$1; shift
 
@@ -155,12 +157,14 @@ let
       pkill "$(basename "$bin")"
       swaymsg -- exec_always "$bin" "$@"
     }
+
     # These services have little state, we can restart them to get the most recent version.
     exec_always ${networkmanagerapplet}/bin/nm-applet --indicator
     exec_always ${udiskie}/bin/udiskie --tray --appindicator -A
     exec_always ${waybar}/bin/waybar
     exec_always ${swayidleScript}/bin/swayidle
     exec_always ${blueman}/bin/blueman-applet
+    exec_always ${pasystray}/bin/pasystray
 
     # kanshi needs restart to override outputs reset changes made by sway reload
     exec_always ${kanshi}/bin/kanshi
