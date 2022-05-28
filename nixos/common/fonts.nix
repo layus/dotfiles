@@ -14,7 +14,7 @@
       anonymousPro
       arkpandora_ttf
       caladea
-      cantarell_fonts
+      cantarell-fonts
       carlito
       clearlyU
       comfortaa
@@ -26,13 +26,13 @@
       google-fonts
       inconsolata # monospaced
       liberation_ttf
-      liberationsansnarrow
+      liberation-sans-narrow
       libertine
       libertinus
       mononoki
       montserrat
       norwester-font
-      opensans-ttf
+      open-sans
       pecita
       powerline-fonts
       roboto
@@ -49,7 +49,7 @@
       #vistafonts
       noto-fonts
       font-awesome
-      mplus-outline-fonts
+      mplus-outline-fonts.osdnRelease # Switch to githubRelease later when font is fixed
       #nerdfonts
       #(nerdfonts.override { fonts = [ "Vollkorn" "FiraCode" "DroidSansMono" ]; })
     ];

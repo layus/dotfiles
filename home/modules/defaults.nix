@@ -43,6 +43,7 @@
       programs.zsh.enable = true;
       home.file.".zshrc".source = ../dotfiles/zshrc;
 
+      home.sessionVariables.EDITOR = "nvim";
       programs.neovim.enable = true;
       programs.neovim.extraConfig = builtins.readFile ../dotfiles/vimrc;
       programs.neovim.withPython3 = true;
@@ -162,7 +163,7 @@
           zim = super.zim.overrideAttrs (oldAttrs: {
             propagatedBuildInputs = oldAttrs.propagatedBuildInputs or [ ] ++ [ self.python3Packages.Babel ];
             preFixup = oldAttrs.preFixup or "" + ''
-              export makeWrapperArgs+=" --set LC_ALL=fr_BE.UTF-8"
+              export makeWrapperArgs+=" --set LC_ALL fr_BE.UTF-8"
             '';
           });
           # TODO: do not use pinned versions without version checks !

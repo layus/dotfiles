@@ -20,6 +20,17 @@
         };
       });
 
+      factorio = super.factorio.overrideAttrs (oldAttrs: rec {
+        version = "1.1.57";
+        pname = "factorio";
+        name = "${pname}-${version}";
+
+        src = self.requireFile {
+          url = "factorio_alpha_x64-1.1.57.tar.xz";
+          sha256 = "0sazpljdkknv74dqhrv5gxi7s50bfccynqk7xhsr4awl2gdkys0v";
+        };
+      });
+
       # teams = super.teams.overrideAttrs (oldAttrs: {
       #   installPhase = ''
       #     runHook preInstall
@@ -45,7 +56,8 @@
             repo = "slurp";
             rev = "fixed_aspect_ratio";
 #            hash = "sha256-4/J9YHDf7V9YzT2CrvHy8WlLZpuGixFEcUo9mW4h7Nc=";
-            hash = "sha256-3OVHZl0NhzOlbiGR6k5NnBhWBDDTj94ccZg99ZsGIV0=";
+#            hash = "sha256-3OVHZl0NhzOlbiGR6k5NnBhWBDDTj94ccZg99ZsGIV0=";
+            hash = "sha256-9x+6nb+QnBsbndX9GpJYvi1czRkZ9qArLgs4a3gzHhQ=";
           };
         });
 
@@ -89,10 +101,10 @@
         gimp #gimp-with-plugins
         slack
         element-desktop
-        mozart2
+        #mozart2 # build fails ?!
         #(builtins.storePath /nix/store/8i227iqjsaq7g4ddbrav6jn6w2lbxs9l-mozart2-2.0.0-beta.1)
         zim
-        skype
+        skypeforlinux
         zoom-us
         texmaker
         #typora # error: Newer versions of typora use anti-user encryption and refuse to start.
@@ -102,11 +114,12 @@
         vlc
         guvcview
         krita
+        #factorio
 
         wireshark-qt
 
-        idea.idea-community
-        idea.pycharm-community
+        jetbrains.idea-community
+        jetbrains.pycharm-community
 
         #virtualbox
         zotero
@@ -240,7 +253,7 @@
       # }}}
       # {{{ Misc
       #((rustChannelOf { channel = "nightly"; date = "2019-02-04"; }).rust.override { extensions = [ "clippy-preview" "rust-src" ]; })
-      manpages
+      man-pages
       #eid-viewer # does not exist anymore ?
       parallel
       pv
@@ -288,19 +301,20 @@
       #dafny
       #vscode # mono # mono explicitly required by VSCode to run dafny
 
-      (pkgs.vscode-with-extensions.override {
-          #vscode = pkgs.vscodium;
-          vscodeExtensions = with pkgs.vscode-extensions; [
-            # Some example extensions...
-            vscodevim.vim
-            yzhang.markdown-all-in-one
-            jnoortheen.nix-ide
-            brettm12345.nixfmt-vscode
-            ms-vsliveshare.vsliveshare
-          ];
-        }
-      )
-      bazel
+      #(pkgs.vscode-with-extensions.override {
+      #    #vscode = pkgs.vscodium;
+      #    vscodeExtensions = with pkgs.vscode-extensions; [
+      #      # Some example extensions...
+      #      vscodevim.vim
+      #      yzhang.markdown-all-in-one
+      #      jnoortheen.nix-ide
+      #      brettm12345.nixfmt-vscode
+      #      ms-vsliveshare.vsliveshare
+      #    ];
+      #  }
+      #)
+      vscode
+      bazel_5
       #(if true then (lib.hiPrio gcc6) else gcc)
       #jre
       jdk

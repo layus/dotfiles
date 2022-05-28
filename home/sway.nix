@@ -16,7 +16,7 @@
 , networkmanagerapplet
 , pasystray
 , pulseaudio
-, skype
+, skypeforlinux
 , slack
 , slurp
 , sway
@@ -124,7 +124,7 @@ let
     execAndScratch "Microsoft Teams - Preview" ${teams}/bin/teams
 
     #exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
-    #swaymsg exec ${skype}/bin/skypeforlinux
+    #swaymsg exec ${skypeforlinux}/bin/skypeforlinux
     #exec dropboxd
     #exec transmission-gtk -m
 

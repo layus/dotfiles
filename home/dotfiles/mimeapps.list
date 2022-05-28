@@ -25,7 +25,7 @@ text/plain=org.gnome.gedit.desktop
 
 [Added Associations]
 application/pdf=org.gnome.Evince.desktop;firefox.desktop;gimp.desktop;
-image/svg+xml=eog.desktop;
+image/svg+xml=org.gnome.eog.desktop;eog.desktop;
 application/x-compressed-tar=org.gnome.FileRoller.desktop;
 image/gif=wine-extension-mcf.desktop;eog.desktop;
 image/png=eog.desktop;gimp.desktop;

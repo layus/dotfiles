@@ -145,6 +145,8 @@ in
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
+  services.fwupd.enable = true;
+
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
@@ -183,6 +185,6 @@ in
   virtualisation.docker.enable = true;
 
   virtualisation.virtualbox.host.enable = true;
-  virtualisation.virtualbox.guest.enable = true;
+  # BROKEN: virtualisation.virtualbox.guest.enable = true;
 }
 

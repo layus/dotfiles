@@ -2,7 +2,7 @@
 {
   # needed because bluetooth chipset is not broadcom, and we need at least 5.12
   # latest is 5.13 as of now (aout 2021)
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = lib.mkDefault pkgs.linuxPackages_latest;
 
   # High quality BT calls
   hardware.bluetooth.enable = true;
