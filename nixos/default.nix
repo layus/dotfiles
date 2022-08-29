@@ -1,8 +1,9 @@
-{ nixpkgs, localConfig, ... }:
+{ nixpkgs, localConfig, ... }@args:
 name:
 
 nixpkgs.lib.nixosSystem {
   system = "x86_64-linux";
+  specialArgs = args // { inherit name; };
   modules = [
     (./machines + "/${name}/configuration.nix")
     (localConfig.nixos-overlay or {})
@@ -17,5 +18,4 @@ nixpkgs.lib.nixosSystem {
       nix.registry.nixpkgs.flake = nixpkgs;
     }
   ];
-
 }
