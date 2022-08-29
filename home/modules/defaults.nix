@@ -30,8 +30,10 @@
         lfs.enable = true;
       };
 
-      nixpkgs.config = import ../dotfiles/nixpkgs-config.nix;
-      xdg.configFile."nixpkgs/config.nix".text = builtins.readFile ../dotfiles/nixpkgs-config.nix;
+      nixpkgs.config = (import ../dotfiles/nixpkgs-config.nix) // {
+        allowUnfreePredicate = (pkg: builtins.trace "Using unfree package ${lib.getName pkg}." true);
+      };
+      xdg.configFile."nixpkgs/config.nix".source = ../dotfiles/nixpkgs-config.nix;
 
       programs.direnv.enable = true;
       programs.direnv.nix-direnv.enable = true;

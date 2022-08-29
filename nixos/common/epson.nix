@@ -21,8 +21,8 @@
     extraBackends = [
       pkgs.epson-escpr
       #pkgs.hplip
-      pkgs.brscan4
-      pkgs.brscan5
+      #pkgs.brscan4
+      #pkgs.brscan5
       # pkgs.utsushi # broken for now, an possibly not needed.
     ];
   };

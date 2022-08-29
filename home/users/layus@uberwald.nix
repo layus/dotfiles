@@ -12,21 +12,26 @@
     userEmail = "guillaume.maudoux@tweag.io";
   };
 
-  systemd.user.services = {
-    jottacloud-daemon = {
-      Unit = {
-        Description = "Jottacloud sync daemon";
-      };
-      Service = {
-        ExecStart = "${pkgs.jotta-cli}/bin/jottad stdoutlog datadir .config/jottad";
-        RestartSec = 300;
-        Restart = "always";
-      };
-      Install = {
-        WantedBy = [ "default.target" ];
-      };
-    };
-  };
+  nixpkgs.config.allowUnfree = true;
+  imports = [
+    ../profiles/nvim.nix
+  ];
+
+  #systemd.user.services = {
+  #  jottacloud-daemon = {
+  #    Unit = {
+  #      Description = "Jottacloud sync daemon";
+  #    };
+  #    Service = {
+  #      ExecStart = "${pkgs.jotta-cli}/bin/jottad stdoutlog datadir .config/jottad";
+  #      RestartSec = 300;
+  #      Restart = "always";
+  #    };
+  #    Install = {
+  #      WantedBy = [ "default.target" ];
+  #    };
+  #  };
+  #};
 }
 
 

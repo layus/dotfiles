@@ -22,6 +22,7 @@ application/xhtml+xml=firefox.desktop
 application/x-extension-xhtml=firefox.desktop
 application/x-extension-xht=firefox.desktop
 text/plain=org.gnome.gedit.desktop
+image/jpeg=org.gnome.eog.desktop
 
 [Added Associations]
 application/pdf=org.gnome.Evince.desktop;firefox.desktop;gimp.desktop;
@@ -34,7 +35,7 @@ text/plain=org.gnome.gedit.desktop;nvim.desktop;gvim.desktop;code-url-handler.de
 application/gzip=org.gnome.FileRoller.desktop;
 application/x-ruby=gvim.desktop;
 application/download=gvim.desktop;
-image/jpeg=eog.desktop;
+image/jpeg=eog.desktop;org.gnome.eog.desktop;
 text/vcard=gvim.desktop;
 application/gpx+xml=gpx-viewer.desktop;
 text/x-makefile=org.gnome.gedit.desktop;gvim.desktop;

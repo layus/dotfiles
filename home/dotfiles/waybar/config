@@ -133,7 +133,7 @@
     },
     "network": {
         "interval": 1,
-        //"interface": "eno1", // (Optional) To force the use of this interface
+        "interface": "wlp0s20f3",
         "format-ethernet": "<span font=\"Font Awesome 6 Free\"></span> {bandwidthDownBits:>9} {bandwidthUpBits:>9}",
         "format-wifi": "<span font=\"Font Awesome 6 Free\"></span> {bandwidthDownBits:>} {bandwidthUpBits:>} {signalStrength:>2}%",
         "format-linked": "",

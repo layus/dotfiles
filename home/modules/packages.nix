@@ -93,6 +93,7 @@
 
         # {{{ Graphical applications
         #firefox /*-bin*/
+        apostrophe
         thunderbird
         chromium
         libreoffice # Not yet cached...
@@ -149,7 +150,7 @@
         wget
         networkmanagerapplet
 
-        citrix_workspace
+        #citrix_workspace
 
         # support both 32- and 64-bit applications
         wineWowPackages.stable
@@ -227,7 +228,7 @@
       fzf
       lynx
       screen
-      ghostscript # Why is this needed ? conflicts with texlive.
+      #ghostscript # Why is this needed ? conflicts with texlive.
       # => Maybe for converting pdf to text.
       diffutils
       colordiff
@@ -270,13 +271,13 @@
       (lib.lowPrio moreutils)
       pandoc
       woof # file transfer with trivial http server
-      #(lib.lowPrio (                      # conflicts wit ghostscript
-      #  texlive.combine { 
-      #    inherit (texlive) scheme-full;
-      #    #inherit (default) auctex;
-      #    pkgFilter = pkg: pkg.tlType == "run" || pkg.tlType == "bin" || pkg.pname == "pgf";
-      #  }
-      #))
+      (lib.lowPrio (                      # conflicts wit ghostscript
+        texlive.combine { 
+          inherit (texlive) scheme-full;
+          #inherit (default) auctex;
+          pkgFilter = pkg: pkg.tlType == "run" || pkg.tlType == "bin" || pkg.pname == "pgf";
+        }
+      ))
       patchelf
       binutils
       gdb
@@ -285,7 +286,7 @@
       #mypkgs.monitormonitors
       sqlite-interactive
       inotify-tools
-      jotta-cli
+      #jotta-cli
       rnix-hashes
 
       # }}}
