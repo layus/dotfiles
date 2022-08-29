@@ -11,6 +11,7 @@
     ./lighttpd.nix
     ./wireguard.nix
     ./ovh-configuration.nix
+    ./hardware-configuration.nix
     #./hardware-configuration.nix
   ];
 
@@ -89,8 +90,10 @@
   ## Nix
 
   system.autoUpgrade.enable = true;
-  system.autoUpgrade.flags = [ "--override-input" "nixpkgs" "github:NixOS/nixpkgs/nixos-21.11" "--impure" ];
+  system.autoUpgrade.flags = [ "--override-input" "nixpkgs" "github:NixOS/nixpkgs/nixos-unstable" "--impure" ];
   system.autoUpgrade.flake = "/home/layus/.config/nixpkgs";
+
+  system.stateVersion = "21.11";
 
   nix.gc = {
     #automatic = true;
@@ -103,7 +106,7 @@
   nix.maxJobs = 4;
   nix.useSandbox = false;
   nix.trustedUsers = [ "root" "@wheel" ];
-  nix.package = pkgs.nix_2_4;
+  nix.package = pkgs.nixVersions.nix_2_8;
   nix.extraOptions = ''
     #extra-experimental-features = nix-command flakes
   '';
@@ -384,12 +387,12 @@
     };
   };
 
-  services.hydra = {
-    enable = true;
-    hydraURL = "hydra.maudoux.be:3000";
-    notificationSender = "hydra@sto-helit.maudoux.be";
-    useSubstitutes = true;
-  };
+  #services.hydra = {
+  #  enable = true;
+  #  hydraURL = "hydra.maudoux.be:3000";
+  #  notificationSender = "hydra@sto-helit.maudoux.be";
+  #  useSubstitutes = true;
+  #};
   nix.buildMachines = [
     { hostName = "localhost";
       system = "x86_64-linux";
