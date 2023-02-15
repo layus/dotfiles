@@ -7,6 +7,8 @@
 
   custom.graphical = true;
 
+  programs.helix.enable = true;
+
   programs.git = {
     userName = "Guillaume Maudoux";
     userEmail = "guillaume.maudoux@tweag.io";

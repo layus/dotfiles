@@ -23,7 +23,7 @@
       crimson
       dejavu_fonts
       gentium
-      google-fonts
+      #google-fonts
       inconsolata # monospaced
       liberation_ttf
       liberation-sans-narrow
@@ -51,7 +51,7 @@
       font-awesome
       mplus-outline-fonts.osdnRelease # Switch to githubRelease later when font is fixed
       #nerdfonts
-      #(nerdfonts.override { fonts = [ "Vollkorn" "FiraCode" "DroidSansMono" ]; })
+      (nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" "Hack"]; })
     ];
     fontconfig = {
       defaultFonts = {

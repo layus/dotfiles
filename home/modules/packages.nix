@@ -4,7 +4,8 @@
   nixpkgs.overlays = [
     (self: super: {
 
-      firefox = super.wrapFirefox super.firefox-unwrapped { forceWayland = true; };
+      # now on by default
+      #firefox = super.wrapFirefox super.firefox-unwrapped { forceWayland = true; };
 
       #thunderbird = super.thunderbird-78;
 
@@ -21,15 +22,19 @@
       });
 
       factorio = super.factorio.overrideAttrs (oldAttrs: rec {
-        version = "1.1.57";
+        version = "1.1.69";
         pname = "factorio";
         name = "${pname}-${version}";
 
         src = self.requireFile {
-          url = "factorio_alpha_x64-1.1.57.tar.xz";
-          sha256 = "0sazpljdkknv74dqhrv5gxi7s50bfccynqk7xhsr4awl2gdkys0v";
+          url = "factorio_alpha_x64-${version}.tar.xz";
+          sha256 = "";
         };
       });
+
+      #wlroots = super.wlroots_0_16.overrideAttrs (oldAttrs: {
+      #  patches = oldAttrs.patches or [] ++ [ ./wlroots-reversed.patch ];
+      #});
 
       # teams = super.teams.overrideAttrs (oldAttrs: {
       #   installPhase = ''
@@ -69,8 +74,8 @@
   #all = super.buildEnv {
   #  # This creates an indirection.
   #  # Nix-env will install this as the only package, creating a layer of symlinks.
-  #  # But, installing this directly as the main derivation prevents to add temporary derivations using nix-env
-  #  # Basically, we want to keep it. Live with it !
+  #  # But installing this directly as the main derivation prevents to add temporary derivations using nix-env
+  #  # Basically we want to keep it. Live with it !
   #  name = "gmaudoux-package-set";
   #  #pathsToLink = ???
   #  extraOutputsToInstall = [ "man" "info" "docdev" ];
@@ -174,9 +179,9 @@
         #xorg.xclock
         meld
         gnuplot
-        gnome3.zenity
+        gnome.zenity
         qtikz
-        gnome3.gnome-settings-daemon
+        gnome.gnome-settings-daemon
 
         slurp
         grim
@@ -264,7 +269,7 @@
       #tup
       gawk
       biber
-      #gnome3.gconf #missinig
+      #gnome.gconf #missinig
       gnumake
       tup
       #(lib.lowPrio remake)

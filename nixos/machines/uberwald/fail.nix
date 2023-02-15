@@ -2,6 +2,13 @@
 { config, lib, pkgs, ... }:
 with lib;
 {
+
+  #options.networking.hostName = mkOption {
+  #  type = types.mkOptionType {
+  #    inherit (types.string) 
+  #  };
+  #};
+
   # that defines extra features for the existing config `environment.etc`
   # environment.etc.'sshd.conf'.source = ....
   options.environment.etc = mkOption {

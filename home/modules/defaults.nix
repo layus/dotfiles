@@ -45,9 +45,20 @@
       programs.zsh.enable = true;
       home.file.".zshrc".source = ../dotfiles/zshrc;
 
+      programs.helix.enable = true;
+      programs.helix.languages = [
+        {
+          name = "haskell";
+          language-server = {
+            command = "haskell-language-server";
+            args = [];
+          };
+        }
+      ];
+
       home.sessionVariables.EDITOR = "nvim";
       programs.neovim.enable = true;
-      programs.neovim.extraConfig = builtins.readFile ../dotfiles/vimrc;
+      #programs.neovim.extraConfig = builtins.readFile ../dotfiles/vimrc;
       programs.neovim.withPython3 = true;
       programs.neovim.extraPackages = [
         pkgs.nodejs
@@ -165,7 +176,7 @@
           zim = super.zim.overrideAttrs (oldAttrs: {
             propagatedBuildInputs = oldAttrs.propagatedBuildInputs or [ ] ++ [ self.python3Packages.Babel ];
             preFixup = oldAttrs.preFixup or "" + ''
-              export makeWrapperArgs+=" --set LC_ALL fr_BE.UTF-8"
+              makeWrapperArgs+=(--set LC_ALL fr_BE.UTF-8)
             '';
           });
           # TODO: do not use pinned versions without version checks !
@@ -191,7 +202,6 @@
           userChrome = builtins.readFile ../dotfiles/userChrome.css;
         };
         package = pkgs.wrapFirefox pkgs.firefox-unwrapped {
-          forceWayland = true;
           extraPolicies = {
             ExtensionSettings = { };
           };

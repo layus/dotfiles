@@ -51,6 +51,7 @@ in
 
   networking.hostName = "uberwald"; # Define your hostname.
   networking.networkmanager.enable = true;
+  systemd.services.NetworkManager-wait-online.enable = false; # disable due to bug https://github.com/NixOS/nixpkgs/issues/180175
   networking.wireless.enable = false; # Enables wireless support via wpa_supplicant.
 
   # Set your time zone. `null` allows dynamic changes.
@@ -117,18 +118,18 @@ in
     };
   };
 
-  users.users.demo = {
-    isNormalUser = true;
-    extraGroups = [
-      "wheel" "networkmanager" "input" "video"
-    ];
-  };
+  #users.users.demo = {
+  #  isNormalUser = true;
+  #  extraGroups = [
+  #    "wheel" "networkmanager" "input" "video"
+  #  ];
+  #};
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     neovim
-    rxvt_unicode.terminfo
+    rxvt-unicode-unwrapped.terminfo
     termite.terminfo
   ];
 

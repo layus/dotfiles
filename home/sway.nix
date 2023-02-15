@@ -13,6 +13,7 @@
 , hexchat
 , kanshi
 , lockimage
+, mako
 , networkmanagerapplet
 , pasystray
 , pulseaudio
@@ -280,6 +281,8 @@ bindsym $mod+Shift+C kill
 bindsym $mod+p exec termite --name=launcher -e "bash -c 'compgen -c | sort -u | fzf --no-extended --print-query | tail -n1 | xargs -r swaymsg -t command exec'"
 for_window [app_id="^launcher$"] floating enable, border pixel 5
 
+# restart mako
+bindsym $mod+Shift+z exec ${mako}/bin/makoctl restore
 
 # change focus
 bindsym $mod+h focus left
