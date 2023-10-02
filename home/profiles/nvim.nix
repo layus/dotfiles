@@ -96,6 +96,10 @@
         api.nvim_set_keymap('n', '<a-c>', '<Cmd>lua buf_kill(0)<CR>', { noremap=true })
         -- force kill
         api.nvim_set_keymap('n', '<a-s-c>', '<Cmd>lua buf_kill(0, true)<CR>', { noremap=true })
+
+
+        api.nvim_set_keymap('n', '<C-Right>', ':e %:h/CMakeLists.txt<CR>', { noremap=true })
+        api.nvim_set_keymap('n', '<C-Left>', ':e %:h/BUILD.bazel<CR>', { noremap=true })
       EOF
     '';
     extraPackages = with pkgs; [
@@ -249,6 +253,16 @@
           --   },
           -- }
 
+          parser_config.starlark = {
+            install_info = {
+              url = "~/projects/tree-sitter-starlark",
+              files = {"src/parser.c", "src/scanner.c"},
+              branch = "main",
+              generate_requires_npm = false,
+              requires_generate_from_grammar = true,
+            },
+          }
+
           require("nvim-treesitter.configs").setup {
             highlight = {
               enable = true,
@@ -325,6 +339,7 @@
           lspc.rnix.setup{ on_attach = on_attach, capabilities = capabilities, flags = flags }
           lspc.clangd.setup{ on_attach = on_attach, capabilities = capabilities, flags = flags }
           lspc.denols.setup{ on_attach = on_attach, capabilities = capabilities, flags = flags }
+          lspc.starlark_rust.setup{ on_attach = on_attach, capabilities = capabilities, flags = flags }
           -- TODO: "autocmd BufWritePre * lua vim.lsp.buf.formatting_sync(nil, 1000)
         '';
       }
@@ -383,6 +398,8 @@
                   f = { "<cmd>Telescope find_files<cr>", "File" },
                   r = { "<cmd>Telescope oldfiles<cr>", "Recent File" },
                   g = { "<cmd>Telescope live_grep<cr>", "RipGrep" },
+                  b = { "<cmd>Telescope buffers<cr>", "Buffers" },
+                  h = { "<cmd>Telescope help_tags<cr>", "Help Tags" },
                 },
               },
             }
@@ -421,7 +438,8 @@
         config = ''
           require('lualine').setup {
             sections = {
-              lualine_c = {"filename", "lsp_progress"}
+              lualine_b = {{'filename', path = 1}},
+              lualine_c = {'branch', 'diff', 'diagnostics', 'lsp_progress'}
             }
           }
         '';
