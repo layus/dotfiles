@@ -10,7 +10,7 @@
 
   services.avahi = {
     enable = true;
-    nssmdns = true;
+    nssmdns4 = true;
     publish.enable = true;
     publish.addresses = true;
     publish.userServices = true;
@@ -20,10 +20,6 @@
     enable = true;
     extraBackends = [
       pkgs.epson-escpr
-      #pkgs.hplip
-      #pkgs.brscan4
-      #pkgs.brscan5
-      # pkgs.utsushi # broken for now, an possibly not needed.
     ];
   };
 }

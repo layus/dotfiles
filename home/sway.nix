@@ -1,7 +1,7 @@
 # Nix template for sway config file
 # vim: ft=i3
 
-{ autorandr
+{ lib
 , blueman
 , brightnessctl
 , dbus
@@ -10,7 +10,6 @@
 , firefox
 , gammastep
 , grim
-, hexchat
 , kanshi
 , lockimage
 , mako
@@ -24,7 +23,6 @@
 , swayidle
 , swaylock
 , systemd
-, teams
 , termite
 , thunderbird
 , udiskie
@@ -35,7 +33,7 @@
 , writeShellScriptBin
 , writeTextFile
 , zim
-} @ args:
+}:
 
 let
   # Wayland apps have only app_id to match upon
@@ -46,9 +44,10 @@ let
   riotSelector =        ''[class="^Riot$"      window_role="browser-window" instance="^riot$"    ]'';
   elementSelector =     ''[class="^Element$"   window_role="browser-window" instance="^element$" ]'';
   skypeSelector =       ''[class="(?i)^Skype$" window_type="normal"                              ]'';
-  thunderbirdSelector = ''[class="^Daily$"     window_role="^3pane$"        instance="^Mail$"    ]'';
-  teamsSelector =       ''[class="Microsoft Teams - Preview"     window_role="browser-window" instance="microsoft teams - preview"   ]'';
+  # thunderbirdSelector = ''[class="^Daily$"     window_role="^3pane$"        instance="^Mail$"    ]'';
+  # teamsSelector =       ''[class="Microsoft Teams - Preview"     window_role="browser-window" instance="microsoft teams - preview"   ]'';
 
+  swaymsgPath = lib.getExe' sway "swaymsg";
 
   # These scripts form an extra indirection but save so much on string escape hell.
   # They need to be named like the wrapped executable to make the pkill trick in execAlwaysScript work.
@@ -58,7 +57,7 @@ let
   '';
 
   swayidleScript = writeShellScriptBin "swayidle" ''
-    exec ${swayidle}/bin/swayidle -w before-sleep ${swaylockScript}/bin/swaylock timeout 600 'swaymsg "output * dpms off"' resume 'swaymsg "output * dpms on"'
+    exec ${swayidle}/bin/swayidle -w before-sleep ${swaylockScript}/bin/swaylock timeout 600 '${swaymsgPath} "output * dpms off"' resume '${swaymsgPath} "output * dpms on"'
   '';
 
   scratchOnce = writeScript "sway-scratch-once" ''
@@ -81,9 +80,9 @@ let
         clazz = e.container.ipc_data.get("window_properties", {}).get("class")
         width = e.container.ipc_data.get("geometry", {}).get("width", 0)
 
-        if width == 440 and "teams" in selector.lower():
-            i3.command("""[class="{}"] move scratchpad""".format(selector))
-            return
+        #if width == 440 and "teams" in selector.lower():
+        #    i3.command("""[class="{}"] move scratchpad""".format(selector))
+        #    return
 
         if app_id == selector:
             i3.command("""[app_id="{}"] move scratchpad""".format(selector))
@@ -109,7 +108,7 @@ let
 
     function exec () {
       echo "Running $1"
-      swaymsg -- exec "$@"
+      ${swaymsgPath} -- exec "$@"
     }
     function execAndScratch () {
       local filter=$1; shift
@@ -122,18 +121,18 @@ let
     execAndScratch Slack        ${slack}/bin/slack
     execAndScratch .zim-wrapped ${zim}/bin/zim
     execAndScratch Element      ${element-desktop}/bin/element-desktop
-    execAndScratch "Microsoft Teams - Preview" ${teams}/bin/teams
+    # execAndScratch "Microsoft Teams - Preview" $-{teams}/bin/teams
 
     #exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
-    #swaymsg exec ${skypeforlinux}/bin/skypeforlinux
+    #${swaymsgPath} exec ${skypeforlinux}/bin/skypeforlinux
     #exec dropboxd
     #exec transmission-gtk -m
 
     # Setup workspace 1.
     # TODO exec $ {i3}/bin/i3-msg 'workspace --no-auto-back-and-forth 1; append_layout ~/.i3/workspace1'
-    swaymsg "workspace --no-auto-back-and-forth 1, exec ${firefox}/bin/firefox"
-    swaymsg "workspace --no-auto-back-and-forth 1, exec ${thunderbird}/bin/thunderbird"
-    swaymsg "workspace --no-auto-back-and-forth 1"
+    ${swaymsgPath} "workspace --no-auto-back-and-forth 1, exec ${firefox}/bin/firefox"
+    ${swaymsgPath} "workspace --no-auto-back-and-forth 1, exec ${thunderbird}/bin/thunderbird"
+    ${swaymsgPath} "workspace --no-auto-back-and-forth 1"
 
     sleep 10
     exit 0
@@ -156,7 +155,7 @@ let
 
       echo "Running $bin"
       pkill "$(basename "$bin")"
-      swaymsg -- exec_always "$bin" "$@"
+      ${swaymsgPath} -- exec_always "$bin" "$@"
     }
 
     # These services have little state, we can restart them to get the most recent version.
@@ -212,8 +211,8 @@ for_window [class="Gnuplot"]            floating enable
 for_window [class="FLTK"]               floating enable
 for_window [class="Gtkdialog"]          floating enable
 for_window [app_id="zenity"]            floating enable, move absolute position 900 px 700 px
-for_window [title="Notification Microsoft Teams"] floating enable, move position 20 20
-no_focus   [title="Notification Microsoft Teams"]
+#for_window [title="Notification Microsoft Teams"] floating enable, move position 20 20
+#no_focus   [title="Notification Microsoft Teams"]
 for_window [window_role="CallWindow"]   floating enable
 for_window [title="^EMV-CAP Password$"] floating enable
 #for_window [class="Graphviz"]           floating enable
@@ -222,7 +221,7 @@ for_window [title="^EMV-CAP Password$"] floating enable
 #for_window [instance="sun-awt-X11-XFramePeer"] floating enable, move absolute position center
 for_window [title="(?i)Netbeans"]       floating disable
 
-for_window [app_id="firefox" title="^Picture-in-Picture$"] floating enable, sticky enable, border none
+for_window [app_id="firefox" title="^Picture-in-picture$"] floating enable, sticky enable, border none
 for_window [app_id="firefox" title="— Sharing Indicator$"] floating enable, sticky enable, border none
 
 #for_window ${slackSelector}             move scratchpad
@@ -278,7 +277,7 @@ bindsym $mod+Shift+C kill
 
 # start dmenu (a program launcher)
 #bindsym $mod+p exec "pkill dmenu; exec ${dmenu}/bin/dmenu_run -f -i"
-bindsym $mod+p exec termite --name=launcher -e "bash -c 'compgen -c | sort -u | fzf --no-extended --print-query | tail -n1 | xargs -r swaymsg -t command exec'"
+bindsym $mod+p exec termite --name=launcher -e "bash -c 'compgen -c | sort -u | fzf --no-extended --print-query | tail -n1 | xargs -r ${swaymsgPath} -t command exec'"
 for_window [app_id="^launcher$"] floating enable, border pixel 5
 
 # restart mako
@@ -408,7 +407,6 @@ mode "scratch" {
     bindsym h ${riotSelector}       scratchpad show, mode "default"
     bindsym r ${riotSelector}       scratchpad show, mode "default"
     bindsym e ${elementSelector}    scratchpad show, mode "default"
-    bindsym t ${teamsSelector}      scratchpad show, mode "default"
     bindsym g                       scratchpad show, mode "default"
     bindsym $mod+g                  scratchpad show, mode "default"
     bindsym n                       scratchpad show, mode "scratch-iterate"
@@ -504,7 +502,7 @@ input * {
     middle_emulation enabled
     xkb_numlock enabled
     xkb_layout "be"
-    xkb_options "eurosign:e"
+    xkb_options "eurosign:e,caps:none"
     tap_button_map lmr
 }
 

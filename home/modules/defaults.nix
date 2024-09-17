@@ -1,6 +1,9 @@
-{ config, pkgs, lib, ... }:
-
 {
+  config,
+  pkgs,
+  lib,
+  ...
+}: {
   config = lib.mkMerge [
     {
       # Let Home Manager install and manage itself.
@@ -26,13 +29,15 @@
         package = pkgs.gitFull;
         userName = lib.mkDefault "Guillaume @layus Maudoux";
         userEmail = lib.mkDefault "layus.on@gmail.com";
-        includes = [{ path = ../gitconfig.inc; }];
+        includes = [{path = ../gitconfig.inc;}];
         lfs.enable = true;
       };
 
-      nixpkgs.config = (import ../dotfiles/nixpkgs-config.nix) // {
-        allowUnfreePredicate = (pkg: builtins.trace "Using unfree package ${lib.getName pkg}." true);
-      };
+      nixpkgs.config =
+        (import ../dotfiles/nixpkgs-config.nix)
+        // {
+          allowUnfreePredicate = pkg: builtins.trace "Using unfree package ${lib.getName pkg}." true;
+        };
       xdg.configFile."nixpkgs/config.nix".source = ../dotfiles/nixpkgs-config.nix;
 
       programs.direnv.enable = true;
@@ -40,21 +45,20 @@
 
       programs.dircolors.enable = true;
       programs.keychain.enable = true;
-      programs.keychain.extraFlags = [ "--systemd" ];
+      programs.keychain.extraFlags = ["--systemd"];
       programs.fish.enable = true;
       programs.zsh.enable = true;
       home.file.".zshrc".source = ../dotfiles/zshrc;
 
       programs.helix.enable = true;
-      programs.helix.languages = [
-        {
-          name = "haskell";
+      programs.helix.languages = {
+        haskell = {
           language-server = {
             command = "haskell-language-server";
             args = [];
           };
-        }
-      ];
+        };
+      };
 
       home.sessionVariables.EDITOR = "nvim";
       programs.neovim.enable = true;
@@ -62,11 +66,11 @@
       programs.neovim.withPython3 = true;
       programs.neovim.extraPackages = [
         pkgs.nodejs
-        (pkgs.python3.withPackages (ps: with ps; [
-          pep8
-          black
-        ]))
-
+        (pkgs.python3.withPackages (ps:
+          with ps; [
+            pep8
+            black
+          ]))
       ];
       programs.neovim.plugins = with pkgs.vimPlugins; [
         ale
@@ -128,8 +132,16 @@
       xdg.configFile."mimeapps.list".source = ../dotfiles/mimeapps.list;
 
       programs.ssh.enable = true;
-      home.file.".ssh/config".text = lib.mkOrder (/* lib.defaultOrder - 1 = */ 999) (builtins.readFile ../dotfiles/ssh/config);
-      home.file.".ssh/pubkeys" = { source = ../dotfiles/ssh/pubkeys; recursive = true; };
+      home.file.".ssh/config".text = lib.mkOrder (
+        /*
+        lib.defaultOrder - 1 =
+        */
+        999
+      ) (builtins.readFile ../dotfiles/ssh/config);
+      home.file.".ssh/pubkeys" = {
+        source = ../dotfiles/ssh/pubkeys;
+        recursive = true;
+      };
       home.file.".ssh/id_ecdsa.pub".source = ../dotfiles/ssh/pubkeys/uberwald_ecdsa.pub;
 
       xdg.userDirs = {
@@ -148,13 +160,10 @@
           XDG_PRINT_SCREEN_DIR = "$HOME/images/captures";
         };
       };
-
     }
-
 
     # Graphical defaults
     (lib.mkIf config.custom.graphical {
-
       wayland.windowManager.sway.enable = true;
       wayland.windowManager.sway.wrapperFeatures = {
         base = true; # not too sure.
@@ -165,19 +174,25 @@
       # Kanshi exists only as a systemd user service.
       # I prefer to start it from sway config, as it ensures a proper restart/reload
       #services.kanshi.enable = true;
-      xdg.configFile."kanshi" = { source = ../dotfiles/kanshi; recursive = true; };
+      xdg.configFile."kanshi" = {
+        source = ../dotfiles/kanshi;
+        recursive = true;
+      };
 
       nixpkgs.overlays = [
         (self: super: {
-          sway-config = super.callPackage ../sway.nix { };
-          lockimage = pkgs.runCommand "background.jpg" { } ''
+          sway-config = super.callPackage ../sway.nix {};
+          lockimage = pkgs.runCommand "background.jpg" {} ''
             ${pkgs.imagemagick}/bin/convert ${../dotfiles/background.webp} -resize "3840x2400^" -gravity Center -extent 3840x2400+250 $out
           '';
           zim = super.zim.overrideAttrs (oldAttrs: {
-            propagatedBuildInputs = oldAttrs.propagatedBuildInputs or [ ] ++ [ self.python3Packages.Babel ];
-            preFixup = oldAttrs.preFixup or "" + ''
-              makeWrapperArgs+=(--set LC_ALL fr_BE.UTF-8)
-            '';
+            propagatedBuildInputs = oldAttrs.propagatedBuildInputs or [] ++ [self.python3Packages.Babel];
+            preFixup =
+              oldAttrs.preFixup
+              or ""
+              + ''
+                makeWrapperArgs+=(--set LC_ALL fr_BE.UTF-8)
+              '';
           });
           # TODO: do not use pinned versions without version checks !
           #sway = super.sway.overrideAttrs (_: {
@@ -191,7 +206,10 @@
         })
       ];
 
-      xdg.configFile."waybar" = { source = ../dotfiles/waybar; recursive = true; };
+      xdg.configFile."waybar" = {
+        source = ../dotfiles/waybar;
+        recursive = true;
+      };
 
       programs.termite.enable = true;
       xdg.configFile."termite/config".source = ../dotfiles/termite;
@@ -203,18 +221,17 @@
         };
         package = pkgs.wrapFirefox pkgs.firefox-unwrapped {
           extraPolicies = {
-            ExtensionSettings = { };
+            ExtensionSettings = {};
           };
         };
       };
 
-      programs.mako.enable = true;
+      services.mako.enable = true;
       xdg.configFile."mako/config".source = ../dotfiles/mako;
-
 
       programs.obs-studio = {
         enable = true;
-        plugins = [ pkgs.obs-studio-plugins.wlrobs ];
+        plugins = [pkgs.obs-studio-plugins.wlrobs];
       };
 
       #programs.vscode = {
@@ -231,7 +248,6 @@
       #    ];
       #  };
       #};
-
     })
   ];
 }

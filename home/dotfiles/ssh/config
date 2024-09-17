@@ -111,6 +111,11 @@ Host aur4.archlinux.org
     IdentityFile ~/.ssh/aur_rsa
     User aur
 
+Host eu.nixbuild.net
+    PubkeyAcceptedKeyTypes ssh-ed25519
+    ServerAliveInterval 60
+    IPQoS throughput
+    SetEnv NIXBUILDNET_REUSE_BUILD_FAILURES=0
 
 # WARN: This tampers with CanonicalizeHostname (deactivated for now)
 Host *

@@ -1,0 +1,15 @@
+diff --git a/notify.c b/notify.c
+index 07dab63..1979ee4 100644
+--- a/notify.c
++++ b/notify.c
+@@ -30,8 +30,8 @@ void notify(sd_bus* bus, const char* summary, const char* body)
+         summary, // STRING summary
+         body, // STRING body
+         0, // ARRAY actions
+-        0, // DICT hints
+-        -1 // INT32 expire_timeout
++        2, "urgency", "y", 2, "resident", "b", 1, // DICT hints
++        1000 // INT32 expire_timeout
+     );
+     if (ret < 0) {
+         fprintf(stderr, "sd_bus_message_append: %s\n", strerror(-ret));

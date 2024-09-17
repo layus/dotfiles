@@ -1,10 +1,10 @@
 {
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11"; # nixpkgs-unstable";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable"; # nixpkgs-unstable";
 
   inputs.homeManager.url = "github:nix-community/home-manager";
   inputs.homeManager.inputs.nixpkgs.follows = "nixpkgs";
 
-  inputs.localConfig.url = "/home/layus/.config/nixpkgs/local";
+  inputs.localConfig.url = "path:/home/layus/.config/nixpkgs/local";
   inputs.localConfig.inputs.nixpkgs.follows = "nixpkgs";
 
   #inputs.dwarffs.url = "github:edolstra/dwarffs";

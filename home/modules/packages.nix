@@ -9,43 +9,51 @@
 
       #thunderbird = super.thunderbird-78;
 
-      jotta-cli = super.jotta-cli.overrideAttrs (oldAttrs: rec {
-        arch = "amd64";
-        version = "0.12.51202";
-        pname = "jotta-cli";
-        name = "${pname}-${version}";
-        src = super.fetchzip {
-          url = "https://repo.jotta.us/archives/linux/amd64/jotta-cli-${version}_linux_amd64.tar.gz";
-          hash = "sha256-B7Rn/0hFVUsEK2Wo8KbqAnzOwQmMKkAssfmaN3dPAUY=";
-          stripRoot = false;
-        };
-      });
+      #jotta-cli = super.jotta-cli.overrideAttrs (oldAttrs: rec {
+      #  arch = "amd64";
+      #  version = "0.12.51202";
+      #  pname = "jotta-cli";
+      #  name = "${pname}-${version}";
+      #  src = super.fetchzip {
+      #    url = "https://repo.jotta.us/archives/linux/amd64/jotta-cli-${version}_linux_amd64.tar.gz";
+      #    hash = "sha256-B7Rn/0hFVUsEK2Wo8KbqAnzOwQmMKkAssfmaN3dPAUY=";
+      #    stripRoot = false;
+      #  };
+      #});
 
       factorio = super.factorio.overrideAttrs (oldAttrs: rec {
-        version = "1.1.69";
+        version = "1.1.100";
         pname = "factorio";
         name = "${pname}-${version}";
-
-        src = self.requireFile {
-          url = "factorio_alpha_x64-${version}.tar.xz";
-          sha256 = "";
+        src = super.requireFile {
+          url = "https://dl.factorio.com/releases/factorio_alpha_x64_${version}.tar.xz";
+          hash = "sha256:0ylr1x39x6x9d4zx5h0j4isgz5m56kznadf984bcvsl51plhh5wc";
         };
       });
+
+      systembus-notify = super.systembus-notify.overrideAttrs (oldAttrs: {
+        patches = oldAttrs.patches or [] ++ [ ./systembus-notify.patch ];
+      });
+
+      emv-cap = self.python3Packages.buildPythonApplication rec {
+        name = "EMV-CAP-${version}";
+        version = "1.6";
+
+        src = super.fetchFromGitHub {
+          owner = "doegox";
+          repo = "EMV-CAP";
+          # rev = master @ v1.6 (untagged)
+          # title = Fix setup.py: license, requirements & bump version
+          rev = "d28dbdd77b57fe2489d0f3d452a5b716a0852949";
+          hash = "sha256-K6uLrkkoWZVByB8toclHRYnVf79dyvMQPQOvDgFvcHo=";
+        };
+
+        propagatedBuildInputs = with self.python3Packages; [ pyscard pycrypto ];
+      };
 
       #wlroots = super.wlroots_0_16.overrideAttrs (oldAttrs: {
       #  patches = oldAttrs.patches or [] ++ [ ./wlroots-reversed.patch ];
       #});
-
-      # teams = super.teams.overrideAttrs (oldAttrs: {
-      #   installPhase = ''
-      #     runHook preInstall
-      #     ${oldAttrs.installPhase}
-      #     runHook postInstall
-      #   '';
-      #   postInstall = (oldAttrs.postInstall or "") + ''
-      #     mv $out/opt/teams/resources/app.asar.unpacked/node_modules/slimcore/bin/rect-overlay{,-do-not-use}
-      #   '';
-      # });
 
       slurp = assert builtins.compareVersions "1.3.2" super.slurp.version <= 0;
         super.slurp.overrideAttrs (oldAttrs: {
@@ -92,7 +100,7 @@
         xournal
         wf-recorder
         poppler_utils
-        teams
+        # teams -- unmainained
         #kdenlive
         # }}}
 
@@ -120,7 +128,8 @@
         vlc
         guvcview
         krita
-        #factorio
+        freecad
+        # factorio
 
         wireshark-qt
 
@@ -137,7 +146,7 @@
         gnome.eog
         gnome.nautilus
         gnome.file-roller
-        gnome.gedit
+        gedit
         pavucontrol
         keychain
         xclip
@@ -154,6 +163,8 @@
         gitg
         wget
         networkmanagerapplet
+        simple-scan
+        emv-cap
 
         #citrix_workspace
 
@@ -162,6 +173,9 @@
         winetricks
 
         kanshi
+        (hugin.overrideAttrs (oldAttrs: {
+          nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ wrapGAppsHook ];
+        }))
 
         # }}}
 
@@ -224,7 +238,6 @@
       ripgrep
       fd
       fzf
-      exa
       ctags
       file
       zip
@@ -291,8 +304,9 @@
       #mypkgs.monitormonitors
       sqlite-interactive
       inotify-tools
-      #jotta-cli
+      jotta-cli
       rnix-hashes
+      nix-output-monitor
 
       # }}}
       # {{{ Admin
@@ -320,7 +334,7 @@
       #  }
       #)
       vscode
-      bazel_5
+      bazel_6
       #(if true then (lib.hiPrio gcc6) else gcc)
       #jre
       jdk

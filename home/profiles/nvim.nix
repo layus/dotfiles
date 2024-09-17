@@ -109,7 +109,7 @@
 
       # Language Servers
       #haskell-language-server
-      rnix-lsp
+      nil
       rust-analyzer
       deno
 
@@ -143,6 +143,20 @@
           wk = require("which-key")
         '';
       }
+      octo-nvim
+      # I hate copilot !
+      # cmp-npm # helps copilot vim, maybe.
+      # {
+      #   plugin = copilot-vim; # upstream
+      #   type = "lua";
+      #   config = ''
+      #     vim.g.copilot_no_tab_map = true
+      #     vim.g.copilot_assume_mapped = true
+      #     vim.api.nvim_set_keymap("i", "<C-J>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
+      #   '';
+      # }
+      #copilot-lua # lua rewrite
+      #copilot-cmp # cmp integration for copilot-lua
       #{
       #  plugin = firenvim;
       #  type = "lua";
@@ -308,7 +322,7 @@
                 S = { "<cmd>lua require('telescope.builtin').diagnostics()<CR>", "Workspace Symbols" },
                 r = { "<cmd>lua vim.lsp.buf.references()<CR>", "Find References" },
                 R = { "<cmd>lua vim.lsp.buf.rename()<CR>", "Rename" },
-                f = { "<cmd>lua vim.lsp.buf.formatting_sync(nil, 1000)<CR>", "Format"},
+                f = { "<cmd>lua vim.lsp.buf.format { async = true }<CR>", "Format"},
                 h = { "<cmd>lua vim.lsp.buf.hover()<CR>", "Hover" },
                 l = { "<cmd>e ~/.cache/nvim/lsp.log<CR>", "Open Log" },
               },
@@ -336,7 +350,12 @@
             }
           }
           lspc.rust_analyzer.setup{ on_attach = on_attach, capabilities = capabilities, flags = flags }
-          lspc.rnix.setup{ on_attach = on_attach, capabilities = capabilities, flags = flags }
+          lspc.nil_ls.setup{
+            on_attach = on_attach,
+            capabilities = capabilities,
+            flags = flags,
+            settings = { ['nil'] = { formatting = { command = { "nixpkgs-fmt" }}}}
+          }
           lspc.clangd.setup{ on_attach = on_attach, capabilities = capabilities, flags = flags }
           lspc.denols.setup{ on_attach = on_attach, capabilities = capabilities, flags = flags }
           lspc.starlark_rust.setup{ on_attach = on_attach, capabilities = capabilities, flags = flags }
@@ -391,6 +410,14 @@
         plugin = telescope-nvim;
         type = "lua";
         config = ''
+            require('telescope').setup{
+              defaults = {
+                -- path_display={ "smart" } 
+                -- path_display={ truncate = 1 } 
+                -- path_display={ "shorten" } 
+                wrap_results = true
+              }
+            }
             wk.register{
               ["<leader>"] = {
                 f = {
@@ -474,7 +501,7 @@
       }
       plenary-nvim
       editorconfig-nvim
-      nvim-ts-rainbow
+      rainbow-delimiters-nvim
       {
         plugin = bufdelete-nvim;
         type = "lua";

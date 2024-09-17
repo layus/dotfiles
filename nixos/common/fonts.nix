@@ -3,10 +3,10 @@
 
   # Add fonts
   fonts = {
-    enableDefaultFonts = true;
+    enableDefaultPackages = true;
     fontDir.enable = true;
     enableGhostscriptFonts = true;
-    fonts = with pkgs; [
+    packages = with pkgs; [
       # Contain a lot of variants
       #bakoma_ttf
       #cm_unicode

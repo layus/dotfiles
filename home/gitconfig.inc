@@ -13,6 +13,7 @@
 
 [push]
     default = simple
+    autoSetupRemote = true
 
 [diff]
     compactionHeuristic = true

@@ -19,7 +19,8 @@ in
     ../../common/bluetooth.nix
     ../../common/ssh.nix
     ../../common/epson.nix
-    ./fail.nix
+    ../../common/brother.nix
+    #./fail.nix
   ];
 
   security.pam.loginLimits = [
@@ -39,15 +40,36 @@ in
   boot.kernelPackages = pkgs.linuxPackages_latest;
   # buggy panel self refresh...
   boot.kernelParams = [ "i915.enable_psr=0" ];
+  boot.kernelModules = [ "kvm-amd" "kvm-intel" ];
+  boot.extraModprobeConfig = "options kvm_intel nested=1";
 
-  nix = {
-    package = pkgs.nixUnstable;
-    extraOptions = ''
-      extra-experimental-features = nix-command flakes ca-derivations
-      extra-substituters = https://cache.ngi0.nixos.org/
-      extra-trusted-public-keys = cache.ngi0.nixos.org-1:KqH5CBLNSyX184S9BKZJo1LxrxJ9ltnY2uAs5c/f1MA=
-    '';
-  };
+  nix.package = pkgs.nixVersions.latest;
+  nix.extraOptions = ''
+    extra-experimental-features = nix-command flakes ca-derivations impure-derivations configurable-impure-env auto-allocate-uids cgroups recursive-nix
+    extra-substituters = https://cache.ngi0.nixos.org/
+    extra-trusted-public-keys = cache.ngi0.nixos.org-1:KqH5CBLNSyX184S9BKZJo1LxrxJ9ltnY2uAs5c/f1MA=
+    builders-use-substitutes = true
+  '';
+  nix.settings.trusted-users = ["@wheel"]; # or just your username
+  nix.buildMachines = [
+    # tweag remote builders
+    {
+      hostName = "build01.tweag.io";
+      maxJobs = 24;
+      sshUser = "nix";
+      sshKey = "/root/.ssh/id-tweag-builder";
+      system = "x86_64-linux";
+      supportedFeatures = [ "big-parallel" "kvm" "nixos-test" ];
+    }
+    {
+      hostName = "build02.tweag.io";
+      maxJobs = 24;
+      sshUser = "nix";
+      sshKey = "/root/.ssh/id-tweag-builder";
+      systems = ["aarch64-darwin" "x86_64-darwin"];
+      supportedFeatures = [ "big-parallel" ];
+    }
+  ];
 
   networking.hostName = "uberwald"; # Define your hostname.
   networking.networkmanager.enable = true;
@@ -68,10 +90,10 @@ in
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   hardware.bluetooth.enable = true;
-  hardware.video.hidpi.enable = true;
-  hardware.opengl.enable = true;
-  hardware.opengl.driSupport32Bit = true;
-  hardware.opengl.extraPackages = with pkgs; [ vaapiIntel vaapiVdpau libvdpau-va-gl intel-media-driver ];
+  #hardware.video.hidpi.enable = true;
+  hardware.graphics.enable = true;
+  hardware.graphics.enable32Bit = true;
+  hardware.graphics.extraPackages = with pkgs; [ vaapiIntel vaapiVdpau libvdpau-va-gl intel-media-driver ];
 
 
   # Select internationalisation properties.
@@ -108,6 +130,8 @@ in
       "adbusers" # Andoid debug bridge pivileges
       "input"
       "video" # brightness and leds control (brightnessctl)
+      "libvirtd"
+      "qemu-libvirtd"
     ];
     openssh.authorizedKeys.keys = builtins.attrValues {
       inherit (cfg.ssh.pubkeys)
@@ -131,6 +155,9 @@ in
     neovim
     rxvt-unicode-unwrapped.terminfo
     termite.terminfo
+
+    #pkgs.linuxPackages.nvidia_x11.bin
+    cudatoolkit
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -147,6 +174,13 @@ in
   services.openssh.enable = true;
 
   services.fwupd.enable = true;
+
+  services.pcscd.enable = true;
+
+  services.upower.enable = true;
+
+  services.earlyoom.enable = true;
+  services.earlyoom.enableNotifications = true;
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
@@ -184,8 +218,14 @@ in
   # services.thinkfan.enable = true; not really needed. Same as defaults.
 
   virtualisation.docker.enable = true;
+  #virtualisation.docker.enableNvidia = true;
+  virtualisation.libvirtd.enable = true;
 
-  virtualisation.virtualbox.host.enable = true;
-  # BROKEN: virtualisation.virtualbox.guest.enable = true;
+  services.openvpn.servers = {
+    vpn = {
+      autoStart = true;
+      config = "config /etc/nixos/vpn.ovpn";
+    };
+  };
 }
 

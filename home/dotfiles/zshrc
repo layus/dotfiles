@@ -5,8 +5,9 @@ HISTFILE=${MY_HISTFILE:-$HOME/.histfile}
 HISTSIZE=100000
 SAVEHIST=100000
 setopt hist_ignore_all_dups
-#setopt inc_append_history
+setopt inc_append_history
 setopt append_history
+unsetopt share_history
 setopt autopushd
 
 # The following lines were added by compinstall
@@ -189,7 +190,13 @@ typeset -U PATH
 RPROMPT='%F{green}$(detect_env)%f'
 
 function detect_env () {
-    envs=($KEYMAP ${IN_NIX_SHELL+nix} ${VCSH_DIRECTORY+vcsh} ${VIRTUAL_ENV+virtualenv} ${NIX_REMOTE+store});
+    envs=($KEYMAP
+        ${IN_NIX_SHELL+nix} \
+        ${VCSH_DIRECTORY+vcsh} \
+        ${VIRTUAL_ENV+virtualenv} \
+        ${NIX_REMOTE+store} \
+        ${DIRENV_DIFF+direnv}\
+    );
     [ -z "$VCSH_DIRECTORY" -a -n "$GIT_DIR" ] && envs+=("git")
     local IFS=',' envs="$envs[*]"
     echo "${envs:+"($envs)"}"
