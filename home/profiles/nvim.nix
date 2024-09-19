@@ -232,11 +232,9 @@
         type = "lua";
         config = ''
           require("nvim-tree").setup{}
-          wk.register{
-            ["<leader>"] = {
-              e = { "<cmd>NvimTreeFindFileToggle<cr>", "Tree"},
-            },
-          }
+          wk.add({
+            { "<leader>e", "<cmd>NvimTreeFindFileToggle<cr>", desc = "Tree" },
+          })
         '';
       }
       vim-markdown
@@ -295,14 +293,10 @@
             },
           }
 
-          wk.register{
-            ["<leader>"] = {
-              t = {
-                name = "+tree-sitter",
-                p = { "<cmd>TSPlaygroundToggle<CR>", "Toggle Playground" },
-              },
-            },
-          }
+          wk.add({
+            { "<leader>t", group = "tree-sitter" },
+            { "<leader>tp", "<cmd>TSPlaygroundToggle<CR>", desc = "Toggle Playground" },
+          })
         '';
       }
       playground
@@ -310,24 +304,20 @@
         plugin = nvim-lspconfig;
           type = "lua";
         config = ''
-          wk.register{
-            ["<leader>"] = {
-              l = {
-                name = "+lsp",
-                d = { "<cmd>lua vim.lsp.buf.definition()<CR>", "Goto Definition" },
-                i = { "<cmd>lua vim.lsp.buf.implementation()<CR>", "Goto Implementation" },
-                D = { "<cmd>lua require('telescope.builtin').lsp_workspace_diagnostics()<CR>", "Open Diagnostics" },
-                e = { "<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>", "Show Diagnostic" },
-                a = { "<cmd>lua vim.lsp.buf.code_action()<CR>", "Code Actions" },
-                S = { "<cmd>lua require('telescope.builtin').diagnostics()<CR>", "Workspace Symbols" },
-                r = { "<cmd>lua vim.lsp.buf.references()<CR>", "Find References" },
-                R = { "<cmd>lua vim.lsp.buf.rename()<CR>", "Rename" },
-                f = { "<cmd>lua vim.lsp.buf.format { async = true }<CR>", "Format"},
-                h = { "<cmd>lua vim.lsp.buf.hover()<CR>", "Hover" },
-                l = { "<cmd>e ~/.cache/nvim/lsp.log<CR>", "Open Log" },
-              },
-            },
-          }
+         wk.add({
+            { "<leader>l", group = "lsp" },
+            { "<leader>lD", "<cmd>lua require('telescope.builtin').lsp_workspace_diagnostics()<CR>", desc = "Open Diagnostics" },
+            { "<leader>lR", "<cmd>lua vim.lsp.buf.rename()<CR>", desc = "Rename" },
+            { "<leader>lS", "<cmd>lua require('telescope.builtin').diagnostics()<CR>", desc = "Workspace Symbols" },
+            { "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<CR>", desc = "Code Actions" },
+            { "<leader>ld", "<cmd>lua vim.lsp.buf.definition()<CR>", desc = "Goto Definition" },
+            { "<leader>le", "<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>", desc = "Show Diagnostic" },
+            { "<leader>lf", "<cmd>lua vim.lsp.buf.format { async = true }<CR>", desc = "Format" },
+            { "<leader>lh", "<cmd>lua vim.lsp.buf.hover()<CR>", desc = "Hover" },
+            { "<leader>li", "<cmd>lua vim.lsp.buf.implementation()<CR>", desc = "Goto Implementation" },
+            { "<leader>ll", "<cmd>e ~/.cache/nvim/lsp.log<CR>", desc = "Open Log" },
+            { "<leader>lr", "<cmd>lua vim.lsp.buf.references()<CR>", desc = "Find References" },
+          })
           local lspc = require("lspconfig")
           local on_attach = function(client, bufnr)
           end
@@ -389,14 +379,10 @@
           type = "lua";
         config = ''
             vim.g.gh_line_map_default = 0
-            wk.register{
-              ["<leader>"] = {
-                g = {
-                  name = "+git",
-                  l = { "<cmd>call gh_line('blob', g:gh_always_interactive)<cr>", "Link" },
-                },
-              },
-            }
+            wk.add({
+              { "<leader>g", group = "git" },
+              { "<leader>gl", "<cmd>call gh_line('blob', g:gh_always_interactive)<cr>", desc = "Link" },
+            })
         '';
       }
       {
@@ -418,33 +404,26 @@
                 wrap_results = true
               }
             }
-            wk.register{
-              ["<leader>"] = {
-                f = {
-                  name = "+find",
-                  f = { "<cmd>Telescope find_files<cr>", "File" },
-                  r = { "<cmd>Telescope oldfiles<cr>", "Recent File" },
-                  g = { "<cmd>Telescope live_grep<cr>", "RipGrep" },
-                  b = { "<cmd>Telescope buffers<cr>", "Buffers" },
-                  h = { "<cmd>Telescope help_tags<cr>", "Help Tags" },
-                },
-              },
-            }
+            wk.add({
+              { "<leader>f", group = "find" },
+              { "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
+              { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "File" },
+              { "<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "RipGrep" },
+              { "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Help Tags" },
+              { "<leader>fr", "<cmd>Telescope oldfiles<cr>", desc = "Recent File" },
+            })
         '';
       }
       nvim-web-devicons
+      mini-nvim
       {
         plugin = lazygit-nvim;
         type = "lua";
         config = ''
-            wk.register{
-              ["<leader>"] = {
-                g = {
-                  name = "+git",
-                  g = { "<cmd>LazyGit<cr>", "LazyGit" },
-                },
-              },
-            }
+            wk.add({
+              { "<leader>g", group = "git" },
+              { "<leader>gg", "<cmd>LazyGit<cr>", desc = "LazyGit" },
+            })
         '';
       }
       {
@@ -452,10 +431,10 @@
         type = "lua";
         config = ''
             require('tabline').setup {}
-            wk.register{
-              ["<tab>"] = { "<cmd>TablineBufferNext<cr>", "Next Buffer" },
-              ["<s-tab>"] = { "<cmd>TablineBufferPrevious<cr>", "Previous Buffer" },
-            }
+            wk.add({
+              { "<s-tab>", "<cmd>TablineBufferPrevious<cr>", desc = "Previous Buffer" },
+              { "<tab>", "<cmd>TablineBufferNext<cr>", desc = "Next Buffer" },
+            })
         '';
       }
       lualine-lsp-progress
@@ -482,21 +461,15 @@
         plugin = gitsigns-nvim;
           type = "lua";
         config = ''
-            require('gitsigns').setup { keymaps = {} }
-            wk.register{
-              ["<leader>"] = {
-                g = {
-                  name = "+git",
-                  h = {
-                    name = "+hunk",
-                    s = { "<cmd>Gitsigns stage_hunk<cr>", "Stage" },
-                    u = { "<cmd>Gitsigns undo_stage_hunk<cr>", "Undo" },
-                    r = { "<cmd>Gitsigns reset_hunk<cr>", "Reset" },
-                  },
-                  b = { "<cmd>lua require('gitsigns').blame_line{full=true}<CR>", "Blame" },
-                },
-              },
-            }
+            require('gitsigns').setup()
+            wk.add({
+              { "<leader>g", group = "git" },
+              { "<leader>gb", "<cmd>lua require('gitsigns').blame_line{full=true}<CR>", desc = "Blame" },
+              { "<leader>gh", group = "hunk" },
+              { "<leader>ghr", "<cmd>Gitsigns reset_hunk<cr>", desc = "Reset" },
+              { "<leader>ghs", "<cmd>Gitsigns stage_hunk<cr>", desc = "Stage" },
+              { "<leader>ghu", "<cmd>Gitsigns undo_stage_hunk<cr>", desc = "Undo" },
+            })
         '';
       }
       plenary-nvim
@@ -506,14 +479,10 @@
         plugin = bufdelete-nvim;
         type = "lua";
         config = ''
-            wk.register{
-              ["<leader>"] = {
-                b = {
-                  name = "+buffers",
-                  d = { "<cmd>lua require('bufdelete').bufdelete(0)<cr>", "Delete" },
-                },
-              },
-            }
+            wk.add({
+              { "<leader>b", group = "buffers" },
+              { "<leader>bd", "<cmd>lua require('bufdelete').bufdelete(0)<cr>", desc = "Delete" },
+            })
         '';
       }
       # DAP
@@ -522,15 +491,11 @@
           type = "lua";
         config = ''
             local dap = require('dap')
-            wk.register{
-              ["<leader>"] = {
-                d = {
-                  name = "+debug",
-                  b = { "<cmd>lua require('dap').toggle_breakpoint()<cr>", "Breakpoint" },
-                  c = { "<cmd>lua require('dap').continue()<cr>", "Continue" },
-                },
-              },
-            }
+            wk.add({
+              { "<leader>d", group = "debug" },
+              { "<leader>db", "<cmd>lua require('dap').toggle_breakpoint()<cr>", desc = "Breakpoint" },
+              { "<leader>dc", "<cmd>lua require('dap').continue()<cr>", desc = "Continue" },
+            })
             dap.adapters.lldb = {
               type = 'executable',
               command = '${pkgs.lldb}/bin/lldb-vscode',
@@ -585,14 +550,10 @@
           type = "lua";
         config = ''
             require("dapui").setup()
-            wk.register{
-              ["<leader>"] = {
-                d = {
-                  name = "+debug",
-                  o = { "<cmd>lua require('dapui').toggle()<cr>", "Toggle UI" },
-                },
-              },
-            }
+            wk.add({
+              { "<leader>d", group = "debug" },
+              { "<leader>do", "<cmd>lua require('dapui').toggle()<cr>", desc = "Toggle UI" },
+            })
         '';
       }
       {

@@ -1,8 +1,7 @@
-{
-  config,
-  pkgs,
-  lib,
-  ...
+{ config
+, pkgs
+, lib
+, ...
 }: {
   config = lib.mkMerge [
     {
@@ -24,12 +23,19 @@
       # changes in each release.
       home.stateVersion = lib.mkDefault "21.11";
 
+      home.activation = {
+        mySymlinks = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+          [ -e .terminfo ] || run ln -sn $VERBOSE_ARG .nix-profile/share/terminfo .terminfo
+          [ -e .config/home-manager ] || run ln -sn $VERBOSE_ARG ../.config/nixpkgs .config/home-manager
+        '';
+      };
+
       programs.git = {
         enable = true;
         package = pkgs.gitFull;
         userName = lib.mkDefault "Guillaume @layus Maudoux";
         userEmail = lib.mkDefault "layus.on@gmail.com";
-        includes = [{path = ../gitconfig.inc;}];
+        includes = [{ path = ../gitconfig.inc; }];
         lfs.enable = true;
       };
 
@@ -45,17 +51,28 @@
 
       programs.dircolors.enable = true;
       programs.keychain.enable = true;
-      programs.keychain.extraFlags = ["--systemd"];
+      programs.keychain.extraFlags = [ "--systemd" ];
       programs.fish.enable = true;
       programs.zsh.enable = true;
-      home.file.".zshrc".source = ../dotfiles/zshrc;
+      home.file.".zshrc".text = builtins.readFile ../dotfiles/zshrc + ''
+
+        direnv_completions_hook () {
+          export FPATH=$ZSH_COMPLETION_USER_DIR''${ZSH_COMPLETION_USER_DIR:+:}$FPATH
+          if [ "$FPATH" != "$OLD_FPATH" ]; then
+            functions -u _ox # mark _ox as undefined, will get reloaded if needed
+            compinit -D
+          fi
+          export OLD_FPATH=$FPATH
+        }
+        precmd_functions+=(direnv_completions_hook)
+      '';
 
       programs.helix.enable = true;
       programs.helix.languages = {
         haskell = {
           language-server = {
             command = "haskell-language-server";
-            args = [];
+            args = [ ];
           };
         };
       };
@@ -122,6 +139,7 @@
         rust-vim #rust.vim
         vim-racer
         fzf-vim
+        vim-bazel
       ];
 
       home.file.".bash_aliases".source = ../dotfiles/bash_aliases;
@@ -132,12 +150,14 @@
       xdg.configFile."mimeapps.list".source = ../dotfiles/mimeapps.list;
 
       programs.ssh.enable = true;
-      home.file.".ssh/config".text = lib.mkOrder (
-        /*
+      home.file.".ssh/config".text = lib.mkOrder
+        (
+          /*
         lib.defaultOrder - 1 =
-        */
-        999
-      ) (builtins.readFile ../dotfiles/ssh/config);
+          */
+          999
+        )
+        (builtins.readFile ../dotfiles/ssh/config);
       home.file.".ssh/pubkeys" = {
         source = ../dotfiles/ssh/pubkeys;
         recursive = true;
@@ -181,15 +201,15 @@
 
       nixpkgs.overlays = [
         (self: super: {
-          sway-config = super.callPackage ../sway.nix {};
-          lockimage = pkgs.runCommand "background.jpg" {} ''
+          sway-config = super.callPackage ../sway.nix { };
+          lockimage = pkgs.runCommand "background.jpg" { } ''
             ${pkgs.imagemagick}/bin/convert ${../dotfiles/background.webp} -resize "3840x2400^" -gravity Center -extent 3840x2400+250 $out
           '';
           zim = super.zim.overrideAttrs (oldAttrs: {
-            propagatedBuildInputs = oldAttrs.propagatedBuildInputs or [] ++ [self.python3Packages.Babel];
+            propagatedBuildInputs = oldAttrs.propagatedBuildInputs or [ ] ++ [ self.python3Packages.Babel ];
             preFixup =
               oldAttrs.preFixup
-              or ""
+                or ""
               + ''
                 makeWrapperArgs+=(--set LC_ALL fr_BE.UTF-8)
               '';
@@ -221,7 +241,7 @@
         };
         package = pkgs.wrapFirefox pkgs.firefox-unwrapped {
           extraPolicies = {
-            ExtensionSettings = {};
+            ExtensionSettings = { };
           };
         };
       };
@@ -231,7 +251,7 @@
 
       programs.obs-studio = {
         enable = true;
-        plugins = [pkgs.obs-studio-plugins.wlrobs];
+        plugins = [ pkgs.obs-studio-plugins.wlrobs ];
       };
 
       #programs.vscode = {
