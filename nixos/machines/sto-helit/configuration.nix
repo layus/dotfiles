@@ -77,11 +77,10 @@
 
   ## Boot
 
-  boot.cleanTmpDir = true;
+  boot.tmp.cleanOnBoot = true;
 
   boot.loader.grub = {
     enable = true;
-    version = 2;
     devices = [ "/dev/sda" ];
     enableCryptodisk = true;
   };
@@ -96,19 +95,20 @@
   system.stateVersion = "21.11";
 
   nix.gc = {
-    #automatic = true;
+    automatic = true;
     dates = "06:06";
     options = "--delete-older-than 10d";
   };
 
-  nix.buildCores = 4;
-
-  nix.maxJobs = 4;
-  nix.useSandbox = false;
-  nix.trustedUsers = [ "root" "@wheel" ];
-  nix.package = pkgs.nixVersions.nix_2_8;
+  nix.settings = {
+    cores = 4;
+    max-jobs = 4;
+    sandbox = true;
+    trusted-users = [ "root" "@wheel" ];
+  };
+  #nix.package = pkgs.nixVersions.nix_2_8;
   nix.extraOptions = ''
-    #extra-experimental-features = nix-command flakes
+    extra-experimental-features = nix-command flakes
   '';
 
   ## Users
@@ -131,8 +131,10 @@
     };
 
     deluge = {
-      home = pkgs.lib.mkForce "/home/deluge";    # Use /home partition to store files.
+      isSystemUser = true;
+      home = pkgs.lib.mkForce "/home/deluge"; # Use /home partition to store files.
       createHome = true;
+      group = "deluge";
     };
 
     git = {
@@ -164,15 +166,16 @@
       openssh.authorizedKeys.keys = [
         "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBG2HcFsg0lXkRwzXvNbYB1r6MQ6/ne5cG6zjvtnIkYiVjt5+0zcpwTWHAS+R6hQ/7++is0egZ2agIm823MatAAM= erin@gwen"
         "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGIxWy1Zpd1mH4/P6ZzBZRBLSUTDilbWbaARQp3N6WbJr8AwAguwqV8nuijys5Rl2IPHdVmJlcvkbnWOZwqdLkI= evandervee@ahose-uvm1"
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIkCht2nrIsYCvkZOAZy64AgEtUZwsVSy4t6qg9ScSbp erin@Tequatl"
       ];
     };
   };
 
   users.extraGroups = {
-    git = {};
-    deluge = {};
-    wheel = {};
-    fileshare = {};
+    git = { };
+    deluge = { };
+    wheel = { };
+    fileshare = { };
   };
 
 
@@ -192,11 +195,11 @@
   };
 
   /*
-  services.influxdb.enable = true;
-  services.telegraf.enable = true;
-  systemd.services.telegraf.serviceConfig.ExecStart = lib.mkForce ''${pkgs.telegraf}/bin/telegraf -config "/etc/telegraf.conf"'';
-  services.grafana.enable = true;
-  services.grafana.addr = "";
+    services.influxdb.enable = true;
+    services.telegraf.enable = true;
+    systemd.services.telegraf.serviceConfig.ExecStart = lib.mkForce ''${pkgs.telegraf}/bin/telegraf -config "/etc/telegraf.conf"'';
+    services.grafana.enable = true;
+    services.grafana.addr = "";
   */
 
   services.dante = {
@@ -238,10 +241,10 @@
   #};
 
   ## Deluge
-  services.deluge.enable = true;
-  services.deluge.web.enable = true;
-  systemd.services.deluged.serviceConfig.CPUShares = 128;
-  systemd.services.deluged.serviceConfig.BlockIOWeight = 10;
+  #services.deluge.enable = true;
+  #services.deluge.web.enable = true;
+  #systemd.services.deluged.serviceConfig.CPUShares = 128;
+  #systemd.services.deluged.serviceConfig.BlockIOWeight = 10;
 
   # Transmission
   #services.transmission.enable = true;
@@ -288,7 +291,7 @@
 
   services.mysql = {
     enable = true;
-    package = pkgs.mysql;
+    package = pkgs.mariadb;
   };
 
   #services.gitlab = {
@@ -299,76 +302,79 @@
   #systemd.services.samba-nmbd.enable = false;
   services.samba = {
     enable = true;
-    enableWinbindd = true;
+    winbindd.enable = true;
     nsswins = true;
-    configText = ''
-      [global]
-      security = user
-      workgroup = WORKGROUP
-      server string = pigloo
-      guest account = nobody
-      map to guest = bad user
-      interfaces = lo tun0 tun1 10.66.0.0/24 127.0.0.1 10.8.1.0/24 10.8.0.0/24
-      hosts allow = 10.66.0.0/24 10.8.0.0/24 10.8.1.0/24 127.0.0.1
-      bind interfaces only = no
+    settings = {
+      global = {
+        "security" = "user";
+        "workgroup" = "WORKGROUP";
+        "server string" = "pigloo";
+        "guest account" = "nobody";
+        "map to guest" = "bad user";
+        "interfaces" = [ "lo" "tun0" "tun1" "10.66.0.0/24" "127.0.0.1" "10.8.1.0/24" "10.8.0.0/24" ];
+        "hosts allow" = [ "10.66.0.0/24" "10.8.0.0/24" "10.8.1.0/24" "127.0.0.1" ];
+        "bind interfaces only" = false;
 
-      ; Turn samba into a WINS server
-      domain master = yes
-      wins support = yes
-      name resolve order = wins lmhosts host bcast
-      netbios name = pigloo
+        # Turn samba into a WINS server
+        "domain master" = true;
+        "wins support" = true;
+        "name resolve order" = "wins lmhosts host bcast";
+        "netbios name" = "pigloo";
 
-      ; Enable debug
-      log level = 2
-      ;log file = /var/log/samba.log.%m
-      ;max log size = 50
-      debug timestamp = yes
+        # Enable debug
+        "log level" = 2;
+        #"log file" = "/var/log/samba.log.%m";
+        #"max log size" = 50;
+        "debug timestamp" = true;
 
-      ; Printers
-      ;disable cups
-      load printers = no
-      printing = bsd
-      printcap name = /dev/null
-      disable spoolss = yes
+        ## Printers
+        # disable cups
+        "load printers" = false;
+        "printing" = "bsd";
+        "printcap name" = "/dev/null";
+        "disable spoolss" = true;
+      };
 
-      [torrents]
-      comment = Torrent related stuff
-      path = /home/deluge
-      public = yes
-      available = yes
-      guest ok = yes
-      writable = yes
-      read only = no
-      browsable = yes
-    ''; # services.samba.configText
+      torrents = {
+        "comment" = "Torrent related stuff";
+        "path" = "/home/deluge";
+        "public" = true;
+        "available" = true;
+        "guest ok" = true;
+        "writable" = true;
+        "read only" = false;
+        "browsable" = true;
+      };
+    }; # services.samba.settings
   }; # services.samba
 
   services.openssh = {
     enable = true;
     ports = [ 3248 22 ];
     #openFirewall = false; # BEWARE !!!
-    permitRootLogin = "no";
-    passwordAuthentication = false;
-    #extraConfig = '' ClientAliveInterval 180 '';
-    kexAlgorithms = [
-      "curve25519-sha256@libssh.org"
-      "diffie-hellman-group-exchange-sha256"
-      "diffie-hellman-group14-sha1"
-    ];
-    macs = [
-      # defaults
-      "hmac-sha2-512-etm@openssh.com"
-      "hmac-sha2-256-etm@openssh.com"
-      "umac-128-etm@openssh.com"
-      "hmac-sha2-512"
-      "hmac-sha2-256"
-      "umac-128@openssh.com"
-      # brother...
-      #"hmac-ripemd160"
-      #"hmac-ripemd160@openssh.com"
-      "hmac-sha1"
-      "hmac-sha1-96"
-    ];
+    settings = {
+      PermitRootLogin = "no";
+      PasswordAuthentication = false;
+      KexAlgorithms = [
+        "curve25519-sha256@libssh.org"
+        "diffie-hellman-group-exchange-sha256"
+        "diffie-hellman-group14-sha1"
+      ];
+      Macs = [
+        # defaults
+        "hmac-sha2-512-etm@openssh.com"
+        "hmac-sha2-256-etm@openssh.com"
+        "umac-128-etm@openssh.com"
+        "hmac-sha2-512"
+        "hmac-sha2-256"
+        "umac-128@openssh.com"
+        # brother...
+        #"hmac-ripemd160"
+        #"hmac-ripemd160@openssh.com"
+        "hmac-sha1"
+        "hmac-sha1-96"
+      ];
+    };
     extraConfig = ''
       Match user brotherSftp
         ChrootDirectory /srv/brotherSftp
@@ -394,14 +400,15 @@
   #  useSubstitutes = true;
   #};
   nix.buildMachines = [
-    { hostName = "localhost";
+    {
+      hostName = "localhost";
       system = "x86_64-linux";
-      supportedFeatures = ["kvm" "nixos-test" "big-parallel" "benchmark"];
+      supportedFeatures = [ "kvm" "nixos-test" "big-parallel" "benchmark" ];
       maxJobs = 4;
     }
   ];
 
-  systemd.timers.urlwatch.timerConfig.RandomizedDelaySec = 8 /*hours*/ *60*60;
+  systemd.timers.urlwatch.timerConfig.RandomizedDelaySec = 8 /*hours*/ * 60 * 60;
   systemd.services.urlwatch = rec {
     description = "Run urlwatch (${startAt})";
     startAt = "daily";
@@ -417,27 +424,26 @@
 
   services.radicale.enable = true;
   #services.radicale.extraArgs = [ "--debug" ];
-  services.radicale.config = ''
-    [server]
-    # Bind all addresses
-    hosts = 0.0.0.0:5232
-    ssl =True
-    key = /var/run/radicale/certificates/privkey.pem
-    certificate = /var/run/radicale/certificates/fullchain.pem
+  services.radicale.settings = {
+    server = {
+      # Bind all addresses
+      hosts = "0.0.0.0:5232";
+      ssl = "True";
+      key = "/var/run/radicale/certificates/privkey.pem";
+      certificate = "/var/run/radicale/certificates/fullchain.pem";
+    };
 
-    [logging]
-    level = info
+    logging.level = "info";
 
-    [auth]
-    type = htpasswd
-    htpasswd_filename = /var/lib/radicale/users
-    htpasswd_encryption = bcrypt
+    auth = {
+      type = "htpasswd";
+      htpasswd_filename = "/var/lib/radicale/users";
+      htpasswd_encryption = "bcrypt";
+    };
 
-    [storage]
-    filesystem_folder = /var/lib/radicale/collections
+    storage.filesystem_folder = "/var/lib/radicale/collections";
 
-    [web]
-    type = internal
+    web.type = "internal";
 
     # # The first rule matching both user and collection patterns will be returned.
 
@@ -453,7 +459,7 @@
     # user: .+
     # collection: %(login)s.*$
     # permission: rw
-  '';
+  };
 
   systemd.services.radicale.serviceConfig.PermissionsStartOnly = true;
   systemd.services.radicale.preStart = ''
@@ -500,7 +506,7 @@
   programs.fish.enable = true;
   documentation.man.generateCaches = false; # man-cache does not build properly
 
-  programs.bash.enableCompletion = true;
+  programs.bash.completion.enable = true;
 
   ## Networking
 
@@ -510,29 +516,30 @@
 
   networking.nat = {
     enable = true;
-    internalIPs = [ "10.8.0.0/24" "10.8.1.0/24"];
+    internalIPs = [ "10.8.0.0/24" "10.8.1.0/24" ];
     externalInterface = "eno1";
   };
 
   networking.interfaces.lo = {
-    ipv4.addresses = [ { address = "10.66.0.1"; prefixLength = 24; } ];
-    ipv4.routes =   [ { address = "10.66.0.0"; prefixLength = 24; } ];
+    ipv4.addresses = [{ address = "10.66.0.1"; prefixLength = 24; }];
+    ipv4.routes = [{ address = "10.66.0.0"; prefixLength = 24; }];
   };
 
   networking.firewall = {
     enable = true;
     allowPing = true;
-    logRefusedConnections = false;  # Too verbose on an OVH server apparently :-/
+    logRefusedConnections = false; # Too verbose on an OVH server apparently :-/
 
     allowedTCPPorts = [
-      22 3248 # ssh (not auto, and better safe than sorry)
+      22
+      3248 # ssh (not auto, and better safe than sorry)
       # samba (over vpn)
-      8112  # deluge-web
-      80    # http
-      443   # https
-      1080  # dante
-      3000  # hydra
-      5232  # radicale
+      8112 # deluge-web
+      80 # http
+      443 # https
+      1080 # dante
+      3000 # hydra
+      5232 # radicale
       #8080  # owncloud
       #8008 8448  # matrix-synapse
       25565 # minecraft
@@ -543,9 +550,9 @@
     ];
 
     allowedUDPPorts = [
-      1194  # openvpn (redirect)
-      1195  # openvpn
-      5228  # sfr...
+      1194 # openvpn (redirect)
+      1195 # openvpn
+      5228 # sfr...
     ];
 
     trustedInterfaces = [ "tun+" ];
@@ -576,18 +583,19 @@
   };
 
   environment.systemPackages = with pkgs; [
-    vim               # Decent file editor
-    git               # Fetch configuration files
+    vim # Decent file editor
+    git # Fetch configuration files
     # TODO: temporary build failure
     #vcsh              # Manage configuration files
     #lynx              # Emergency web access
-    htop atop         # List processes
+    htop
+    atop # List processes
     #iotop             # Disk usage
     certbot
 
     #imagemagick      # imagemagick, for lychee
-    urlwatch          # provide the system version
-    rxvt_unicode.terminfo
+    urlwatch # provide the system version
+    rxvt-unicode-unwrapped.terminfo
     termite.terminfo
   ];
 
@@ -627,7 +635,7 @@
 
   # Postgres (who needs this ?)
   services.postgresql.enable = true;
-  services.postgresql.package = pkgs.postgresql_10;
+  services.postgresql.package = pkgs.postgresql_14;
 
   # OwnCloud
   #services.cron.systemCronJobs = [
