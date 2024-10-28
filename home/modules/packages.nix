@@ -128,7 +128,7 @@
         vlc
         guvcview
         krita
-        freecad
+        # freecad #coin3D hash mismatch
         # factorio
 
         wireshark-qt

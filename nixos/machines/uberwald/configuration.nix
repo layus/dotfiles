@@ -223,7 +223,7 @@ in
 
   services.openvpn.servers = {
     vpn = {
-      autoStart = true;
+      autoStart = false;
       config = "config /etc/nixos/vpn.ovpn";
     };
   };

@@ -189,7 +189,10 @@
         base = true; # not too sure.
         gtk = true;
       };
+
       xdg.configFile."sway/config".source = lib.mkForce "${pkgs.sway-config}/etc/sway/config";
+
+      home.sessionVariables.NIXOS_OZONE_WL = "1";
 
       # Kanshi exists only as a systemd user service.
       # I prefer to start it from sway config, as it ensures a proper restart/reload

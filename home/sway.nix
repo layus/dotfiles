@@ -37,15 +37,12 @@
 
 let
   # Wayland apps have only app_id to match upon
-  zimSelector =         ''[app_id="^(?:[Zz]im|\.zim-wrapped)$"]''; # [window_type="normal" title="- Zim$"]
-
-  # XWayland apps have more fields
-  slackSelector =       ''[class="^Slack$"                                  instance="^slack$"   ]'';
-  riotSelector =        ''[class="^Riot$"      window_role="browser-window" instance="^riot$"    ]'';
-  elementSelector =     ''[class="^Element$"   window_role="browser-window" instance="^element$" ]'';
-  skypeSelector =       ''[class="(?i)^Skype$" window_type="normal"                              ]'';
-  # thunderbirdSelector = ''[class="^Daily$"     window_role="^3pane$"        instance="^Mail$"    ]'';
-  # teamsSelector =       ''[class="Microsoft Teams - Preview"     window_role="browser-window" instance="microsoft teams - preview"   ]'';
+  slackSelector = ''[app_id="^[Ss]lack$"]'';
+  zimSelector = ''[app_id="^[Zz]im$"]'';
+  elementSelector = ''[app_id="^[Ee]lement$"]'';
+  skypeSelector = ''[app_id="^[Ss]kype$"]'';
+  thunderbirdSelector = ''[app_id="^[Tt]hunderbird$"]'';
+  firefoxSelector = ''[app_id="[Ff]irefox$"]'';
 
   swaymsgPath = lib.getExe' sway "swaymsg";
 
@@ -118,10 +115,10 @@ let
 
     # default is 5700:3500
     exec ${gammastep}/bin/gammastep -l 50.6:4.32 -t 5700:4500
-    execAndScratch Slack        ${slack}/bin/slack
-    execAndScratch .zim-wrapped ${zim}/bin/zim
-    execAndScratch Element      ${element-desktop}/bin/element-desktop
-    # execAndScratch "Microsoft Teams - Preview" $-{teams}/bin/teams
+    execAndScratch Slack    ${slack}/bin/slack
+    execAndScratch zip      ${zim}/bin/zim
+    execAndScratch Element  ${element-desktop}/bin/element-desktop
+    #execAndScratch "Microsoft Teams - Preview" $-{teams}/bin/teams
 
     #exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
     #${swaymsgPath} exec ${skypeforlinux}/bin/skypeforlinux
@@ -130,11 +127,11 @@ let
 
     # Setup workspace 1.
     # TODO exec $ {i3}/bin/i3-msg 'workspace --no-auto-back-and-forth 1; append_layout ~/.i3/workspace1'
-    ${swaymsgPath} "workspace --no-auto-back-and-forth 1, exec ${firefox}/bin/firefox"
+    ${swaymsgPath} "workspace --no-auto-back-and-forth 1', exec ${firefox}/bin/firefox"
     ${swaymsgPath} "workspace --no-auto-back-and-forth 1, exec ${thunderbird}/bin/thunderbird"
     ${swaymsgPath} "workspace --no-auto-back-and-forth 1"
 
-    sleep 10
+    sleep 10  # why ?
     exit 0
   '';
 
@@ -224,16 +221,7 @@ for_window [title="(?i)Netbeans"]       floating disable
 for_window [app_id="firefox" title="^Picture-in-picture$"] floating enable, sticky enable, border none
 for_window [app_id="firefox" title="— Sharing Indicator$"] floating enable, sticky enable, border none
 
-#for_window ${slackSelector}             move scratchpad
-#for_window ${zimSelector}               move scratchpad
-#for_window ${riotSelector}              move scratchpad
-
-#assign [class="Zenity"] → 0
-assign [class="Firefox"] → 1
-assign [class="Thunderbird"] → 1
-#assign [class="URxvt" instance="initialTerm"] → 2
-assign [class="Pdfpc" window_role="presentation"] → 0
-assign [class="Pdfpc" window_role="presentation"] fullscreen enable
+assign ${thunderbirdSelector} → 1
 
 exec_always ${execAlwaysScript}
 exec ${execScript}
@@ -404,8 +392,6 @@ mode "scratch" {
     bindsym z ${zimSelector}        scratchpad show, mode "default"
     bindsym s ${slackSelector}      scratchpad show, mode "default"
     bindsym k ${skypeSelector}      scratchpad show, mode "default"
-    bindsym h ${riotSelector}       scratchpad show, mode "default"
-    bindsym r ${riotSelector}       scratchpad show, mode "default"
     bindsym e ${elementSelector}    scratchpad show, mode "default"
     bindsym g                       scratchpad show, mode "default"
     bindsym $mod+g                  scratchpad show, mode "default"
