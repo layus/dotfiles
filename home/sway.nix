@@ -68,7 +68,7 @@ let
 
     i3 = i3ipc.Connection()
 
-    selector = sys.argv[1]
+    title = sys.argv[1]
 
     def on_window(i3, e):
         if e.change != "new": return
@@ -77,22 +77,13 @@ let
         clazz = e.container.ipc_data.get("window_properties", {}).get("class")
         width = e.container.ipc_data.get("geometry", {}).get("width", 0)
 
-        #if width == 440 and "teams" in selector.lower():
-        #    i3.command("""[class="{}"] move scratchpad""".format(selector))
-        #    return
-
-        if app_id == selector:
-            i3.command("""[app_id="{}"] move scratchpad""".format(selector))
-            i3.main_quit()
-
-        if clazz == selector:
-            i3.command("""[class="{}"] move scratchpad""".format(selector))
-            i3.main_quit()
-
+        selector = f"[app_id={title}]" if (app_id == title) else f"[class={title}]" 
+        i3.command(f"{selector} move scratchpad, resize set 1520 800, move to position center")
+        i3.main_quit()
 
     i3.on('window', on_window)
 
-    print("Ready to scratch", selector, flush=True)
+    print("Ready to scratch", title, flush=True)
     i3.main()
   '';
 
@@ -127,7 +118,7 @@ let
 
     # Setup workspace 1.
     # TODO exec $ {i3}/bin/i3-msg 'workspace --no-auto-back-and-forth 1; append_layout ~/.i3/workspace1'
-    ${swaymsgPath} "workspace --no-auto-back-and-forth 1', exec ${firefox}/bin/firefox"
+    ${swaymsgPath} "workspace --no-auto-back-and-forth \"1'\", exec ${firefox}/bin/firefox"
     ${swaymsgPath} "workspace --no-auto-back-and-forth 1, exec ${thunderbird}/bin/thunderbird"
     ${swaymsgPath} "workspace --no-auto-back-and-forth 1"
 
@@ -222,6 +213,7 @@ for_window [app_id="firefox" title="^Picture-in-picture$"] floating enable, stic
 for_window [app_id="firefox" title="— Sharing Indicator$"] floating enable, sticky enable, border none
 
 assign ${thunderbirdSelector} → 1
+assign ${slackSelector} → 2
 
 exec_always ${execAlwaysScript}
 exec ${execScript}

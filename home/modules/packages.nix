@@ -141,11 +141,11 @@
 
         # }}}
         # {{{ Desktop environment
-        gnome.gnome-themes-extra # For firefox and thunderbird theming.
-        gnome.evince
-        gnome.eog
-        gnome.nautilus
-        gnome.file-roller
+        gnome-themes-extra # For firefox and thunderbird theming.
+        evince
+        eog
+        nautilus
+        file-roller
         gedit
         pavucontrol
         keychain
@@ -193,9 +193,9 @@
         #xorg.xclock
         meld
         gnuplot
-        gnome.zenity
+        zenity
         qtikz
-        gnome.gnome-settings-daemon
+        gnome-settings-daemon
 
         slurp
         grim

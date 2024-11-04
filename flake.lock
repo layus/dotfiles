@@ -27,7 +27,7 @@
         ]
       },
       "locked": {
-        "lastModified": 1730127055,
+        "lastModified": 1730127737,
         "narHash": "sha256-XsCfquaiuXRuQJq8iHDABkm+qCLMP+BNEtTf3DrmR78=",
         "path": "/home/layus/.config/nixpkgs/local",
         "type": "path"
