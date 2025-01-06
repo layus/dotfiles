@@ -97,7 +97,7 @@
 
         # {{{ special
         #converted to plugins: obs-wlrobs obs-studio // see home manager
-        xournal
+        # RIP: xournal
         wf-recorder
         poppler_utils
         # teams -- unmainained
@@ -203,6 +203,8 @@
         termite
         alacritty
         ghostty
+        # BROKEN: enlightenment.terminology
+        st
 
         # }}}
 
