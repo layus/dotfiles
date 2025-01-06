@@ -20,6 +20,7 @@ in
     ../../common/ssh.nix
     ../../common/epson.nix
     ../../common/brother.nix
+    ../../common/tpm.nix
     #./fail.nix
   ];
 
@@ -132,6 +133,8 @@ in
       "video" # brightness and leds control (brightnessctl)
       "libvirtd"
       "qemu-libvirtd"
+      "tss" # access tpm (secure enclave)
+      "uhid" # access fake usb device
     ];
     openssh.authorizedKeys.keys = builtins.attrValues {
       inherit (cfg.ssh.pubkeys)
