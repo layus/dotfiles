@@ -50,8 +50,12 @@
       programs.direnv.nix-direnv.enable = true;
 
       programs.dircolors.enable = true;
+
       programs.keychain.enable = true;
-      programs.keychain.extraFlags = [ "--systemd" ];
+      programs.keychain.extraFlags = [ "--quiet" "--systemd" ];
+      programs.keychain.keys = [ "~/.ssh/*_{rsa,ecdsa,ed25519}(N)"];
+      programs.keychain.agents = [ "ssh" ];
+
       programs.fish.enable = true;
       programs.zsh.enable = true;
       home.file.".zshrc".text = builtins.readFile ../dotfiles/zshrc + ''

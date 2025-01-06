@@ -202,14 +202,16 @@ function detect_env () {
     echo "${envs:+"($envs)"}"
 }
 
-if [ -z "$SSH_AUTH_SOCK" ]; then
-    ## Eval keychain
-    eval $(
-      setopt nullglob
-      keychain --eval --systemd --agents ssh -Q --quiet $HOME/.ssh/*_{ecdsa,rsa,ed25519}
-    )
-fi
+# See programs.keychain.*
+#if [ -z "$SSH_AUTH_SOCK" ]; then
+#    ## Eval keychain
+#    eval $(
+#      setopt nullglob
+#      keychain --eval --systemd --agents ssh -Q --quiet $HOME/.ssh/*_{ecdsa,rsa,ed25519}
+#    )
+#fi
 
-eval "$(direnv hook zsh)"
+# See programs.direnv.*
+# eval "$(direnv hook zsh)"
 
 # vim: set et, sw=4, ts=4
