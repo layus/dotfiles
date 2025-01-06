@@ -267,6 +267,7 @@
       tmux
       tmate
       nixpkgs-fmt
+      quilt
 
 
       # }}}
