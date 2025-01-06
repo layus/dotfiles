@@ -4,6 +4,7 @@
   security.tpm2.tctiEnvironment.enable = true; # TPM2TOOLS_TCTI and TPM2_PKCS11_TCTI env variables
   #users.users.YOUR_USER.extraGroups = [ "tss" ]; # tss group has access to TPM devices
 
+  users.groups.uhid = {};
   services.udev.extraRules = ''
     KERNEL=="uhid", SUBSYSTEM=="misc", GROUP="uhid", MODE="0660"
   '';
