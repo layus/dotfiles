@@ -50,8 +50,9 @@
       noto-fonts
       font-awesome
       mplus-outline-fonts.osdnRelease # Switch to githubRelease later when font is fixed
-      #nerdfonts
-      (nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" "Hack"]; })
+      nerd-fonts.fira-code
+      nerd-fonts.droid-sans-mono
+      nerd-fonts.hack
     ];
     fontconfig = {
       defaultFonts = {

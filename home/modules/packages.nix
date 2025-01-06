@@ -200,6 +200,10 @@
         slurp
         grim
 
+        termite
+        alacritty
+        ghostty
+
         # }}}
 
         # {{{ Nix internals fixup
