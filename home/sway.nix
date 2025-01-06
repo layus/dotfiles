@@ -481,7 +481,6 @@ input * {
     xkb_numlock enabled
     xkb_layout "be"
     xkb_options "eurosign:e,caps:none"
-    tap_button_map lmr
 }
 
 # Thinkpad keyboard: 1:1:AT_Translated_Set_2_keyboard
