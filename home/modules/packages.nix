@@ -22,17 +22,17 @@
       #});
 
       factorio = super.factorio.overrideAttrs (oldAttrs: rec {
-        version = "1.1.100";
+        version = "2.0.32";
         pname = "factorio";
         name = "${pname}-${version}";
         src = super.requireFile {
           url = "https://dl.factorio.com/releases/factorio_alpha_x64_${version}.tar.xz";
-          hash = "sha256:0ylr1x39x6x9d4zx5h0j4isgz5m56kznadf984bcvsl51plhh5wc";
+          hash = "sha256:0xrx5snnsln4az47h7vxamh0zgsf8lcrdxm01qh5w0b5svcwmcai";
         };
       });
 
       systembus-notify = super.systembus-notify.overrideAttrs (oldAttrs: {
-        patches = oldAttrs.patches or [] ++ [ ./systembus-notify.patch ];
+        patches = oldAttrs.patches or [ ] ++ [ ./systembus-notify.patch ];
       });
 
       emv-cap = self.python3Packages.buildPythonApplication rec {
@@ -49,11 +49,15 @@
         };
 
         propagatedBuildInputs = with self.python3Packages; [ pyscard pycrypto ];
+        pyproject = true;
+        build-system = with self.python3Packages; [ setuptools ];
       };
 
       #wlroots = super.wlroots_0_16.overrideAttrs (oldAttrs: {
       #  patches = oldAttrs.patches or [] ++ [ ./wlroots-reversed.patch ];
       #});
+
+      timesheets-prompt = super.callPackage ../pkgs/by-name/ti/timesheets-prompt { };
 
       slurp = assert builtins.compareVersions "1.3.2" super.slurp.version <= 0;
         super.slurp.overrideAttrs (oldAttrs: {
@@ -68,8 +72,8 @@
             owner = "wisp3rwind";
             repo = "slurp";
             rev = "fixed_aspect_ratio";
-#            hash = "sha256-4/J9YHDf7V9YzT2CrvHy8WlLZpuGixFEcUo9mW4h7Nc=";
-#            hash = "sha256-3OVHZl0NhzOlbiGR6k5NnBhWBDDTj94ccZg99ZsGIV0=";
+            #hash = "sha256-4/J9YHDf7V9YzT2CrvHy8WlLZpuGixFEcUo9mW4h7Nc=";
+            #hash = "sha256-3OVHZl0NhzOlbiGR6k5NnBhWBDDTj94ccZg99ZsGIV0=";
             hash = "sha256-9x+6nb+QnBsbndX9GpJYvi1czRkZ9qArLgs4a3gzHhQ=";
           };
         });
@@ -118,23 +122,21 @@
         #mozart2 # build fails ?!
         #(builtins.storePath /nix/store/8i227iqjsaq7g4ddbrav6jn6w2lbxs9l-mozart2-2.0.0-beta.1)
         zim
-        skypeforlinux
         zoom-us
         texmaker
         #typora # error: Newer versions of typora use anti-user encryption and refuse to start.
         inkscape
-        yed
+        #yed
         hexchat
         vlc
         guvcview
         krita
         # freecad #coin3D hash mismatch
-        # factorio
 
         wireshark-qt
 
-        jetbrains.idea-community
-        jetbrains.pycharm-community
+        #jetbrains.idea-community
+        #jetbrains.pycharm-community
 
         #virtualbox
         zotero
@@ -151,7 +153,7 @@
         keychain
         xclip
         imagemagickBig
-        sox
+        (sox.override { enableLame = true; })
         pdfpc
         #gstreamer
         #gst-plugins-base
@@ -169,13 +171,13 @@
         #citrix_workspace
 
         # support both 32- and 64-bit applications
-        wineWowPackages.stable
-        winetricks
+        #wineWowPackages.stable
+        #winetricks
 
         kanshi
-        (hugin.overrideAttrs (oldAttrs: {
-          nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ wrapGAppsHook ];
-        }))
+        #(hugin.overrideAttrs (oldAttrs: {
+        #  nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ wrapGAppsHook ];
+        #}))
 
         # }}}
 
@@ -206,6 +208,8 @@
         # BROKEN: enlightenment.terminology
         st
 
+        tpm-fido
+        pinentry
         # }}}
 
         # {{{ Nix internals fixup
@@ -295,9 +299,8 @@
       #(lib.lowPrio remake)
       (lib.lowPrio moreutils)
       pandoc
-      woof # file transfer with trivial http server
-      (lib.lowPrio (                      # conflicts wit ghostscript
-        texlive.combine { 
+      (lib.lowPrio (# conflicts wit ghostscript
+        texlive.combine {
           inherit (texlive) scheme-full;
           #inherit (default) auctex;
           pkgFilter = pkg: pkg.tlType == "run" || pkg.tlType == "bin" || pkg.pname == "pgf";
@@ -311,8 +314,8 @@
       #mypkgs.monitormonitors
       sqlite-interactive
       inotify-tools
-      jotta-cli
-      rnix-hashes
+      #jotta-cli
+      #rnix-hashes # unmaintained, but was so useful
       nix-output-monitor
 
       # }}}
@@ -341,7 +344,7 @@
       #  }
       #)
       vscode
-      bazel_6
+      bazel_8
       #(if true then (lib.hiPrio gcc6) else gcc)
       #jre
       jdk

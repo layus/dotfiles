@@ -14,7 +14,9 @@
     "modules-right":
         [ "idle_inhibitor"
         , "pulseaudio"
-        , "network"
+        , "network#wifi"
+        , "network#ethernet"
+        , "network#ethernet_direct"
         , "disk"
         , "cpu"
         , "memory"
@@ -87,18 +89,18 @@
     },
     "cpu": {
         "interval": 1,
-        "format": "<span font=\"Font Awesome 6 Free\"></span> {usage:3}%",
+        "format": "<span font=\"Font Awesome 7 Free\"></span> {usage:3}%",
         "tooltip": false
     },
     "disk": {
         "interval": 1,
         "path": "/",
-        "format": "<span font=\"Font Awesome 6 Free\"></span> {free:>}{path}", // hdd:    db:
+        "format": "<span font=\"Font Awesome 7 Free\"></span> {free:>}{path}", // hdd:    db:
         "tooltip-format": "{used}/{total} used ({percentage_used}%)"
     },
     "memory": {
         "interval": 1,
-        "format": "<span font=\"Font Awesome 6 Free\"></span> {:>3}%" // 
+        "format": "<span font=\"Font Awesome 7 Free\"></span> {:>3}%" // 
     },
     "temperature": {
         "interval": 1,
@@ -107,12 +109,12 @@
         "critical-threshold": 80,
         // "format-critical": "{temperatureC:2}°C {icon}",
         "format": "{icon} {temperatureC:2}°C",
-        "format-icons":["<span font=\"Font Awesome 6 Free\"></span>", "<span font=\"Font Awesome 6 Free\"></span>", "<span font=\"Font Awesome 6 Free\"></span>"] //["", "", ""]
+        "format-icons":["<span font=\"Font Awesome 7 Free\"></span>", "<span font=\"Font Awesome 7 Free\"></span>", "<span font=\"Font Awesome 7 Free\"></span>"] //["", "", ""]
     },
     "backlight": {
         // "device": "acpi_video1",
         "format": "{icon} {percent:>3}%",
-        "format-icons": ["<span font=\"Font Awesome 6 Free\"></span>", "<span font=\"Font Awesome 6 Free\"></span>"],
+        "format-icons": ["<span font=\"Font Awesome 7 Free\"></span>", "<span font=\"Font Awesome 7 Free\"></span>"],
         "on-scroll-up": "light -A 10",
         "on-scroll-down": "light -U 10",
         "tooltip": false
@@ -124,18 +126,36 @@
             "critical": 15
         },
         "format": "{icon} {capacity}%",
-        "format-charging": "<span font=\"Font Awesome 6 Free\"></span> {capacity:3}%",
-        "format-plugged": "<span font=\"Font Awesome 6 Free\"></span> {capacity:3}%",
+        "format-charging": "<span font=\"Font Awesome 7 Free\"></span> {capacity:3}%",
+        "format-plugged": "<span font=\"Font Awesome 7 Free\"></span> {capacity:3}%",
         "format-alt": "{icon} {time}",
-        "format-good": "<span font=\"Font Awesome 6 Free\"></span> {capacity:3}%",
-        "format-full": "<span font=\"Font Awesome 6 Free\"></span> full",
-        "format-icons": ["<span font=\"Font Awesome 6 Free\"></span>", "<span font=\"Font Awesome 6 Free\"></span>", "<span font=\"Font Awesome 6 Free\"></span>", "<span font=\"Font Awesome 6 Free\"></span>", "<span font=\"Font Awesome 6 Free\"></span>"]
+        "format-good": "<span font=\"Font Awesome 7 Free\"></span> {capacity:3}%",
+        "format-full": "<span font=\"Font Awesome 7 Free\"></span> full",
+        "format-icons": ["<span font=\"Font Awesome 7 Free\"></span>", "<span font=\"Font Awesome 7 Free\"></span>", "<span font=\"Font Awesome 7 Free\"></span>", "<span font=\"Font Awesome 7 Free\"></span>", "<span font=\"Font Awesome 7 Free\"></span>"]
     },
-    "network": {
+    "network#wifi": {
         "interval": 1,
         "interface": "wlp0s20f3",
-        "format-ethernet": "<span font=\"Font Awesome 6 Free\"></span> {bandwidthDownBits:>9} {bandwidthUpBits:>9}",
-        "format-wifi": "<span font=\"Font Awesome 6 Free\"></span> {bandwidthDownBits:>} {bandwidthUpBits:>} {signalStrength:>2}%",
+        "format-ethernet": "<span font=\"Font Awesome 7 Free\"></span> {bandwidthDownBits:>} {bandwidthUpBits:>}",
+        "format-wifi": "<span font=\"Font Awesome 7 Free\"></span> {bandwidthDownBits:>} {bandwidthUpBits:>} {signalStrength:>2}%",
+        "format-linked": "",
+        "format-disconnected": "",
+        "tooltip": false
+    },
+    "network#ethernet_direct": {
+        "interval": 1,
+        "interface": "enp0s20f0u1",
+        "format-ethernet": "<span font=\"Font Awesome 7 Free\"></span> {bandwidthDownBits:>} {bandwidthUpBits:>}",
+        "format-wifi": "<span font=\"Font Awesome 7 Free\"></span> {bandwidthDownBits:>} {bandwidthUpBits:>} {signalStrength:>2}%",
+        "format-linked": "",
+        "format-disconnected": "",
+        "tooltip": false
+    },
+    "network#ethernet": {
+        "interval": 1,
+        "interface": "enp0s13f0u3u2",
+        "format-ethernet": "<span font=\"Font Awesome 7 Free\"></span> {bandwidthDownBits:>} {bandwidthUpBits:>}",
+        "format-wifi": "<span font=\"Font Awesome 7 Free\"></span> {bandwidthDownBits:>} {bandwidthUpBits:>} {signalStrength:>2}%",
         "format-linked": "",
         "format-disconnected": "",
         "tooltip": false
@@ -157,17 +177,17 @@
         "format": "{icon} {volume:3}%  {format_source}",
         "format-bluetooth": "{volume}% {icon} {format_source}",
         "format-bluetooth-muted": " {icon} {format_source}",
-        "format-muted": "<span font=\"Font Awesome 6 Free\"></span> {format_source}",
-        "format-source": "<span font=\"Font Awesome 6 Free\"></span> {volume:3}%",
-        "format-source-muted": "<span font=\"Font Awesome 6 Free\"></span>",
+        "format-muted": "<span font=\"Font Awesome 7 Free\"></span> {format_source}",
+        "format-source": "<span font=\"Font Awesome 7 Free\"></span> {volume:3}%",
+        "format-source-muted": "<span font=\"Font Awesome 7 Free\"></span>",
         "format-icons": {
-            "headphones": "<span font=\"Font Awesome 6 Free\"></span>",
-            "handsfree": "<span font=\"Font Awesome 6 Free\"></span>",
-            "headset": "<span font=\"Font Awesome 6 Free\"></span>",
-            "phone": "<span font=\"Font Awesome 6 Free\"></span>",
-            "portable": "<span font=\"Font Awesome 6 Free\"></span>",
-            "car": "<span font=\"Font Awesome 6 Free\"></span>",
-            "default": ["<span font=\"Font Awesome 6 Free\"></span>", "<span font=\"Font Awesome 6 Free\"></span>", "<span font=\"Font Awesome 6 Free\"></span>"]
+            "headphones": "<span font=\"Font Awesome 7 Free\"></span>",
+            "handsfree": "<span font=\"Font Awesome 7 Free\"></span>",
+            "headset": "<span font=\"Font Awesome 7 Free\"></span>",
+            "phone": "<span font=\"Font Awesome 7 Free\"></span>",
+            "portable": "<span font=\"Font Awesome 7 Free\"></span>",
+            "car": "<span font=\"Font Awesome 7 Free\"></span>",
+            "default": ["<span font=\"Font Awesome 7 Free\"></span>", "<span font=\"Font Awesome 7 Free\"></span>", "<span font=\"Font Awesome 7 Free\"></span>"]
         },
         "on-click": "pavucontrol"
     }

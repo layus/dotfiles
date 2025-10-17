@@ -4,7 +4,6 @@
 #CanonicalizeMaxDots 0
 #CanonicalizeFallbackLocal yes
 
-
 # maudoux.be
 
 Host sto-lat sto-lat.maudoux.be
@@ -122,5 +121,6 @@ Host *
     StrictHostKeyChecking yes
     ForwardAgent no
     ForwardX11 no
-    Compression = yes
+    Compression yes
+    ServerAliveInterval 20
 

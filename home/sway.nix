@@ -10,13 +10,12 @@
 , firefox
 , gammastep
 , grim
-, kanshi
+, way-displays
 , lockimage
 , mako
 , networkmanagerapplet
 , pasystray
 , pulseaudio
-, skypeforlinux
 , slack
 , slurp
 , sway
@@ -40,7 +39,6 @@ let
   slackSelector = ''[app_id="^[Ss]lack$"]'';
   zimSelector = ''[app_id="^[Zz]im$"]'';
   elementSelector = ''[app_id="^[Ee]lement$"]'';
-  skypeSelector = ''[app_id="^[Ss]kype$"]'';
   thunderbirdSelector = ''[app_id="^[Tt]hunderbird$"]'';
   firefoxSelector = ''[app_id="[Ff]irefox$"]'';
 
@@ -106,13 +104,12 @@ let
 
     # default is 5700:3500
     exec ${gammastep}/bin/gammastep -l 50.6:4.32 -t 5700:4500
-    execAndScratch Slack    ${slack}/bin/slack
+    execAndScratch Slack    ${slack}/bin/slack --ozone-platform=wayland
     execAndScratch zim      ${zim}/bin/zim
     execAndScratch Element  ${element-desktop}/bin/element-desktop
     #execAndScratch "Microsoft Teams - Preview" $-{teams}/bin/teams
 
     #exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
-    #${swaymsgPath} exec ${skypeforlinux}/bin/skypeforlinux
     #exec dropboxd
     #exec transmission-gtk -m
 
@@ -150,12 +147,12 @@ let
     exec_always ${networkmanagerapplet}/bin/nm-applet --indicator
     exec_always ${udiskie}/bin/udiskie --tray --appindicator -A
     exec_always ${waybar}/bin/waybar
-    exec_always ${swayidleScript}/bin/swayidle
+    # breaks exec_always ${swayidleScript}/bin/swayidle
     exec_always ${blueman}/bin/blueman-applet
     exec_always ${pasystray}/bin/pasystray
 
     # kanshi needs restart to override outputs reset changes made by sway reload
-    exec_always ${kanshi}/bin/kanshi
+    exec_always ${way-displays}/bin/way-displays
   '';
 
   config = ''
@@ -383,7 +380,6 @@ bindsym $mod+z ${zimSelector} scratchpad show
 mode "scratch" {
     bindsym z ${zimSelector}        scratchpad show, mode "default"
     bindsym s ${slackSelector}      scratchpad show, mode "default"
-    bindsym k ${skypeSelector}      scratchpad show, mode "default"
     bindsym e ${elementSelector}    scratchpad show, mode "default"
     bindsym g                       scratchpad show, mode "default"
     bindsym $mod+g                  scratchpad show, mode "default"
@@ -447,33 +443,7 @@ mode "resize" {
 
 bindsym $mod+r mode "resize"
 
-#set $HP "Hewlett Packard LA2405 CZ40022966"
-set $dell "Dell Inc. DELL U2415 7MT0196H25AS"
-set $eizo "Eizo Nanao Corporation EV2480 43440041"
-set $main eDP-1
-
-#bar {
-#    output $main
-#    mode hide
-#    font Inconsolata 11
-#}
-#
-#bar {
-#    output $HP
-#    mode dock
-#    #tray_output primary
-#    font Inconsolata 11
-#}
-#
-#bar {
-#    #output DP-4
-#    mode invisible
-#    #status_command true
-#    tray_output primary
-#}
-
 output * bg #6699cc solid_color
-#output $HP mode 1980x1200 transform 270
 
 input * {
     tap enabled
@@ -483,15 +453,6 @@ input * {
     xkb_options "eurosign:e,caps:none"
 }
 
-# Thinkpad keyboard: 1:1:AT_Translated_Set_2_keyboard
-# Dell wireless mouse: 1133:16425:Logitech_Dell_WM514
-# Sun USB Keyboard: 1072:162:Sun_USB_Keyboard
-# Thinkpad trackpoint: 2:10:TPPS/2_Elan_TrackPoint
-# Thinkpad touchpad: 1267:12679:ELAN0672:00_04F3:3187_Touchpad
-# Thinkpad mouse:    1267:12679:ELAN0672:00_04F3:3187_Mouse
-# One by Wacom: 1386:884:Wacom_Intuos_S_Pen
-
-
 input "1386:884:Wacom_Intuos_S_Pen" {
     map_to_region 31 553 1168 826
 }
@@ -499,29 +460,29 @@ input "1386:884:Wacom_Intuos_S_Pen" {
 # HiDPi screen needs bigger cursor :-).
 seat * xcursor_theme Adwaita 24
 
-workspace  0 output $main
-workspace  1 output $main
-workspace  2 output $main
-workspace  3 output $main
-workspace  4 output $main
-workspace  5 output $main
-workspace  6 output $main
-workspace  7 output $main
-workspace  8 output $main
-workspace  9 output $main
-workspace 10 output $main
+workspace  0 output eDP-1 DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8
+workspace  1 output eDP-1 DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8
+workspace  2 output eDP-1 DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8
+workspace  3 output eDP-1 DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8
+workspace  4 output eDP-1 DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8
+workspace  5 output eDP-1 DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8
+workspace  6 output eDP-1 DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8
+workspace  7 output eDP-1 DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8
+workspace  8 output eDP-1 DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8
+workspace  9 output eDP-1 DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8
+workspace 10 output eDP-1 DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8
 
-workspace  "0'" output $eizo
-workspace  "1'" output $eizo
-workspace  "2'" output $eizo
-workspace  "3'" output $eizo
-workspace  "4'" output $eizo
-workspace  "5'" output $eizo
-workspace  "6'" output $eizo
-workspace  "7'" output $eizo
-workspace  "8'" output $eizo
-workspace  "9'" output $eizo
-workspace "10'" output $eizo
+workspace  "0'" output DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8 eDP-1
+workspace  "1'" output DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8 eDP-1
+workspace  "2'" output DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8 eDP-1
+workspace  "3'" output DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8 eDP-1
+workspace  "4'" output DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8 eDP-1
+workspace  "5'" output DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DP-7 DP-8 eDP-1
+workspace  "6'" output DP-8 DP-7 DP-6 DP-5 DP-4 DP-3 DP-2 DP-1 eDP-1
+workspace  "7'" output DP-8 DP-7 DP-6 DP-5 DP-4 DP-3 DP-2 DP-1 eDP-1
+workspace  "8'" output DP-8 DP-7 DP-6 DP-5 DP-4 DP-3 DP-2 DP-1 eDP-1
+workspace  "9'" output DP-8 DP-7 DP-6 DP-5 DP-4 DP-3 DP-2 DP-1 eDP-1
+workspace "10'" output DP-8 DP-7 DP-6 DP-5 DP-4 DP-3 DP-2 DP-1 eDP-1
 '';
 
 in writeTextFile {

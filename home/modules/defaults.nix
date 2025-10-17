@@ -53,23 +53,32 @@
 
       programs.keychain.enable = true;
       programs.keychain.extraFlags = [ "--quiet" "--systemd" ];
-      programs.keychain.keys = [ "~/.ssh/*_{rsa,ecdsa,ed25519}(N)"];
-      programs.keychain.agents = [ "ssh" ];
+      programs.keychain.keys = [ "~/.ssh/*_{rsa,ecdsa,ed25519}(N)" ];
 
       programs.fish.enable = true;
       programs.zsh.enable = true;
-      home.file.".zshrc".text = builtins.readFile ../dotfiles/zshrc + ''
-
-        direnv_completions_hook () {
-          export FPATH=$ZSH_COMPLETION_USER_DIR''${ZSH_COMPLETION_USER_DIR:+:}$FPATH
-          if [ "$FPATH" != "$OLD_FPATH" ]; then
-            functions -u _ox # mark _ox as undefined, will get reloaded if needed
-            compinit -D
-          fi
-          export OLD_FPATH=$FPATH
-        }
-        precmd_functions+=(direnv_completions_hook)
-      '';
+      programs.zsh.autocd = true;
+      programs.zsh.history.path = "/home/layus/.histfile";
+      programs.zsh.history.size = 100000;
+      programs.zsh.history.ignoreAllDups = true;
+      programs.zsh.history.ignoreSpace = true;
+      programs.zsh.history.ignorePatterns = [ "rm *" "pkill *" ];
+      programs.zsh.history.append = true;
+      programs.zsh.history.share = false;
+      programs.zsh.initContent =
+        (builtins.readFile ../dotfiles/zshrc +
+          ''
+            direnv_completions_hook () {
+              export FPATH=$ZSH_COMPLETION_USER_DIR''${ZSH_COMPLETION_USER_DIR:+:}$FPATH
+              if [ "$FPATH" != "$OLD_FPATH" ]; then
+                functions -u _ox # mark _ox as undefined, will get reloaded if needed
+                compinit -D
+              fi
+              export OLD_FPATH=$FPATH
+            }
+            precmd_functions+=(direnv_completions_hook)
+          '')
+      ;
 
       programs.helix.enable = true;
       programs.helix.languages = {
@@ -151,17 +160,11 @@
 
       xdg.mime.enable = true;
       xdg.mimeApps.enable = true;
-      xdg.configFile."mimeapps.list".source = ../dotfiles/mimeapps.list;
+      xdg.configFile."mimeapps.list".source = lib.mkForce ../dotfiles/mimeapps.list;
 
       programs.ssh.enable = true;
-      home.file.".ssh/config".text = lib.mkOrder
-        (
-          /*
-        lib.defaultOrder - 1 =
-          */
-          999
-        )
-        (builtins.readFile ../dotfiles/ssh/config);
+      programs.ssh.enableDefaultConfig = false;
+      home.file.".ssh/config".text = lib.mkOrder 999 (builtins.readFile ../dotfiles/ssh/config);
       home.file.".ssh/pubkeys" = {
         source = ../dotfiles/ssh/pubkeys;
         recursive = true;
@@ -260,6 +263,19 @@
         enable = true;
         plugins = [ pkgs.obs-studio-plugins.wlrobs ];
       };
+
+      services.activitywatch = {
+        enable = true;
+        watchers = {
+          aw-watcher-window-wayland = {
+            package = pkgs.aw-watcher-window-wayland;
+            settings = {
+              poll_time = 5;
+            };
+          };
+        };
+      };
+
 
       #programs.vscode = {
       #  enable = true;

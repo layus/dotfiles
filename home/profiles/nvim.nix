@@ -115,8 +115,7 @@
 
       # Debuggers
       lldb
-      haskellPackages.haskell-debug-adapter
-      haskellPackages.ghci-dap
+      #haskellPackages.haskell-debug-adapter
 
       # Formatters
       ormolu
@@ -327,17 +326,17 @@
           lspc.hls.setup {
             on_attach = on_attach,
             capabilities = capabilities,
-            flags = flags,
-            settings = {
-              haskell = {
-                plugin = {
-                type = "lua";
-                  hlint = {
-                    globalOn = true
-                  }
-                }
-              }
-            }
+            --settings = {
+            --  haskell = {
+            --    plugin = {
+            --    type = "lua";
+            --      hlint = {
+            --        globalOn = true
+            --      }
+            --    }
+            --  }
+            --},
+            flags = flags
           }
           lspc.rust_analyzer.setup{ on_attach = on_attach, capabilities = capabilities, flags = flags }
           lspc.nil_ls.setup{

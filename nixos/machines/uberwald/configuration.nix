@@ -50,8 +50,9 @@ in
     extra-substituters = https://cache.ngi0.nixos.org/
     extra-trusted-public-keys = cache.ngi0.nixos.org-1:KqH5CBLNSyX184S9BKZJo1LxrxJ9ltnY2uAs5c/f1MA=
     builders-use-substitutes = true
+    max-substitution-jobs = 64
   '';
-  nix.settings.trusted-users = ["@wheel"]; # or just your username
+  nix.settings.trusted-users = [ "@wheel" ]; # or just your username
   nix.buildMachines = [
     # tweag remote builders
     {
@@ -67,7 +68,7 @@ in
       maxJobs = 24;
       sshUser = "nix";
       sshKey = "/root/.ssh/id-tweag-builder";
-      systems = ["aarch64-darwin" "x86_64-darwin"];
+      systems = [ "aarch64-darwin" "x86_64-darwin" ];
       supportedFeatures = [ "big-parallel" ];
     }
   ];
@@ -94,7 +95,7 @@ in
   #hardware.video.hidpi.enable = true;
   hardware.graphics.enable = true;
   hardware.graphics.enable32Bit = true;
-  hardware.graphics.extraPackages = with pkgs; [ vaapiIntel vaapiVdpau libvdpau-va-gl intel-media-driver ];
+  hardware.graphics.extraPackages = with pkgs; [ vaapiIntel vaapiVdpau intel-media-driver ];
 
 
   # Select internationalisation properties.
@@ -220,8 +221,14 @@ in
 
   # services.thinkfan.enable = true; not really needed. Same as defaults.
 
-  virtualisation.docker.enable = true;
-  #virtualisation.docker.enableNvidia = true;
+  virtualisation.docker = {
+    enable = true;
+    daemon.settings = {
+      "max-concurrent-downloads" = 20;
+      "max-concurrent-uploads" = 5;
+    };
+    # enableNvidia = true;
+  };
   virtualisation.libvirtd.enable = true;
 
   services.openvpn.servers = {
