@@ -141,7 +141,7 @@
         vim-SyntaxRange
         vim-endwise
         deoplete-nvim
-        nvim-lspconfig
+        #nvim-lspconfig
         nvim-yarp
         #vim-hug-neovim-rpc
         #neocomplcache

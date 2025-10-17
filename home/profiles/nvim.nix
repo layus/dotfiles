@@ -11,97 +11,101 @@
 
   programs.neovim = {
     enable = true;
-    extraConfig = pkgs.lib.mkBefore ''
-      lua <<EOF
-        local cmd = vim.cmd
-        local exec = vim.api.nvim_exec
-        local api = vim.api
-        local fn = vim.fn
-        local g = vim.g
-        local opt = vim.opt
+    extraConfig = pkgs.lib.mkMerge [
+      (pkgs.lib.mkBefore ''
+        lua <<EOF
+          local cmd = vim.cmd
+          local exec = vim.api.nvim_exec
+          local api = vim.api
+          local fn = vim.fn
+          local g = vim.g
+          local opt = vim.opt
 
-        opt.mouse = 'a'
-        opt.clipboard = 'unnamedplus'
-        opt.swapfile = false
-        opt.relativenumber = true
-        opt.number = true
-        opt.showmatch = true
-        opt.colorcolumn = '80'
-        opt.splitright = true
-        opt.splitbelow = true
-        opt.ignorecase = true
-        opt.smartcase = true
-        opt.linebreak = true
-        opt.timeoutlen = 0
-        opt.hidden = true
-        opt.history = 100
-        opt.lazyredraw = true
-        opt.completeopt = 'menuone,noselect'
-        opt.undofile = true
+          opt.mouse = 'a'
+          opt.clipboard = 'unnamedplus'
+          opt.swapfile = false
+          opt.relativenumber = true
+          opt.number = true
+          opt.showmatch = true
+          opt.colorcolumn = '80'
+          opt.splitright = true
+          opt.splitbelow = true
+          opt.ignorecase = true
+          opt.smartcase = true
+          opt.linebreak = true
+          opt.timeoutlen = 0
+          opt.hidden = true
+          opt.history = 100
+          opt.lazyredraw = true
+          opt.completeopt = 'menuone,noselect'
+          opt.undofile = true
 
-        cmd [[
-          syntax enable
-        ]]
+          cmd [[
+            syntax enable
+          ]]
 
-        -- Don't lose selection
-        api.nvim_set_keymap('v', '<', '<gv', { noremap=true })
-        api.nvim_set_keymap('v', '>', '>gv', { noremap=true })
+          -- Don't lose selection
+          api.nvim_set_keymap('v', '<', '<gv', { noremap=true })
+          api.nvim_set_keymap('v', '>', '>gv', { noremap=true })
 
-        api.nvim_set_keymap('n', '<C-h>', '<C-w>h', { noremap=true })
-        api.nvim_set_keymap('n', '<C-j>', '<C-w>j', { noremap=true })
-        api.nvim_set_keymap('n', '<C-k>', '<C-w>k', { noremap=true })
-        api.nvim_set_keymap('n', '<C-l>', '<C-w>l', { noremap=true })
+          api.nvim_set_keymap('n', '<C-h>', '<C-w>h', { noremap=true })
+          api.nvim_set_keymap('n', '<C-j>', '<C-w>j', { noremap=true })
+          api.nvim_set_keymap('n', '<C-k>', '<C-w>k', { noremap=true })
+          api.nvim_set_keymap('n', '<C-l>', '<C-w>l', { noremap=true })
 
 
-        local api = vim.api
+          local api = vim.api
     
-        local function nvim_loaded_buffers()
-          local result = {}
-          local buffers = api.nvim_list_bufs()
-          for _, buf in ipairs(buffers) do
-            if api.nvim_buf_is_loaded(buf) then
-              table.insert(result, buf)
+          local function nvim_loaded_buffers()
+            local result = {}
+            local buffers = api.nvim_list_bufs()
+            for _, buf in ipairs(buffers) do
+              if api.nvim_buf_is_loaded(buf) then
+                table.insert(result, buf)
+              end
             end
+            return result
           end
-          return result
-        end
         
-        -- Kill the target buffer (or the current one if 0/nil)
-        function buf_kill(target_buf, should_force)
-          if not should_force and vim.bo.modified then
-            return api.nvim_err_writeln('Buffer is modified. Force required.')
-          end
-          local command = 'bd'
-          if should_force then command = command..'!' end
-          if target_buf == 0 or target_buf == nil then
-            target_buf = api.nvim_get_current_buf()
-          end
-          local buffers = nvim_loaded_buffers()
-          if #buffers == 1 then
-            api.nvim_command(command)
-            return
-          end
-          local nextbuf
-          for i, buf in ipairs(buffers) do
-            if buf == target_buf then
-              nextbuf = buffers[(i - 1 + 1) % #buffers + 1]
-              break
+          -- Kill the target buffer (or the current one if 0/nil)
+          function buf_kill(target_buf, should_force)
+            if not should_force and vim.bo.modified then
+              return api.nvim_err_writeln('Buffer is modified. Force required.')
             end
+            local command = 'bd'
+            if should_force then command = command..'!' end
+            if target_buf == 0 or target_buf == nil then
+              target_buf = api.nvim_get_current_buf()
+            end
+            local buffers = nvim_loaded_buffers()
+            if #buffers == 1 then
+              api.nvim_command(command)
+              return
+            end
+            local nextbuf
+            for i, buf in ipairs(buffers) do
+              if buf == target_buf then
+                nextbuf = buffers[(i - 1 + 1) % #buffers + 1]
+                break
+              end
+            end
+            api.nvim_set_current_buf(nextbuf)
+            api.nvim_command(table.concat({command, target_buf}, ' '))
           end
-          api.nvim_set_current_buf(nextbuf)
-          api.nvim_command(table.concat({command, target_buf}, ' '))
-        end
         
-        -- normal kill
-        api.nvim_set_keymap('n', '<a-c>', '<Cmd>lua buf_kill(0)<CR>', { noremap=true })
-        -- force kill
-        api.nvim_set_keymap('n', '<a-s-c>', '<Cmd>lua buf_kill(0, true)<CR>', { noremap=true })
+          -- normal kill
+          api.nvim_set_keymap('n', '<a-c>', '<Cmd>lua buf_kill(0)<CR>', { noremap=true })
+          -- force kill
+          api.nvim_set_keymap('n', '<a-s-c>', '<Cmd>lua buf_kill(0, true)<CR>', { noremap=true })
 
 
-        api.nvim_set_keymap('n', '<C-Right>', ':e %:h/CMakeLists.txt<CR>', { noremap=true })
-        api.nvim_set_keymap('n', '<C-Left>', ':e %:h/BUILD.bazel<CR>', { noremap=true })
-      EOF
-    '';
+          api.nvim_set_keymap('n', '<C-Right>', ':e %:h/CMakeLists.txt<CR>', { noremap=true })
+          api.nvim_set_keymap('n', '<C-Left>', ':e %:h/BUILD.bazel<CR>', { noremap=true })
+        EOF
+      '')
+      (pkgs.lib.mkAfter ''
+      '')
+    ];
     extraPackages = with pkgs; [
       # For telescope
       fzf
@@ -140,6 +144,20 @@
         type = "lua";
         config = ''
           wk = require("which-key")
+          wk.add({
+            { "<leader>l", group = "lsp" },
+            { "<leader>lD", "<cmd>lua require('telescope.builtin').lsp_workspace_diagnostics()<CR>", desc = "Open Diagnostics" },
+            { "<leader>lR", "<cmd>lua vim.lsp.buf.rename()<CR>", desc = "Rename" },
+            { "<leader>lS", "<cmd>lua require('telescope.builtin').diagnostics()<CR>", desc = "Workspace Symbols" },
+            { "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<CR>", desc = "Code Actions" },
+            { "<leader>ld", "<cmd>lua vim.lsp.buf.definition()<CR>", desc = "Goto Definition" },
+            { "<leader>le", "<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>", desc = "Show Diagnostic" },
+            { "<leader>lf", "<cmd>lua vim.lsp.buf.format { async = true }<CR>", desc = "Format" },
+            { "<leader>lh", "<cmd>lua vim.lsp.buf.hover()<CR>", desc = "Hover" },
+            { "<leader>li", "<cmd>lua vim.lsp.buf.implementation()<CR>", desc = "Goto Implementation" },
+            { "<leader>ll", "<cmd>e ~/.cache/nvim/lsp.log<CR>", desc = "Open Log" },
+            { "<leader>lr", "<cmd>lua vim.lsp.buf.references()<CR>", desc = "Find References" },
+         })
         '';
       }
       octo-nvim
@@ -215,7 +233,7 @@
           }
         '';
       }
-      cmp-nvim-lsp
+      #cmp-nvim-lsp
       # Snippets
       cmp_luasnip
       friendly-snippets
@@ -300,30 +318,17 @@
       }
       playground
       {
-        plugin = nvim-lspconfig;
-          type = "lua";
+        optional = true;
+        plugin = playground;
+        type = "lua";
         config = ''
-         wk.add({
-            { "<leader>l", group = "lsp" },
-            { "<leader>lD", "<cmd>lua require('telescope.builtin').lsp_workspace_diagnostics()<CR>", desc = "Open Diagnostics" },
-            { "<leader>lR", "<cmd>lua vim.lsp.buf.rename()<CR>", desc = "Rename" },
-            { "<leader>lS", "<cmd>lua require('telescope.builtin').diagnostics()<CR>", desc = "Workspace Symbols" },
-            { "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<CR>", desc = "Code Actions" },
-            { "<leader>ld", "<cmd>lua vim.lsp.buf.definition()<CR>", desc = "Goto Definition" },
-            { "<leader>le", "<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>", desc = "Show Diagnostic" },
-            { "<leader>lf", "<cmd>lua vim.lsp.buf.format { async = true }<CR>", desc = "Format" },
-            { "<leader>lh", "<cmd>lua vim.lsp.buf.hover()<CR>", desc = "Hover" },
-            { "<leader>li", "<cmd>lua vim.lsp.buf.implementation()<CR>", desc = "Goto Implementation" },
-            { "<leader>ll", "<cmd>e ~/.cache/nvim/lsp.log<CR>", desc = "Open Log" },
-            { "<leader>lr", "<cmd>lua vim.lsp.buf.references()<CR>", desc = "Find References" },
-          })
-          local lspc = require("lspconfig")
-          local on_attach = function(client, bufnr)
+          local function on_attach(client, bufnr)
           end
           local flags = {
             debounce_text_changes = 500,
           }
-          lspc.hls.setup {
+          vim.lsp.enable('hls')
+          vim.lsp.config('hls', {
             on_attach = on_attach,
             capabilities = capabilities,
             --settings = {
@@ -337,17 +342,22 @@
             --  }
             --},
             flags = flags
-          }
-          lspc.rust_analyzer.setup{ on_attach = on_attach, capabilities = capabilities, flags = flags }
-          lspc.nil_ls.setup{
+          })
+          vim.lsp.enable('rust_analyzer')
+          vim.lsp.config('rust_analyzer', { on_attach = on_attach, capabilities = capabilities, flags = flags })
+          vim.lsp.enable('nil_ls')
+          vim.lsp.config('nil_ls', {
             on_attach = on_attach,
             capabilities = capabilities,
             flags = flags,
             settings = { ['nil'] = { formatting = { command = { "nixpkgs-fmt" }}}}
-          }
-          lspc.clangd.setup{ on_attach = on_attach, capabilities = capabilities, flags = flags }
-          lspc.denols.setup{ on_attach = on_attach, capabilities = capabilities, flags = flags }
-          lspc.starlark_rust.setup{ on_attach = on_attach, capabilities = capabilities, flags = flags }
+          })
+          vim.lsp.enable('clangd')
+          vim.lsp.config('clangd', { on_attach = on_attach, capabilities = capabilities, flags = flags })
+          vim.lsp.enable('denols')
+          vim.lsp.config('denols', { on_attach = on_attach, capabilities = capabilities, flags = flags })
+          vim.lsp.enable('starlark_rust')
+          vim.lsp.config('starlark_rust', { on_attach = on_attach, capabilities = capabilities, flags = flags })
           -- TODO: "autocmd BufWritePre * lua vim.lsp.buf.formatting_sync(nil, 1000)
         '';
       }
@@ -365,52 +375,52 @@
         plugin = toggleterm-nvim;
         type = "lua";
         config = ''
-            require("toggleterm").setup {
-              open_mapping = [[<c-t>]],
-              direction = 'float',
-            }
+          require("toggleterm").setup {
+            open_mapping = [[<c-t>]],
+            direction = 'float',
+          }
         '';
       }
       vim-nix
       vim-lastplace
       {
         plugin = vim-gh-line;
-          type = "lua";
+        type = "lua";
         config = ''
-            vim.g.gh_line_map_default = 0
-            wk.add({
-              { "<leader>g", group = "git" },
-              { "<leader>gl", "<cmd>call gh_line('blob', g:gh_always_interactive)<cr>", desc = "Link" },
-            })
+          vim.g.gh_line_map_default = 0
+          wk.add({
+            { "<leader>g", group = "git" },
+            { "<leader>gl", "<cmd>call gh_line('blob', g:gh_always_interactive)<cr>", desc = "Link" },
+          })
         '';
       }
       {
         plugin = telescope-ui-select-nvim;
-          type = "lua";
+        type = "lua";
         config = ''
-            require("telescope").load_extension("ui-select")
+          require("telescope").load_extension("ui-select")
         '';
       }
       {
         plugin = telescope-nvim;
         type = "lua";
         config = ''
-            require('telescope').setup{
-              defaults = {
-                -- path_display={ "smart" } 
-                -- path_display={ truncate = 1 } 
-                -- path_display={ "shorten" } 
-                wrap_results = true
-              }
+          require('telescope').setup{
+            defaults = {
+              -- path_display={ "smart" } 
+              -- path_display={ truncate = 1 } 
+              -- path_display={ "shorten" } 
+              wrap_results = true
             }
-            wk.add({
-              { "<leader>f", group = "find" },
-              { "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
-              { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "File" },
-              { "<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "RipGrep" },
-              { "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Help Tags" },
-              { "<leader>fr", "<cmd>Telescope oldfiles<cr>", desc = "Recent File" },
-            })
+          }
+          wk.add({
+            { "<leader>f", group = "find" },
+            { "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
+            { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "File" },
+            { "<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "RipGrep" },
+            { "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Help Tags" },
+            { "<leader>fr", "<cmd>Telescope oldfiles<cr>", desc = "Recent File" },
+          })
         '';
       }
       nvim-web-devicons
@@ -419,27 +429,27 @@
         plugin = lazygit-nvim;
         type = "lua";
         config = ''
-            wk.add({
-              { "<leader>g", group = "git" },
-              { "<leader>gg", "<cmd>LazyGit<cr>", desc = "LazyGit" },
-            })
+          wk.add({
+            { "<leader>g", group = "git" },
+            { "<leader>gg", "<cmd>LazyGit<cr>", desc = "LazyGit" },
+          })
         '';
       }
       {
         plugin = tabline-nvim;
         type = "lua";
         config = ''
-            require('tabline').setup {}
-            wk.add({
-              { "<s-tab>", "<cmd>TablineBufferPrevious<cr>", desc = "Previous Buffer" },
-              { "<tab>", "<cmd>TablineBufferNext<cr>", desc = "Next Buffer" },
-            })
+          require('tabline').setup {}
+          wk.add({
+            { "<s-tab>", "<cmd>TablineBufferPrevious<cr>", desc = "Previous Buffer" },
+            { "<tab>", "<cmd>TablineBufferNext<cr>", desc = "Next Buffer" },
+          })
         '';
       }
-      lualine-lsp-progress
+      #lualine-lsp-progress
       {
         plugin = lualine-nvim;
-          type = "lua";
+        type = "lua";
         config = ''
           require('lualine').setup {
             sections = {
@@ -451,24 +461,24 @@
       }
       {
         plugin = nvim-notify;
-          type = "lua";
+        type = "lua";
         config = ''
-            require('notify').setup {}
+          require('notify').setup {}
         '';
       }
       {
         plugin = gitsigns-nvim;
-          type = "lua";
+        type = "lua";
         config = ''
-            require('gitsigns').setup()
-            wk.add({
-              { "<leader>g", group = "git" },
-              { "<leader>gb", "<cmd>lua require('gitsigns').blame_line{full=true}<CR>", desc = "Blame" },
-              { "<leader>gh", group = "hunk" },
-              { "<leader>ghr", "<cmd>Gitsigns reset_hunk<cr>", desc = "Reset" },
-              { "<leader>ghs", "<cmd>Gitsigns stage_hunk<cr>", desc = "Stage" },
-              { "<leader>ghu", "<cmd>Gitsigns undo_stage_hunk<cr>", desc = "Undo" },
-            })
+          require('gitsigns').setup()
+          wk.add({
+            { "<leader>g", group = "git" },
+            { "<leader>gb", "<cmd>lua require('gitsigns').blame_line{full=true}<CR>", desc = "Blame" },
+            { "<leader>gh", group = "hunk" },
+            { "<leader>ghr", "<cmd>Gitsigns reset_hunk<cr>", desc = "Reset" },
+            { "<leader>ghs", "<cmd>Gitsigns stage_hunk<cr>", desc = "Stage" },
+            { "<leader>ghu", "<cmd>Gitsigns undo_stage_hunk<cr>", desc = "Undo" },
+          })
         '';
       }
       plenary-nvim
@@ -478,97 +488,97 @@
         plugin = bufdelete-nvim;
         type = "lua";
         config = ''
-            wk.add({
-              { "<leader>b", group = "buffers" },
-              { "<leader>bd", "<cmd>lua require('bufdelete').bufdelete(0)<cr>", desc = "Delete" },
-            })
+          wk.add({
+            { "<leader>b", group = "buffers" },
+            { "<leader>bd", "<cmd>lua require('bufdelete').bufdelete(0)<cr>", desc = "Delete" },
+          })
         '';
       }
       # DAP
       {
         plugin = nvim-dap;
-          type = "lua";
+        type = "lua";
         config = ''
-            local dap = require('dap')
-            wk.add({
-              { "<leader>d", group = "debug" },
-              { "<leader>db", "<cmd>lua require('dap').toggle_breakpoint()<cr>", desc = "Breakpoint" },
-              { "<leader>dc", "<cmd>lua require('dap').continue()<cr>", desc = "Continue" },
-            })
-            dap.adapters.lldb = {
-              type = 'executable',
-              command = '${pkgs.lldb}/bin/lldb-vscode',
-              name = "lldb"
-            }
-            dap.configurations.rust = {
-              {
-                name = "Launch",
-                type = "lldb",
-                request = "launch",
-                program = function()
-                  return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
-                end,
-                cwd = "''${workspaceFolder}",
-                stopOnEntry = false,
-                args = {},
-                runInTerminal = false,
-              },
-              {
-                name = "Attach to process",
-                type = 'rust',
-                request = 'attach',
-                pid = require('dap.utils').pick_process,
-                args = {},
-              },
-            }
-            dap.adapters.haskell = {
-              type = 'executable';
-              command = 'haskell-debug-adapter';
-              args = {};
-            }
-            dap.configurations.haskell = {
-              {
-                type = 'haskell',
-                request = 'launch',
-                name = 'cabal',
-                workspace = "''${workspaceFolder}",
-                startup = "''${file}",
-                stopOnEntry = true,
-                logFile = vim.fn.stdpath('cache') .. '/haskell-dap.log',
-                logLevel = 'WARNING',
-                ghciEnv = {HOI="hoi"},
-                ghciPrompt = "Prelude>",
-                ghciInitialPrompt = "Prelude>",
-                ghciCmd= "cabal exec -- ghci-dap --interactive -i -i''${workspaceFolder}",
-              },
-            }
+          local dap = require('dap')
+          wk.add({
+            { "<leader>d", group = "debug" },
+            { "<leader>db", "<cmd>lua require('dap').toggle_breakpoint()<cr>", desc = "Breakpoint" },
+            { "<leader>dc", "<cmd>lua require('dap').continue()<cr>", desc = "Continue" },
+          })
+          dap.adapters.lldb = {
+            type = 'executable',
+            command = '${pkgs.lldb}/bin/lldb-vscode',
+            name = "lldb"
+          }
+          dap.configurations.rust = {
+            {
+              name = "Launch",
+              type = "lldb",
+              request = "launch",
+              program = function()
+                return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+              end,
+              cwd = "''${workspaceFolder}",
+              stopOnEntry = false,
+              args = {},
+              runInTerminal = false,
+            },
+            {
+              name = "Attach to process",
+              type = 'rust',
+              request = 'attach',
+              pid = require('dap.utils').pick_process,
+              args = {},
+            },
+          }
+          dap.adapters.haskell = {
+            type = 'executable';
+            command = 'haskell-debug-adapter';
+            args = {};
+          }
+          dap.configurations.haskell = {
+            {
+              type = 'haskell',
+              request = 'launch',
+              name = 'cabal',
+              workspace = "''${workspaceFolder}",
+              startup = "''${file}",
+              stopOnEntry = true,
+              logFile = vim.fn.stdpath('cache') .. '/haskell-dap.log',
+              logLevel = 'WARNING',
+              ghciEnv = {HOI="hoi"},
+              ghciPrompt = "Prelude>",
+              ghciInitialPrompt = "Prelude>",
+              ghciCmd= "cabal exec -- ghci-dap --interactive -i -i''${workspaceFolder}",
+            },
+          }
         '';
       }
       {
         plugin = nvim-dap-ui;
-          type = "lua";
+        type = "lua";
         config = ''
-            require("dapui").setup()
-            wk.add({
-              { "<leader>d", group = "debug" },
-              { "<leader>do", "<cmd>lua require('dapui').toggle()<cr>", desc = "Toggle UI" },
-            })
+          require("dapui").setup()
+          wk.add({
+            { "<leader>d", group = "debug" },
+            { "<leader>do", "<cmd>lua require('dapui').toggle()<cr>", desc = "Toggle UI" },
+          })
         '';
       }
       {
         plugin = telescope-dap-nvim;
         type = "lua";
         config = ''
-            require('telescope').load_extension('dap')
+          require('telescope').load_extension('dap')
         '';
       }
-      {
-        plugin = rust-tools-nvim;
-          type = "lua";
-        config = ''
-            require('rust-tools').setup({})
-        '';
-      }
+      #{
+      #  plugin = rust-tools-nvim;
+      #  type = "lua";
+      #  config = ''
+      #    require('rust-tools').setup({})
+      #  '';
+      #}
       #{
       #  plugin = indent-blankline-nvim;
       #  type = "lua";
