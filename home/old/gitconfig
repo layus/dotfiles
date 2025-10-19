@@ -1,0 +1,38 @@
+[user]
+    email = layus.on@gmail.com
+    name = Guillaume Maudoux
+
+[color]
+    ui = auto
+
+[push]
+    default = simple
+
+[core]
+    excludesfile = /home/layus/.gitignore.d/global
+
+[diff]
+    compactionHeuristic = true
+    noprefix = true
+[alias]
+    st = status -s
+    ci = commit
+    br = branch
+    c = checkout
+    df = diff
+    lg = log -p
+    ign = ls-files -o -i --exclude-standard
+    up = !eval $(keychain --eval --agents ssh -Q $HOME/.ssh/dark-vador_rsa) && git pull
+    pu = !eval $(keychain --eval --agents ssh -Q $HOME/.ssh/dark-vador_rsa) && git push
+    fetch = !eval $(keychain --eval --agents ssh -Q $HOME/.ssh/dark-vador_rsa) && git push
+    lola = log --graph --decorate --oneline --all
+    lol = log --decorate --oneline
+
+[rebase]
+    autosquash = true
+
+[sendemail]
+    smtpEncryption = tls
+    smtpServer = smtp.gmail.com
+    smtpUser = layus.on@gmail.com
+    smtpServerPort = 587

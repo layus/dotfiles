@@ -150,7 +150,6 @@
         file-roller
         gedit
         pavucontrol
-        keychain
         xclip
         imagemagickBig
         (sox.override { enableLame = true; })
@@ -163,7 +162,6 @@
         #gst-ffmpeg
         gtkspell3
         gitg
-        wget
         networkmanagerapplet
         simple-scan
         emv-cap
@@ -279,6 +277,9 @@
       tmate
       nixpkgs-fmt
       quilt
+      keychain
+      wget
+      curl
 
 
       # }}}
