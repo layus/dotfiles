@@ -48,8 +48,8 @@
 
       programs.direnv.enable = true;
       programs.direnv.nix-direnv.enable = true;
-
       programs.dircolors.enable = true;
+      programs.keychain.enable = true;
 
       programs.fish.enable = true;
       programs.zsh.enable = true;

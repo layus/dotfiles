@@ -26,18 +26,12 @@
     df = diff
     lg = log -p
     ign = ls-files -o -i --exclude-standard
-    up = !eval $(keychain --eval --agents ssh -Q $HOME/.ssh/dark-vador_rsa) && git pull
-    pu = !eval $(keychain --eval --agents ssh -Q $HOME/.ssh/dark-vador_rsa) && git push
-    fetch = !eval $(keychain --eval --agents ssh -Q $HOME/.ssh/dark-vador_rsa) && git push
-    dlog = log --decorate --oneline
-    glog = log --graph --oneline --decorate
-    gloga = log --graph --oneline --decorate --all
 
-    # old aliases (name is meaningless...)
-    lola = log --graph --decorate --oneline --all
-    lolg = log --graph --oneline --decorate
-    lol = log --decorate --oneline
-
+    # Too late, these nonsensical names are in muscle memory
+    up = pull
+    lol =  log --decorate --oneline
+    lolg = log --decorate --oneline --graph
+    lola = log --decorate --oneline --graph --all
 
 [rebase]
     autosquash = true
