@@ -44,48 +44,14 @@ in {
     mod_status = true;
     enableModules = [
       "mod_auth"  # Simple auth scheme
+      "mod_authn_file"
       "mod_fastcgi"
       "mod_openssl"
       "mod_access"
       "mod_alias"
       "mod_rewrite"
     ];
-    extraConfig = let
-      # SSL/TLS config.
-      # Generated with mozilla ssl config generator.
-      # @ https://mozilla.github.io/server-side-tls/ssl-config-generator/
-      letsencrypt = domain: ''
-        $SERVER["socket"] == ":443" {
-          $HTTP["host"] == "${domain}" {
-            protocol     = "https://"
-            ssl.engine   = "enable"
-            ssl.disable-client-renegotiation = "enable"
-
-            # pemfile is cert+privkey, ca-file is the intermediate chain in one file
-            ssl.pemfile             = "${config.security.acme.certs.maudoux.webroot}/${domain}/privkey.pem"
-            ssl.ca-file             = "${config.security.acme.certs.maudoux.webroot}/${domain}/fullchain.pem"
-            # for DH/DHE ciphers, dhparam should be >= 2048-bit
-            ssl.dh-file            = "/etc/lighttpd/certificates/dhparam.pem"
-            # ECDH/ECDHE ciphers curve strength (see `openssl ecparam -list_curves`)
-            ssl.ec-curve            = "secp384r1"
-            # Compression is by default off at compile-time, but use if needed
-            ssl.use-compression     = "disable"
-
-            # Environment flag for HTTPS enabled
-            setenv.add-environment = (
-                "HTTPS" => "on"
-            )
-
-            # intermediate configuration, tweak to your needs
-            ssl.use-sslv2 = "disable"
-            ssl.use-sslv3 = "disable"
-            ssl.honor-cipher-order    = "enable"
-            ssl.cipher-list           = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA"
-          }
-        }
-      '';
-
-    in ''
+    extraConfig = ''
       #dir-listing.activate = "enable"
 
       # Auth
@@ -197,8 +163,8 @@ in {
         ssl.disable-client-renegotiation = "enable"
 
         # pemfile is cert+privkey, ca-file is the intermediate chain in one file
-        ssl.pemfile             = "/etc/lighttpd/certificates/maudoux.be.pem"
-        ssl.ca-file             = "/etc/lighttpd/certificates/maudoux.be.ca.crt"
+        ssl.pemfile             = "${config.security.acme.certs.maudoux.webroot}/full.pem"
+        ssl.ca-file             = "${config.security.acme.certs.maudoux.webroot}/fullchain.pem"
         # for DH/DHE ciphers, dhparam should be >= 2048-bit
         ssl.dh-file            = "/etc/lighttpd/certificates/dhparam.pem"
         # ECDH/ECDHE ciphers curve strength (see `openssl ecparam -list_curves`)

@@ -450,8 +450,8 @@
       # Bind all addresses
       hosts = "0.0.0.0:5232";
       ssl = "True";
-      key = "/var/run/radicale/certificates/privkey.pem";
-      certificate = "/var/run/radicale/certificates/fullchain.pem";
+      key = "${config.security.acme.certs.maudoux.webroot}/key.pem";
+      certificate = "${config.security.acme.certs.maudoux.webroot}/fullchain.pem";
     };
 
     logging.level = "info";
@@ -465,39 +465,7 @@
     storage.filesystem_folder = "/var/lib/radicale/collections";
 
     web.type = "internal";
-
-    # # The first rule matching both user and collection patterns will be returned.
-
-    # # Allow authenticated user to read 'shared' collections in their home directory
-    # # (usually symlinks from other calendars)
-    # [allow-shared-read]
-    # user: .+
-    # collection: %(login)s/.+-shared.ics$
-    # permission: r
-
-    # # Give owners read-write access to everything else:
-    # [owner-write]
-    # user: .+
-    # collection: %(login)s.*$
-    # permission: rw
   };
-
-  systemd.services.radicale.serviceConfig.PermissionsStartOnly = true;
-  systemd.services.radicale.preStart = ''
-    set -xe
-    mkdir -p /var/run/radicale/certificates
-    chmod 700 /var/run/radicale /var/run/radicale/certificates
-    chown radicale:radicale /var/run/radicale /var/run/radicale/certificates
-    rm -rf /var/run/radicale/certificates/*
-
-    radicale_dir=/var/run/radicale/certificates
-    le_dir=/etc/letsencrypt/live
-
-    for dom in maudoux.be; do
-      install -m 440 -o root -g radicale -t $radicale_dir $le_dir/$dom/privkey.pem
-      install -m 440 -o root -g radicale -t $radicale_dir $le_dir/$dom/fullchain.pem
-    done
-  '';
 
   systemd.services."status-email-user@" = {
     enable = true;
