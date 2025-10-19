@@ -25,8 +25,8 @@
 
       home.activation = {
         mySymlinks = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-          [ -e .terminfo ] || run ln -sn $VERBOSE_ARG .nix-profile/share/terminfo .terminfo
-          [ -e .config/home-manager ] || run ln -sn $VERBOSE_ARG ../.config/nixpkgs .config/home-manager
+          [ -e .terminfo -o -L .terminfo ] || run ln -sn $VERBOSE_ARG .nix-profile/share/terminfo .terminfo
+          [ -e .config/home-manager -o -L .config/home-manager ] || run ln -sn $VERBOSE_ARG ../.config/nixpkgs .config/home-manager
         '';
       };
 

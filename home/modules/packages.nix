@@ -234,7 +234,8 @@
       #  propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or "") ++ [ python3Packages.setuptools ];
       #}))
       #rxvt_unicode-with-plugins
-      #vim_configurable 
+      #vim_configurable
+      termite.terminfo
       editorconfig-core-c # Was is das ?
       #neovim
       emacs
