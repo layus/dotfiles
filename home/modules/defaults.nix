@@ -51,10 +51,6 @@
 
       programs.dircolors.enable = true;
 
-      programs.keychain.enable = true;
-      programs.keychain.extraFlags = [ "--quiet" "--systemd" "--ssh-allow-forwarded" ];
-      programs.keychain.keys = [ "~/.ssh/*_{rsa,ecdsa,ed25519}(N)" ];
-
       programs.fish.enable = true;
       programs.zsh.enable = true;
       programs.zsh.autocd = true;

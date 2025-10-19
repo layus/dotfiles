@@ -202,14 +202,11 @@ function detect_env () {
     echo "${envs:+"($envs)"}"
 }
 
-# See programs.keychain.*
-#if [ -z "$SSH_AUTH_SOCK" ]; then
-#    ## Eval keychain
-#    eval $(
-#      setopt nullglob
-#      keychain --eval --systemd --agents ssh -Q --quiet $HOME/.ssh/*_{ecdsa,rsa,ed25519}
-#    )
-#fi
+# Keychain always prefers the local agent over the forwarded one. Fix this.
+if [ -z "$SSH_AUTH_SOCK" ]; then
+    ## Eval keychain
+    eval $( keychain --eval --systemd --quiet ~/.ssh/*_{rsa,ecdsa,ed25519}(N) )
+fi
 
 # See programs.direnv.*
 # eval "$(direnv hook zsh)"
