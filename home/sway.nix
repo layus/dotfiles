@@ -447,6 +447,7 @@ output * bg #6699cc solid_color
 
 input * {
     tap enabled
+    drag_lock disabled
     middle_emulation enabled
     xkb_numlock enabled
     xkb_layout "be"
