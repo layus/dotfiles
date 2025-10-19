@@ -37,21 +37,6 @@ in {
 
   #systemd.services.lighttpd.path = [ pkgs.imagemagick ];
 
-  systemd.services.lighttpd.preStart = ''
-    set -xe
-    mkdir -p /var/run/lighttpd/certificates
-    chown 770 /var/run/lighttpd /var/run/lighttpd/certificates
-    chown lighttpd:lighttpd /var/run/lighttpd /var/run/lighttpd/certificates
-
-    lighttpd_dir=/etc/lighttpd/certificates
-    le_dir=/etc/letsencrypt/live
-
-    for dom in maudoux.be; do 
-      cat $le_dir/$dom/privkey.pem $le_dir/$dom/cert.pem > $lighttpd_dir/$dom.pem
-      cat $le_dir/$dom/fullchain.pem > $lighttpd_dir/$dom.ca.crt
-    done
-  '';
-
   services.lighttpd = {
     enable = true;
     document-root = "/nonexistent" ; # Serve the current directory
@@ -77,10 +62,10 @@ in {
             ssl.disable-client-renegotiation = "enable"
 
             # pemfile is cert+privkey, ca-file is the intermediate chain in one file
-            ssl.pemfile             = "/etc/lighttpd/certificates/${domain}.pem"
-            ssl.ca-file             = "/etc/lighttpd/certificates/${domain}.ca.crt"
+            ssl.pemfile             = "${config.security.acme.certs.maudoux.webroot}/${domain}/privkey.pem"
+            ssl.ca-file             = "${config.security.acme.certs.maudoux.webroot}/${domain}/fullchain.pem"
             # for DH/DHE ciphers, dhparam should be >= 2048-bit
-            ssl.dh-file            = "/etc/lighttpd/certificates/dhparam.pem" 
+            ssl.dh-file            = "/etc/lighttpd/certificates/dhparam.pem"
             # ECDH/ECDHE ciphers curve strength (see `openssl ecparam -list_curves`)
             ssl.ec-curve            = "secp384r1"
             # Compression is by default off at compile-time, but use if needed
@@ -203,9 +188,9 @@ in {
       # Let's encrypt
 
       $HTTP["url"] =~ "^/.well-known" {
-        server.document-root = "/home/http/"
+        server.document-root = "${config.security.acme.certs.maudoux.webroot}"
       }
-      
+
       $SERVER["socket"] == ":443" {
         protocol     = "https://"
         ssl.engine   = "enable"
@@ -215,7 +200,7 @@ in {
         ssl.pemfile             = "/etc/lighttpd/certificates/maudoux.be.pem"
         ssl.ca-file             = "/etc/lighttpd/certificates/maudoux.be.ca.crt"
         # for DH/DHE ciphers, dhparam should be >= 2048-bit
-        ssl.dh-file            = "/etc/lighttpd/certificates/dhparam.pem" 
+        ssl.dh-file            = "/etc/lighttpd/certificates/dhparam.pem"
         # ECDH/ECDHE ciphers curve strength (see `openssl ecparam -list_curves`)
         ssl.ec-curve            = "secp384r1"
         # Compression is by default off at compile-time, but use if needed

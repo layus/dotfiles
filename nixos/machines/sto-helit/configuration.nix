@@ -62,6 +62,27 @@
   };
   #security.pam.enableSSHAgentAuth = true;
 
+  security.acme.acceptTerms = true;
+  security.acme.defaults.email = "layus.on@gmail.com";
+  security.acme.certs."maudoux" = {
+    domain = "maudoux.be";
+    webroot = "/var/lib/acme/maudoux";
+    group = config.users.users.lighttpd.group;
+    extraDomainNames = [ "marie-guillaume.maudoux.be" ];
+    reloadServices = ["lighttpd" "radicale"];
+    postRun = ''
+      # set permission on dir
+      ${pkgs.acl}/bin/setfacl -m \
+        u:lighttpd:rx,u:radicale:rx \
+        /var/lib/acme/maudoux
+
+      # set permission on key file
+      ${pkgs.acl}/bin/setfacl -m \
+        u:lighttpd:r,u:radicale:r \
+        /var/lib/acme/maudoux/*.pem
+    '';
+  };
+
   # services.fail2ban.enable = true;
   # services.fail2ban.jails = {
   #   # Can kick you off your own server with spoofed ip packets.
@@ -113,8 +134,8 @@
 
   ## Users
 
-  #users.defaultUserShell = "/run/current-system/sw/bin/zsh";
-  users.defaultUserShell = "/run/current-system/sw/bin/fish";
+  users.defaultUserShell = "/run/current-system/sw/bin/zsh";
+  #users.defaultUserShell = "/run/current-system/sw/bin/fish";
 
   users.mutableUsers = true;
 
