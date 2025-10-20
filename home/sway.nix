@@ -104,8 +104,8 @@ let
 
     # default is 5700:3500
     exec ${gammastep}/bin/gammastep -l 50.6:4.32 -t 5700:4500
-    execAndScratch Slack    ${slack}/bin/slack --ozone-platform=wayland
-    execAndScratch zim      ${zim}/bin/zim
+    execAndScratch Slack    ${slack}/bin/slack
+    execAndScratch Zim      ${zim}/bin/zim
     execAndScratch Element  ${element-desktop}/bin/element-desktop
     #execAndScratch "Microsoft Teams - Preview" $-{teams}/bin/teams
 
