@@ -106,7 +106,7 @@
         #converted to plugins: obs-wlrobs obs-studio // see home manager
         # RIP: xournal
         wf-recorder
-        poppler_utils
+        poppler-utils
         # teams -- unmainained
         #kdenlive
         # }}}
@@ -210,7 +210,7 @@
         st
 
         tpm-fido
-        pinentry
+        pinentry-gnome3
         # }}}
 
         # {{{ Nix internals fixup
@@ -244,8 +244,8 @@
       #  propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or []) ++ [ pythonPackages.simplejson ]; # for mozilla pushtree
       #}))
       subversion # VCS
-      gitAndTools.hub
-      gitAndTools.gh
+      hub
+      gh
       tree
       ripgrep
       fd
@@ -304,13 +304,13 @@
       #(lib.lowPrio remake)
       (lib.lowPrio moreutils)
       pandoc
-      (lib.lowPrio (# conflicts wit ghostscript
-        texlive.combine {
-          inherit (texlive) scheme-full;
-          #inherit (default) auctex;
-          pkgFilter = pkg: pkg.tlType == "run" || pkg.tlType == "bin" || pkg.pname == "pgf";
-        }
-      ))
+      #(lib.lowPrio (# conflicts wit ghostscript
+      #  texlive.combine {
+      #    inherit (texlive) scheme-full;
+      #    #inherit (default) auctex;
+      #    pkgFilter = pkg: pkg.tlType == "run" || pkg.tlType == "bin" || pkg.pname == "pgf";
+      #  }
+      #))
       patchelf
       binutils
       gdb

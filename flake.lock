@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1760662441,
-        "narHash": "sha256-mlDqR1Ntgs9uYYEAUR1IhamKBO0lxoNS4zGLzEZaY0A=",
+        "lastModified": 1767606757,
+        "narHash": "sha256-lCl9QyHHHG/lKkpZu9nhJ5ri30FUD66VWNMJp167wPY=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "722792af097dff5790f1a66d271a47759f477755",
+        "rev": "c4eabb884b01366f25c3f80823b12dd595ed603a",
         "type": "github"
       },
       "original": {
@@ -27,23 +27,23 @@
         ]
       },
       "locked": {
-        "lastModified": 1730127737,
-        "narHash": "sha256-XsCfquaiuXRuQJq8iHDABkm+qCLMP+BNEtTf3DrmR78=",
-        "path": "/home/layus/.config/nixpkgs/local",
+        "lastModified": 1765577718,
+        "narHash": "sha256-f/bHg85Z/z8G3MWSIF3Ol5H+zAbtGNZju0F3gWsNehc=",
+        "path": "/home/gmaudoux/.config/nixpkgs/local",
         "type": "path"
       },
       "original": {
-        "path": "/home/layus/.config/nixpkgs/local",
+        "path": "/home/gmaudoux/.config/nixpkgs/local",
         "type": "path"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1760524057,
-        "narHash": "sha256-EVAqOteLBFmd7pKkb0+FIUyzTF61VKi7YmvP1tw4nEw=",
+        "lastModified": 1767379071,
+        "narHash": "sha256-EgE0pxsrW9jp9YFMkHL9JMXxcqi/OoumPJYwf+Okucw=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "544961dfcce86422ba200ed9a0b00dd4b1486ec5",
+        "rev": "fb7944c166a3b630f177938e478f0378e64ce108",
         "type": "github"
       },
       "original": {

@@ -4,7 +4,7 @@
   inputs.homeManager.url = "github:nix-community/home-manager";
   inputs.homeManager.inputs.nixpkgs.follows = "nixpkgs";
 
-  inputs.localConfig.url = "path:/home/layus/.config/nixpkgs/local";
+  inputs.localConfig.url = "path:/home/gmaudoux/.config/nixpkgs/local";
   inputs.localConfig.inputs.nixpkgs.follows = "nixpkgs";
 
   #inputs.dwarffs.url = "github:edolstra/dwarffs";

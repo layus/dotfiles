@@ -33,8 +33,8 @@
       programs.git = {
         enable = true;
         package = pkgs.gitFull;
-        userName = lib.mkDefault "Guillaume @layus Maudoux";
-        userEmail = lib.mkDefault "layus.on@gmail.com";
+        settings.user.name = lib.mkDefault "Guillaume @layus Maudoux";
+        settings.user.email = lib.mkDefault "layus.on@gmail.com";
         includes = [{ path = ../gitconfig.inc; }];
         lfs.enable = true;
       };
@@ -212,7 +212,7 @@
             ${pkgs.imagemagick}/bin/convert ${../dotfiles/background.webp} -resize "3840x2400^" -gravity Center -extent 3840x2400+250 $out
           '';
           zim = super.zim.overrideAttrs (oldAttrs: {
-            propagatedBuildInputs = oldAttrs.propagatedBuildInputs or [ ] ++ [ self.python3Packages.Babel ];
+            propagatedBuildInputs = oldAttrs.propagatedBuildInputs or [ ] ++ [ self.python3Packages.babel ];
             preFixup =
               oldAttrs.preFixup
                 or ""

@@ -14,7 +14,7 @@
 , lockimage
 , mako
 , networkmanagerapplet
-, pasystray
+#, pasystray
 , pulseaudio
 , slack
 , slurp
@@ -149,11 +149,11 @@ let
     exec_always ${waybar}/bin/waybar
     # breaks exec_always ${swayidleScript}/bin/swayidle
     exec_always ${blueman}/bin/blueman-applet
-    exec_always ${pasystray}/bin/pasystray
 
     # kanshi needs restart to override outputs reset changes made by sway reload
     exec_always ${way-displays}/bin/way-displays
   '';
+    #exec_always ${pasystray}/bin/pasystray
 
   config = ''
 # i3 config file (v4.4)
