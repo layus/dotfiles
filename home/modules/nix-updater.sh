@@ -14,6 +14,30 @@ override_inputs=(@overrideInputFlags@)
 
 # --- helpers ---
 
+require_clean_tree() {
+  if ! git -C "$flake_dir" diff --quiet -- ':!.verified-rev' 2>/dev/null; then
+    echo "ERROR: Flake directory has uncommitted changes. Commit first." >&2
+    exit 1
+  fi
+  if ! git -C "$flake_dir" diff --cached --quiet 2>/dev/null; then
+    echo "ERROR: Flake directory has staged but uncommitted changes. Commit first." >&2
+    exit 1
+  fi
+  verified_rev="$(git -C "$flake_dir" rev-parse HEAD 2>/dev/null || echo "")"
+  if [ -z "$verified_rev" ]; then
+    echo "ERROR: Could not determine git revision." >&2
+    exit 1
+  fi
+}
+
+stamp_verified_rev() {
+  echo "$verified_rev" > "$flake_dir/.verified-rev"
+}
+
+clear_verified_rev() {
+  : > "$flake_dir/.verified-rev"
+}
+
 resolve_target() {
   local t="$1"
   case "$t" in
@@ -53,8 +77,10 @@ write_state() {
 
 cmd_build() {
   local target="$1"
+  require_clean_tree
   resolve_target "$target"
 
+  stamp_verified_rev
   write_state "building"
   echo "=== nix-updater build ($target) started at $(date) ===" > "$log_file"
 
@@ -88,10 +114,12 @@ cmd_build() {
     fi
   else
     error="$(tail -20 "$log_file")"
+    clear_verified_rev
     write_state "failed" "" "" "$error"
     echo "Build failed." >> "$log_file"
     return 1
   fi
+  clear_verified_rev
 }
 
 cmd_apply() {
@@ -120,6 +148,9 @@ cmd_apply() {
 
     echo "=== Applying $t update ==="
 
+    require_clean_tree
+    stamp_verified_rev
+
     local -a apply_flags=("${override_inputs[@]}")
 
     local recorded_lock
@@ -146,6 +177,7 @@ cmd_apply() {
        "$state_file" > "$state_file.tmp" \
        && mv "$state_file.tmp" "$state_file"
 
+    clear_verified_rev
     echo "$t: applied successfully ($result)"
   }
 

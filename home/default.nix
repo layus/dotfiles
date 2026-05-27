@@ -6,15 +6,19 @@ homeManager.lib.homeManagerConfiguration {
     (./users + "/${name}@${machine}.nix")
     (localConfig.home-overlay or { })
 
-    # config integrity: capture revision + block activation on dirty builds
-    # Note: --override-input makes self.rev absent (lock mismatch), but the
-    # git tree may still be clean.  Accept dirtyRev when it lacks "-dirty".
+    # config integrity: capture revision + enforce clean builds
+    # self.rev is present when the tree + lock are clean.  --override-input
+    # drops it, but the wrapper writes the verified rev into .verified-rev
+    # before building (and truncates it after).  We trust either source.
     ({ lib, ... }:
     let
-      rev = self.rev or self.dirtyRev or null;
-      isClean = rev != null && ! lib.hasSuffix "-dirty" rev;
+      verifiedRev = lib.strings.trim (builtins.readFile (self.outPath + "/.verified-rev"));
+      rev =
+        if self ? rev then self.rev                    # nix-verified clean tree
+        else if verifiedRev != "" then verifiedRev     # wrapper-verified
+        else null;
     in {
-      home.file.".config/hm-config-rev" = lib.mkIf isClean {
+      home.file.".config/hm-config-rev" = lib.mkIf (rev != null) {
         text = rev;
       };
 
@@ -23,7 +27,7 @@ homeManager.lib.homeManagerConfiguration {
       home.activation.requireCleanConfig = lib.hm.dag.entryBefore [ "writeBoundary" ] ''
         if [ ! -f "$newGenPath/home-files/.config/hm-config-rev" ]; then
           echo "ERROR: Refusing to activate — HM config was built from a dirty tree."
-          echo "       Commit your changes and rebuild."
+          echo "       Use nix-updater or rebuild.sh to build from a clean tree."
           exit 1
         fi
       '';

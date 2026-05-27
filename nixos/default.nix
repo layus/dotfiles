@@ -18,19 +18,23 @@ nixpkgs.lib.nixosSystem {
       nix.registry.nixpkgs.flake = nixpkgs;
     }
 
-    # config integrity: capture revision + block activation on dirty builds
-    # Note: --override-input makes self.rev absent (lock mismatch), but the
-    # git tree may still be clean.  Accept dirtyRev when it lacks "-dirty".
+    # config integrity: capture revision + enforce clean builds
+    # self.rev is present when the tree + lock are clean.  --override-input
+    # drops it, but the wrapper writes the verified rev into .verified-rev
+    # before building (and truncates it after).  We trust either source.
     ({ lib, ... }:
     let
-      rev = self.rev or self.dirtyRev or null;
-      isClean = rev != null && ! lib.hasSuffix "-dirty" rev;
+      verifiedRev = lib.strings.trim (builtins.readFile (self.outPath + "/.verified-rev"));
+      rev =
+        if self ? rev then self.rev
+        else if verifiedRev != "" then verifiedRev
+        else null;
     in {
       system.configurationRevision = if rev != null then rev else "unknown";
 
       environment.etc."nixos-source".source = self.outPath;
 
-      environment.etc."nixos-config-rev" = lib.mkIf isClean {
+      environment.etc."nixos-config-rev" = lib.mkIf (rev != null) {
         text = rev;
       };
 
@@ -39,8 +43,8 @@ nixpkgs.lib.nixosSystem {
           # Allow first boot and dry-activate
           :
         elif [ ! -f "$systemConfig/etc/nixos-config-rev" ]; then
-          echo "ERROR: Refusing to activate — configuration was built from a dirty tree."
-          echo "       Commit your changes and rebuild."
+          echo "ERROR: Refusing to activate — NixOS config was built from a dirty tree."
+          echo "       Use nix-updater or rebuild.sh to build from a clean tree."
           exit 1
         fi
       '';
