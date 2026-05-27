@@ -172,8 +172,17 @@
       #     vim.api.nvim_set_keymap("i", "<C-J>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
       #   '';
       # }
-      #copilot-lua # lua rewrite
-      #copilot-cmp # cmp integration for copilot-lua
+      copilot-lua # lua rewrite
+      {
+        plugin = copilot-cmp; # cmp integration for copilot-lua
+        type = "lua";
+        config = ''
+          require("copilot").setup({
+            suggestion = { enabled = false },
+            panel = { enabled = false },
+          })
+        '';
+      }
       #{
       #  plugin = firenvim;
       #  type = "lua";
@@ -305,60 +314,11 @@
             --   extended_mode = true,
             --   max_file_lines = nul,
             -- },
-            playground = {
-              enable = true
-            },
           }
 
           wk.add({
             { "<leader>t", group = "tree-sitter" },
-            { "<leader>tp", "<cmd>TSPlaygroundToggle<CR>", desc = "Toggle Playground" },
           })
-        '';
-      }
-      playground
-      {
-        optional = true;
-        plugin = playground;
-        type = "lua";
-        config = ''
-          local function on_attach(client, bufnr)
-          end
-          local flags = {
-            debounce_text_changes = 500,
-          }
-          vim.lsp.enable('hls')
-          vim.lsp.config('hls', {
-            on_attach = on_attach,
-            capabilities = capabilities,
-            --settings = {
-            --  haskell = {
-            --    plugin = {
-            --    type = "lua";
-            --      hlint = {
-            --        globalOn = true
-            --      }
-            --    }
-            --  }
-            --},
-            flags = flags
-          })
-          vim.lsp.enable('rust_analyzer')
-          vim.lsp.config('rust_analyzer', { on_attach = on_attach, capabilities = capabilities, flags = flags })
-          vim.lsp.enable('nil_ls')
-          vim.lsp.config('nil_ls', {
-            on_attach = on_attach,
-            capabilities = capabilities,
-            flags = flags,
-            settings = { ['nil'] = { formatting = { command = { "nixpkgs-fmt" }}}}
-          })
-          vim.lsp.enable('clangd')
-          vim.lsp.config('clangd', { on_attach = on_attach, capabilities = capabilities, flags = flags })
-          vim.lsp.enable('denols')
-          vim.lsp.config('denols', { on_attach = on_attach, capabilities = capabilities, flags = flags })
-          vim.lsp.enable('starlark_rust')
-          vim.lsp.config('starlark_rust', { on_attach = on_attach, capabilities = capabilities, flags = flags })
-          -- TODO: "autocmd BufWritePre * lua vim.lsp.buf.formatting_sync(nil, 1000)
         '';
       }
       {
