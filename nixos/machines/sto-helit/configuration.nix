@@ -585,7 +585,7 @@
     #imagemagick      # imagemagick, for lychee
     urlwatch # provide the system version
     rxvt-unicode-unwrapped.terminfo
-    termite.terminfo
+    kitty.terminfo
   ];
 
 
