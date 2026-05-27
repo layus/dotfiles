@@ -7,12 +7,18 @@ homeManager.lib.homeManagerConfiguration {
     (localConfig.home-overlay or { })
 
     # config integrity: capture revision + block activation on dirty builds
-    ({ lib, ... }: {
-      home.file.".config/hm-config-rev" = lib.mkIf (self ? rev) {
-        text = self.rev;
+    # Note: --override-input makes self.rev absent (lock mismatch), but the
+    # git tree may still be clean.  Accept dirtyRev when it lacks "-dirty".
+    ({ lib, ... }:
+    let
+      rev = self.rev or self.dirtyRev or null;
+      isClean = rev != null && ! lib.hasSuffix "-dirty" rev;
+    in {
+      home.file.".config/hm-config-rev" = lib.mkIf isClean {
+        text = rev;
       };
 
-      home.sessionVariables.HM_CONFIG_REV = self.rev or self.dirtyRev or "unknown";
+      home.sessionVariables.HM_CONFIG_REV = if rev != null then rev else "unknown";
 
       home.activation.requireCleanConfig = lib.hm.dag.entryBefore [ "writeBoundary" ] ''
         if [ ! -f "$newGenPath/home-files/.config/hm-config-rev" ]; then

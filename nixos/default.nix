@@ -19,13 +19,19 @@ nixpkgs.lib.nixosSystem {
     }
 
     # config integrity: capture revision + block activation on dirty builds
-    ({ lib, ... }: {
-      system.configurationRevision = self.rev or self.dirtyRev or "unknown";
+    # Note: --override-input makes self.rev absent (lock mismatch), but the
+    # git tree may still be clean.  Accept dirtyRev when it lacks "-dirty".
+    ({ lib, ... }:
+    let
+      rev = self.rev or self.dirtyRev or null;
+      isClean = rev != null && ! lib.hasSuffix "-dirty" rev;
+    in {
+      system.configurationRevision = if rev != null then rev else "unknown";
 
       environment.etc."nixos-source".source = self.outPath;
 
-      environment.etc."nixos-config-rev" = lib.mkIf (self ? rev) {
-        text = self.rev;
+      environment.etc."nixos-config-rev" = lib.mkIf isClean {
+        text = rev;
       };
 
       system.activationScripts.requireCleanConfig = ''
