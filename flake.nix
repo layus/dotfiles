@@ -4,12 +4,13 @@
   inputs.homeManager.url = "github:nix-community/home-manager";
   inputs.homeManager.inputs.nixpkgs.follows = "nixpkgs";
 
+  inputs.localConfig.url = "path:./local-default";
 
   #inputs.dwarffs.url = "github:edolstra/dwarffs";
   #inputs.dwarffs.inputs.nixpkgs.follows = "nixpkgs";
   #inputs.dwarffs.inputs.nix.inputs.nixpkgs.follows = "nixpkgs";
 
-  outputs = { self, homeManager, nixpkgs, ... }@args:
+  outputs = { self, homeManager, nixpkgs, localConfig, ... }@args:
     let
       lib = nixpkgs.lib;
 

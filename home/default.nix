@@ -1,13 +1,10 @@
-{ self, homeManager, nixpkgs, lib ? nixpkgs.lib, ... }@args:
+{ self, homeManager, localConfig, nixpkgs, lib ? nixpkgs.lib, ... }@args:
 name: machine:
 
-let
-  localHome = ../local/local-home.nix;
-in
 homeManager.lib.homeManagerConfiguration {
   modules = [
     (./users + "/${name}@${machine}.nix")
-  ] ++ lib.optional (builtins.pathExists localHome) localHome ++ [
+    (localConfig.home-overlay or { })
 
     # config integrity: capture revision + block activation on dirty builds
     ({ lib, ... }: {

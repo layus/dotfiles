@@ -64,14 +64,18 @@ let
       echo "=== nix-updater build ($target) started at $(date) ===" > "$log_file"
 
       # Build with fresh inputs (without mutating flake.lock)
-      update_flags=()
+      build_flags=()
       for input in ${lib.escapeShellArgs cfg.updateInputs}; do
-        update_flags+=(--update-input "$input")
+        build_flags+=(--update-input "$input")
+      done
+      for override in ${lib.escapeShellArgs (lib.mapAttrsToList (name: url: "${name} ${url}") cfg.overrideInputs)}; do
+        IFS=' ' read -r input_name input_url <<< "$override"
+        build_flags+=(--override-input "$input_name" "$input_url")
       done
 
       if nix build \
           "$flake_dir#$attr" \
-          "''${update_flags[@]}" \
+          "''${build_flags[@]}" \
           --out-link "$result_link" \
           --output-lock-file "$lock_file" \
           --log-format bar-with-logs \
@@ -105,7 +109,7 @@ let
   # Apply script
   applyScript = pkgs.writeShellApplication {
     name = "nix-updater-apply";
-    runtimeInputs = with pkgs; [ coreutils git hostname jq ];
+    runtimeInputs = with pkgs; [ coreutils hostname jq ];
     text = ''
       set -euo pipefail
 
@@ -132,25 +136,28 @@ let
 
         echo "=== Applying $t update ==="
 
-        # Update flake.lock with the recorded lock file before rebuilding,
-        # so nixos-rebuild/home-manager switch use the matching inputs.
+        # Build override flags to match what the build used
+        local -a override_flags=()
+        for override in ${lib.escapeShellArgs (lib.mapAttrsToList (name: url: "${name} ${url}") cfg.overrideInputs)}; do
+          IFS=' ' read -r input_name input_url <<< "$override"
+          override_flags+=(--override-input "$input_name" "$input_url")
+        done
+
+        # Use the recorded lock file so the apply uses the same inputs as the build
         local recorded_lock
-        recorded_lock="$(jq -r .lock_file "$state_file")"
+        recorded_lock="$(jq -r '.lock_file // ""' "$state_file")"
         if [ -n "$recorded_lock" ] && [ -f "$recorded_lock" ]; then
-          echo "Updating $flake_dir/flake.lock with recorded lock file"
-          cp "$recorded_lock" "$flake_dir/flake.lock"
-          git -C "$flake_dir" add flake.lock
-          git -C "$flake_dir" commit -m "flake.lock: update inputs (nix-updater $t)" -- flake.lock || true
+          override_flags+=(--reference-lock-file "$recorded_lock")
         fi
 
         case "$t" in
           nixos)
-            echo "Running: sudo nixos-rebuild boot --flake $flake_dir#$host"
-            sudo nixos-rebuild boot --flake "$flake_dir#$host"
+            echo "Running: sudo nixos-rebuild boot --flake $flake_dir#$host ''${override_flags[*]}"
+            sudo nixos-rebuild boot --flake "$flake_dir#$host" "''${override_flags[@]}"
             ;;
           hm)
-            echo "Running: home-manager switch --flake $flake_dir#$USER@$host"
-            home-manager switch --flake "$flake_dir#$USER@$host"
+            echo "Running: home-manager switch --flake $flake_dir#$USER@$host ''${override_flags[*]}"
+            home-manager switch --flake "$flake_dir#$USER@$host" "''${override_flags[@]}"
             ;;
         esac
 
@@ -344,6 +351,13 @@ in {
       type = lib.types.listOf lib.types.str;
       default = [ "nixpkgs" "homeManager" ];
       description = "Flake inputs to update (via --update-input) before building.";
+    };
+
+    overrideInputs = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = {};
+      example = { localConfig = "path:./local"; };
+      description = "Flake inputs to override (via --override-input) on every build.";
     };
 
     calendar = lib.mkOption {

@@ -1,15 +1,12 @@
-{ self, nixpkgs, ... }@args:
+{ self, nixpkgs, localConfig, ... }@args:
 name:
 
-let
-  localNixos = ../local/local-nixos.nix;
-in
 nixpkgs.lib.nixosSystem {
   system = "x86_64-linux";
   specialArgs = args // { inherit name; };
   modules = [
     (./machines + "/${name}/configuration.nix")
-  ] ++ nixpkgs.lib.optional (builtins.pathExists localNixos) localNixos ++ [
+    (localConfig.nixos-overlay or {})
     #(./machines + "/${name}/hardware-configuration.nix")
     #dwarffs.nixosModules.dwarffs
 
