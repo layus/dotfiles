@@ -188,7 +188,7 @@
 
         waypipe
         wl-clipboard
-        helvum
+        #helvum  # removed from nixpkgs (unmaintained, vulnerable dep)
         wdisplays
         wtype
         xorg.xkill
