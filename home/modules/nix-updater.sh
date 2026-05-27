@@ -90,13 +90,16 @@ cmd_build() {
   done
   build_flags+=("${override_inputs[@]}")
 
+  local interactive=0
+  [ -t 1 ] && interactive=1
+
   if nix build \
       "$flake_dir#$attr" \
       "${build_flags[@]}" \
       --out-link "$result_link" \
       --output-lock-file "$lock_file" \
       --log-format bar-with-logs \
-      >> "$log_file" 2>&1; then
+      2>&1 | if [ "$interactive" = 1 ]; then tee -a "$log_file"; else cat >> "$log_file"; fi; then
 
     result="$(readlink -f "$result_link")"
 
