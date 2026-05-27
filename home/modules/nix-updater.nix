@@ -181,6 +181,78 @@ let
     '';
   };
 
+  # Interactive status script (for on-click)
+  statusScript = pkgs.writeShellApplication {
+    name = "nix-updater-status";
+    runtimeInputs = with pkgs; [ coreutils jq ];
+    text = ''
+      state_dir="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+      log_dir="''${XDG_STATE_HOME:-$HOME/.local/state}/nix-updater"
+
+      show_target() {
+        local t="$1"
+        local state_file="$state_dir/nix-updater-$t.json"
+        local log_file="$log_dir/$t.log"
+
+        echo "━━━ $t ━━━"
+        if [ ! -f "$state_file" ]; then
+          echo "  No data (no builds have run yet)"
+          echo ""
+          return
+        fi
+
+        local status timestamp diff_summary error result
+        status="$(jq -r .status "$state_file")"
+        timestamp="$(jq -r .timestamp "$state_file")"
+        result="$(jq -r '.result // ""' "$state_file")"
+        diff_summary="$(jq -r '.diff_summary // ""' "$state_file")"
+        error="$(jq -r '.error // ""' "$state_file")"
+
+        echo "  Status:    $status"
+        echo "  Timestamp: $timestamp"
+
+        if [ "$status" = "ready" ] && [ -n "$result" ]; then
+          echo "  Result:    $result"
+        fi
+
+        if [ -n "$diff_summary" ] && [ "$diff_summary" != "null" ] && [ "$diff_summary" != "" ]; then
+          echo ""
+          echo "  Changes:"
+          echo "    ''${diff_summary//$'\n'/$'\n    '}"
+        fi
+
+        if [ "$status" = "failed" ] && [ -n "$error" ] && [ "$error" != "null" ]; then
+          echo ""
+          echo "  Error (last 20 lines):"
+          echo "    ''${error//$'\n'/$'\n    '}"
+          echo ""
+          echo "  Full log: $log_file"
+        fi
+
+        echo ""
+      }
+
+      echo ""
+      echo "╔══════════════════════════════════╗"
+      echo "║     nix-updater status           ║"
+      echo "╚══════════════════════════════════╝"
+      echo ""
+
+      show_target nixos
+      show_target hm
+
+      echo "━━━ Available commands ━━━"
+      echo "  nix-updater-apply nixos    Apply NixOS update (sudo nixos-rebuild boot)"
+      echo "  nix-updater-apply hm       Apply home-manager update (home-manager switch)"
+      echo "  nix-updater-apply both     Apply both"
+      echo "  nix-updater-build nixos    Trigger a NixOS build now"
+      echo "  nix-updater-build hm       Trigger a home-manager build now"
+      echo ""
+
+      exec bash
+    '';
+  };
+
   # Waybar status script
   waybarScript = pkgs.writeShellApplication {
     name = "nix-updater-waybar";
@@ -222,31 +294,31 @@ let
       nixos_status="$(read_status nixos)"
       hm_status="$(read_status hm)"
 
-      # Determine overall icon and class
-      # Priority: failed > building > ready > current/unknown
-      icon=""
-      class=""
+      # Per-status icon mapping
+      status_icon() {
+        case "$1" in
+          failed)   echo "✗" ;;
+          building) echo "…" ;;
+          ready)    echo "⬆" ;;
+          current)  echo "✓" ;;
+          *)        echo "?" ;;
+        esac
+      }
 
+      nixos_icon="$(status_icon "$nixos_status")"
+      hm_icon="$(status_icon "$hm_status")"
+      text="❄$nixos_icon 🏠$hm_icon"
+
+      # Overall class for CSS styling (worst status wins)
+      # Priority: failed > building > ready > current > unknown
+      class="current"
       for s in "$nixos_status" "$hm_status"; do
         case "$s" in
-          failed)   icon="✗"; class="failed" ;;
-          building) [ "$class" != "failed" ] && { icon="↻"; class="building"; } ;;
-          ready)    [ "$class" != "failed" ] && [ "$class" != "building" ] && { icon="⬆"; class="ready"; } ;;
-          current)  [ -z "$class" ] && { icon="✓"; class="current"; } ;;
-          *)        [ -z "$class" ] && { icon="?"; class="unknown"; } ;;
+          failed)   class="failed" ;;
+          building) [ "$class" != "failed" ] && class="building" ;;
+          ready)    [ "$class" != "failed" ] && [ "$class" != "building" ] && class="ready" ;;
         esac
       done
-
-      # Count ready updates
-      ready_count=0
-      [ "$nixos_status" = "ready" ] && ready_count=$((ready_count + 1))
-      [ "$hm_status" = "ready" ] && ready_count=$((ready_count + 1))
-
-      if [ "$ready_count" -gt 0 ]; then
-        text="$icon $ready_count"
-      else
-        text="$icon"
-      fi
 
       tooltip="$(read_tooltip nixos)\n$(read_tooltip hm)"
 
@@ -330,6 +402,7 @@ in {
     home.packages = [
       buildScript
       applyScript
+      statusScript
       waybarScript
     ];
   };

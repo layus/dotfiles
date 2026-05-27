@@ -197,7 +197,7 @@
         "return-type": "json",
         "interval": 30,
         "exec": "nix-updater-waybar",
-        "on-click": "kitty --class nix-updater -e nix-updater-apply both"
+        "on-click": "kitty --class nix-updater -e nix-updater-status"
     }
     //"custom/media": {
     //    "format": "{icon} {}",
