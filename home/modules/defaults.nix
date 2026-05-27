@@ -292,6 +292,13 @@
       #    ];
       #  };
       #};
+
+      # Reload sway after all config changes are applied (catches sway, waybar, etc.)
+      home.activation.reloadSway = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        if [ -n "''${WAYLAND_DISPLAY:-}" ] && command -v swaymsg &>/dev/null; then
+          $DRY_RUN_CMD swaymsg reload || true
+        fi
+      '';
     })
   ];
 }
