@@ -111,7 +111,7 @@
 
   system.autoUpgrade.enable = true;
   system.autoUpgrade.flags = [ "--override-input" "nixpkgs" "github:NixOS/nixpkgs/nixos-unstable" "--impure" ];
-  system.autoUpgrade.flake = "/home/layus/.config/nixpkgs";
+  system.autoUpgrade.flake = "${config.users.extraUsers.layus.home or "/home/layus"}/.config/nixpkgs";
 
   system.stateVersion = "21.11";
 

@@ -11,7 +11,7 @@
       # Home Manager needs a bit of information about you and the
       # paths it should manage.
       home.username = lib.mkDefault "layus";
-      home.homeDirectory = lib.mkDefault "/home/layus";
+      home.homeDirectory = lib.mkDefault "/home/${config.home.username}";
 
       # This value determines the Home Manager release that your
       # configuration is compatible with. This helps avoid breakage
@@ -54,7 +54,7 @@
       programs.fish.enable = true;
       programs.zsh.enable = true;
       programs.zsh.autocd = true;
-      programs.zsh.history.path = "/home/layus/.histfile";
+      programs.zsh.history.path = "${config.home.homeDirectory}/.histfile";
       programs.zsh.history.size = 100000;
       programs.zsh.history.ignoreAllDups = true;
       programs.zsh.history.ignoreSpace = true;

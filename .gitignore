@@ -1,4 +1,2 @@
 config.nix
 result
-local/
-local-*

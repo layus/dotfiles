@@ -4,27 +4,37 @@
   inputs.homeManager.url = "github:nix-community/home-manager";
   inputs.homeManager.inputs.nixpkgs.follows = "nixpkgs";
 
-  inputs.localConfig.url = "path:/home/layus/.config/nixpkgs/local";
-  inputs.localConfig.inputs.nixpkgs.follows = "nixpkgs";
-
   #inputs.dwarffs.url = "github:edolstra/dwarffs";
   #inputs.dwarffs.inputs.nixpkgs.follows = "nixpkgs";
   #inputs.dwarffs.inputs.nix.inputs.nixpkgs.follows = "nixpkgs";
 
-  outputs = { self, homeManager, nixpkgs, localConfig, ... }@args: {
-    nixosConfigurations =
-      nixpkgs.lib.attrsets.mapAttrs
-        (machine: _: import ./nixos args machine)
-        (builtins.readDir ./nixos/machines)
-        ;
+  outputs = { self, homeManager, nixpkgs, ... }@args:
+    let
+      lib = nixpkgs.lib;
 
-    homeConfigurations = {
-      "layus@uberwald"     = import ./home args "layus" "uberwald";
-      "layus@ankh-morpork" = import ./home args "layus" "ankh-morpork";
-      "layus@sto-helit"    = import ./home args "layus" "sto-helit";
-      "gmaudoux@klatch"    = import ./home args "gmaudoux" "klatch";
-      "gmaudoux"           = import ./home args "gmaudoux" "headless";
+      # Auto-generate homeConfigurations from home/users/*.nix filenames.
+      # Files are named "user@machine.nix" and produce a "user@machine" entry.
+      # Additionally, "user@headless.nix" also produces a bare "user" entry
+      # (used as fallback when home-manager can't match user@hostname).
+      userFiles = builtins.readDir ./home/users;
+      homeEntries = lib.concatMapAttrs (filename: _:
+        let
+          stem = lib.removeSuffix ".nix" filename;
+          parts = lib.splitString "@" stem;
+          user = builtins.elemAt parts 0;
+          machine = builtins.elemAt parts 1;
+        in
+          { "${stem}" = import ./home args user machine; }
+          // lib.optionalAttrs (machine == "headless") { "${user}" = import ./home args user machine; }
+      ) userFiles;
+    in {
+      nixosConfigurations =
+        lib.attrsets.mapAttrs
+          (machine: _: import ./nixos args machine)
+          (builtins.readDir ./nixos/machines)
+          ;
+
+      homeConfigurations = homeEntries;
     };
-  };
 
 }
