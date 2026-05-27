@@ -56,6 +56,9 @@ let
           ;;
       esac
 
+      result_link="$log_dir/result-$target"
+      lock_file="$log_dir/flake-lock-$target.json"
+
       write_state "building"
 
       echo "=== nix-updater build ($target) started at $(date) ===" > "$log_file"
@@ -65,9 +68,6 @@ let
       for input in ${lib.escapeShellArgs cfg.updateInputs}; do
         update_flags+=(--update-input "$input")
       done
-
-      result_link="$log_dir/result-$target"
-      lock_file="$log_dir/flake-lock-$target.json"
 
       if nix build \
           "$flake_dir#$attr" \
