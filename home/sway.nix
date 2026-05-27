@@ -64,9 +64,10 @@ let
     from pprint import pprint
     import sys
 
-    i3 = i3ipc.Connection()
-
     title = sys.argv[1]
+    print("Starting for", title, file = sys.stderr)
+
+    i3 = i3ipc.Connection()
 
     def on_window(i3, e):
         if e.change != "new": return
@@ -74,6 +75,11 @@ let
         app_id = e.container.app_id
         clazz = e.container.ipc_data.get("window_properties", {}).get("class")
         width = e.container.ipc_data.get("geometry", {}).get("width", 0)
+        print(f"New container appeared: {app_id} {clazz} {width}", file = sys.stderr)
+
+        if app_id != title:
+            print(f"{app_id} is not for us, we are looking for {title}", file = sys.stderr)
+            return
 
         selector = f"[app_id={title}]" if (app_id == title) else f"[class={title}]" 
         i3.command(f"{selector} move scratchpad, resize set 1520 800, move to position center")
@@ -82,31 +88,36 @@ let
     i3.on('window', on_window)
 
     print("Ready to scratch", title, flush=True)
+    print("Ready to scratch", title, file = sys.stderr)
     i3.main()
   '';
 
 
   execScript = writeShellScript "sway-exec-apps" ''
 
+    exec &>~/.cache/sway/sway-exec-apps.log
+    set -x
+
     # XXX: Not really needed here. But prevents race conditions with exec-always-apps
     ${dbus}/bin/dbus-update-activation-environment --systemd --all
     ${systemd}/bin/systemctl --user restart pipewire.service
 
-    function exec () {
-      echo "Running $1"
-      ${swaymsgPath} -- exec "$@"
+    function run () {
+      local filter=$1; shift
+      echo "Executing $@"
+      ${swaymsgPath} -- "exec_always $@ &> ~/.cache/sway/$filter.log"
     }
     function execAndScratch () {
       local filter=$1; shift
 
-      ${scratchOnce} "$filter" | { read; exec "$@"; } &
+      ${scratchOnce} "$filter" | { read; run "$filter" "$@"; } &
     }
 
     # default is 5700:3500
-    exec ${gammastep}/bin/gammastep -l 50.6:4.32 -t 5700:4500
-    execAndScratch Slack    ${slack}/bin/slack
-    execAndScratch Zim      ${zim}/bin/zim
-    execAndScratch Element  ${element-desktop}/bin/element-desktop
+    run gammastep ${gammastep}/bin/gammastep -l 50.6:4.32 -t 5700:4500
+    run Slack     ${slack}/bin/slack
+    execAndScratch zim      ${zim}/bin/zim
+    execAndScratch Element  ${element-desktop}/bin/element-desktop --password-store=gnome-libsecret
     #execAndScratch "Microsoft Teams - Preview" $-{teams}/bin/teams
 
     #exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
@@ -120,10 +131,14 @@ let
     ${swaymsgPath} "workspace --no-auto-back-and-forth 1"
 
     sleep 10  # why ?
+    wait
     exit 0
   '';
 
   execAlwaysScript = writeShellScript "sway-exec-always-apps" ''
+    exec &>~/.cache/sway/sway-exec-always-apps.log
+    set -x
+
     # Work around dbus and systemd not being _aware_ of sway-defined vars.
     #${systemd}/bin/systemctl --user import-environment DISPLAY WAYLAND_DISPLAY SWAYSOCK
     #${dbus}/bin/dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK
@@ -136,11 +151,13 @@ let
     # It is a bit redundant to call swaymsg here, but it ensures that the app starts in background.
     # Does it ? This script already starts in background itself...
     function exec_always () {
-      local bin=$1; shift
+      local bin=$1
+      shift
+      name=$(basename "$bin")
 
       echo "Running $bin"
-      pkill "$(basename "$bin")"
-      ${swaymsgPath} -- exec_always "$bin" "$@"
+      pkill "$name"
+      swaymsg -- "exec_always $bin $@ &> ~/.cache/sway/$name.log"
     }
 
     # These services have little state, we can restart them to get the most recent version.
@@ -150,9 +167,10 @@ let
     # breaks exec_always ${swayidleScript}/bin/swayidle
     exec_always ${blueman}/bin/blueman-applet
     exec_always ${pasystray}/bin/pasystray
-
-    # kanshi needs restart to override outputs reset changes made by sway reload
     exec_always ${way-displays}/bin/way-displays
+
+    wait
+    exit 0
   '';
 
   config = ''
@@ -183,7 +201,7 @@ bindsym XF86Sleep       exec "${swaylockScript}/bin/swaylock"
 bindsym Shift+Pause     exec "${swaylockScript}/bin/swaylock; exec ${systemd}/bin/systemctl hibernate"
 bindsym Shift+XF86Sleep exec "${swaylockScript}/bin/swaylock; exec ${systemd}/bin/systemctl hibernate"
 bindsym $mod+w          exec $HOME/bin/nm_toggle
-#bindsym $mod+Shift+W exec autorandr -c
+bindsym Ctrl+Space      exec pkill -USR2 -n handy
 
 #for_window [class="URxvt"]              border pixel 1
 for_window [app_id="^termite$"]            border pixel 1
