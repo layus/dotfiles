@@ -156,12 +156,6 @@ cmd_apply() {
 
     local -a apply_flags=("${override_inputs[@]}")
 
-    local recorded_lock
-    recorded_lock="$(jq -r '.lock_file // ""' "$state_file")"
-    if [ -n "$recorded_lock" ] && [ -f "$recorded_lock" ]; then
-      apply_flags+=(--reference-lock-file "$recorded_lock")
-    fi
-
     case "$t" in
       nixos)
         echo "Running: sudo nixos-rebuild boot --flake $flake_dir#$host ${apply_flags[*]}"
