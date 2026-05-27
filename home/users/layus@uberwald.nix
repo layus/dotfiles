@@ -9,8 +9,14 @@
   programs.helix.enable = true;
 
   programs.git = {
-    userName = "Guillaume Maudoux";
-    userEmail = "guillaume.maudoux@tweag.io";
+    settings.user.name = "Guillaume Maudoux";
+    settings.user.email = "guillaume.maudoux@tweag.io";
+  };
+
+  services.kdeconnect = {
+    enable = true;
+    #package = pkgs.kdePackages.kdeconnect-kde;
+    indicator = true;
   };
 
   nixpkgs.config.allowUnfree = true;
@@ -68,7 +74,7 @@
       Description = "Run timesheets prompt every day at 15:30";
     };
     Timer = {
-      OnCalendar = "15:30";
+      OnCalendar = "Mon..Fri *-*-* 15:30";
       Persistent = true;
     };
     Install = {

@@ -59,6 +59,8 @@
 
       timesheets-prompt = super.callPackage ../pkgs/by-name/ti/timesheets-prompt { };
 
+      windsurf-wrapper = super.callPackage ../pkgs/by-name/wi/windsurf { };
+
       slurp = assert builtins.compareVersions "1.3.2" super.slurp.version <= 0;
         super.slurp.overrideAttrs (oldAttrs: {
           #patches = oldAttrs.patches or [] ++ [(
@@ -106,7 +108,7 @@
         #converted to plugins: obs-wlrobs obs-studio // see home manager
         # RIP: xournal
         wf-recorder
-        poppler_utils
+        poppler-utils
         # teams -- unmainained
         #kdenlive
         # }}}
@@ -118,7 +120,7 @@
         chromium
         libreoffice # Not yet cached...
         gnumeric
-        calibre
+        #calibre
         gimp #gimp-with-plugins
         slack
         element-desktop
@@ -126,7 +128,7 @@
         #(builtins.storePath /nix/store/8i227iqjsaq7g4ddbrav6jn6w2lbxs9l-mozart2-2.0.0-beta.1)
         zim
         zoom-us
-        texmaker
+        #texmaker
         #typora # error: Newer versions of typora use anti-user encryption and refuse to start.
         inkscape
         #yed
@@ -188,6 +190,7 @@
         wl-clipboard
         helvum
         wdisplays
+        wtype
         xorg.xkill
         xorg.xrandr
         arandr
@@ -210,7 +213,8 @@
         st
 
         tpm-fido
-        pinentry
+        pinentry-gnome3
+        windsurf-wrapper
         # }}}
 
         # {{{ Nix internals fixup
@@ -244,8 +248,8 @@
       #  propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or []) ++ [ pythonPackages.simplejson ]; # for mozilla pushtree
       #}))
       subversion # VCS
-      gitAndTools.hub
-      gitAndTools.gh
+      hub
+      gh
       tree
       ripgrep
       fd

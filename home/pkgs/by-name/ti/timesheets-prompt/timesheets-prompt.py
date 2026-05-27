@@ -54,7 +54,7 @@ class PromptWindow(Gtk.Window):
         key_controller.connect("key-pressed", self._on_key_pressed)
         self.textview.add_controller(key_controller)
 
-        # Connect text changes callback to proper buffer signal
+        # Connect text change callback to TextBuffer signal
         self.buffer = self.textview.get_buffer()
         self.buffer.connect("changed", self._on_text_changed)
 
@@ -86,11 +86,12 @@ class PromptWindow(Gtk.Window):
         )
 
     def get_text(self):
-        """Retrieve all text from the TextView buffer."""
+        """Retrieve all text from TextView."""
         start, end = self.buffer.get_bounds()
         return self.buffer.get_text(start, end, True).strip()
 
     def enough_text(self):
+        """Check if text meets minimum requirements."""
         text = self.get_text()
         word_count = len(text.split())
         char_count = len(text)
@@ -108,7 +109,7 @@ class PromptWindow(Gtk.Window):
             else:
                 # Trigger submit
                 self._on_submit_clicked(None)
-            return True  # Stop further processing
+            return True  # Disallow further key processing
         return False
 
     def _on_submit_clicked(self, button):
@@ -126,8 +127,54 @@ class PromptWindow(Gtk.Window):
             self.unlock()
 
     def _on_text_changed(self, entry):
-        # Make button senistive to hint that there is enough text
+        # Enable or disable the submit button based on text validity
         self.button.set_sensitive(self.enough_text())
+
+
+def initialize_layer_shell(window, monitor):
+    """Perform Layer Shell-specific initialization for the given window."""
+    gi.require_version('Gtk4LayerShell', '1.0')
+    from gi.repository import Gtk4LayerShell as LayerShell
+
+    LayerShell.init_for_window(window)
+    LayerShell.set_layer(window, LayerShell.Layer.TOP)
+    LayerShell.set_anchor(window, LayerShell.Edge.TOP, True)
+    LayerShell.set_anchor(window, LayerShell.Edge.BOTTOM, True)
+    LayerShell.set_anchor(window, LayerShell.Edge.LEFT, True)
+    LayerShell.set_anchor(window, LayerShell.Edge.RIGHT, True)
+
+    # Add margins to all edges
+    LayerShell.set_margin(window, LayerShell.Edge.TOP, 40)
+    LayerShell.set_margin(window, LayerShell.Edge.BOTTOM, 40)
+    LayerShell.set_margin(window, LayerShell.Edge.LEFT, 40)
+    LayerShell.set_margin(window, LayerShell.Edge.RIGHT, 40)
+
+    # Grab keyboard focus
+    LayerShell.set_keyboard_mode(window, LayerShell.KeyboardMode.ON_DEMAND)
+    if isinstance(window, PromptWindow):
+        LayerShell.set_keyboard_mode(window, LayerShell.KeyboardMode.EXCLUSIVE)
+    LayerShell.auto_exclusive_zone_enable(window)
+    LayerShell.set_monitor(window, monitor)
+
+
+def create_layer_shell_windows_on_all_monitors():
+    """Create a Layer Shell window on all available monitors."""
+    gi.require_version('Gtk', '4.0')
+    display = Gdk.Display.get_default()
+    monitors = display.get_monitors()
+    window = None
+
+    for monitor in monitors:
+        # Create a new window for each monitor
+        if not window:
+            window = PromptWindow(lambda: app.quit())
+        else:
+            window = Gtk.Window(application=app)
+
+        # Initialize Layer Shell for the window
+        initialize_layer_shell(window, monitor)
+        window.present()
+
 
 class ScreenLock:
     def __init__(self):
@@ -145,7 +192,9 @@ class ScreenLock:
         app.quit()
 
     def _on_failed(self, lock_instance):
-        app.quit()
+        # Use a Layershell window for fallback
+        print("Session lock failed; falling back to Layer Shell.")
+        create_layer_shell_windows_on_all_monitors()
 
     def _on_monitor(self, lock_instance, monitor):
         if not self.window:
@@ -161,6 +210,7 @@ class ScreenLock:
 
     def lock(self):
         self.lock_instance.lock()
+
 
 app = Gtk.Application(application_id='com.github.wmww.gtk4-layer-shell.py-session-lock')
 lock = ScreenLock()
