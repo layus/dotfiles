@@ -240,8 +240,8 @@
         recursive = true;
       };
 
-      programs.termite.enable = true;
-      xdg.configFile."termite/config".source = ../dotfiles/termite;
+      programs.kitty.enable = true;
+      xdg.configFile."kitty/kitty.conf".source = ../dotfiles/kitty.conf;
 
       programs.firefox = {
         enable = true;
@@ -264,7 +264,7 @@
       };
 
       services.activitywatch = {
-        enable = true;
+        enable = false; # temporarily disabled: aw-webui build is broken
         watchers = {
           aw-watcher-window-wayland = {
             package = pkgs.aw-watcher-window-wayland;

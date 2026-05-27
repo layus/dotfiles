@@ -22,7 +22,7 @@
 , swayidle
 , swaylock
 , systemd
-, termite
+, kitty
 , thunderbird
 , udiskie
 , waybar
@@ -204,8 +204,7 @@ bindsym $mod+w          exec $HOME/bin/nm_toggle
 bindsym Ctrl+Space      exec pkill -USR2 -n handy
 
 #for_window [class="URxvt"]              border pixel 1
-for_window [app_id="^termite$"]            border pixel 1
-for_window [class="^Termite$" instance="^termite$"] border pixel 1
+for_window [app_id="^kitty$"]              border pixel 1
 
 for_window [title="Oz Browser"]         floating enable
 for_window [title="Super Hexagon"]      floating enable
@@ -264,15 +263,15 @@ mouse_warping none
 
 # start a terminal
 #bindsym $mod+Return exec i3-sensible-terminal
-bindsym $mod+Return exec ${termite}/bin/termite
-bindsym $mod+o exec ${termite}/bin/termite -e "bash -c 'vim $(fd . $HOME --hidden | fzf)'"
+bindsym $mod+Return exec ${kitty}/bin/kitty
+bindsym $mod+o exec ${kitty}/bin/kitty bash -c 'vim $(fd . $HOME --hidden | fzf)'
 
 # kill focused window
 bindsym $mod+Shift+C kill
 
 # start dmenu (a program launcher)
 #bindsym $mod+p exec "pkill dmenu; exec ${dmenu}/bin/dmenu_run -f -i"
-bindsym $mod+p exec termite --name=launcher -e "bash -c 'compgen -c | sort -u | fzf --no-extended --print-query | tail -n1 | xargs -r ${swaymsgPath} -t command exec'"
+bindsym $mod+p exec ${kitty}/bin/kitty --class launcher bash -c 'compgen -c | sort -u | fzf --no-extended --print-query | tail -n1 | xargs -r ${swaymsgPath} -t command exec'
 for_window [app_id="^launcher$"] floating enable, border pixel 5
 
 # restart mako

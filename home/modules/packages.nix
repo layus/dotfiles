@@ -206,7 +206,7 @@
         slurp
         grim
 
-        termite
+        kitty
         alacritty
         ghostty
         # BROKEN: enlightenment.terminology
@@ -240,7 +240,6 @@
       #}))
       #rxvt_unicode-with-plugins
       #vim_configurable
-      termite.terminfo
       editorconfig-core-c # Was is das ?
       #neovim
       emacs
