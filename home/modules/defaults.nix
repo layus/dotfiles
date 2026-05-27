@@ -173,6 +173,7 @@
       xdg.userDirs = {
         enable = true;
         createDirectories = true;
+        setSessionVariables = true;
         desktop = "$HOME";
         documents = "$HOME/documents";
         download = "$HOME/downloads";
@@ -182,8 +183,8 @@
         templates = "$HOME/documents/templates";
         videos = "$HOME/documents";
         extraConfig = {
-          XDG_PROJECTS_DIR = "$HOME/projects";
-          XDG_PRINT_SCREEN_DIR = "$HOME/images/captures";
+          PROJECTS = "$HOME/projects";
+          PRINT_SCREEN = "$HOME/images/captures";
         };
       };
     }
@@ -245,6 +246,7 @@
 
       programs.firefox = {
         enable = true;
+        configPath = ".mozilla/firefox";
         profiles.default = {
           userChrome = builtins.readFile ../dotfiles/userChrome.css;
         };

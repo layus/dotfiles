@@ -138,7 +138,7 @@
         krita
         # freecad #coin3D hash mismatch
 
-        wireshark-qt
+        wireshark
 
         #jetbrains.idea-community
         #jetbrains.pycharm-community
@@ -191,12 +191,12 @@
         #helvum  # removed from nixpkgs (unmaintained, vulnerable dep)
         wdisplays
         wtype
-        xorg.xkill
-        xorg.xrandr
+        xkill
+        xrandr
         arandr
         autorandr # display management
-        xorg.xev
-        #xorg.xclock
+        xev
+        #xclock
         meld
         gnuplot
         zenity
@@ -357,7 +357,7 @@
       #jre
       jdk
 
-      xorg.xclock
+      xclock
 
       # }}}
     ]
