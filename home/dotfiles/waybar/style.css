@@ -74,6 +74,7 @@ window#waybar.chromium {
 #network,
 #pulseaudio,
 #custom-media,
+#custom-nix-updates,
 #tray,
 #mode,
 #idle_inhibitor {
@@ -194,4 +195,28 @@ label:focus {
 
 #mpd.paused {
     border-bottom: 3px solid #51a37a;
+}
+
+#custom-nix-updates {
+    border-bottom: 3px solid #64727D;
+}
+
+#custom-nix-updates.current {
+    border-bottom: 3px solid #2ecc71;
+}
+
+#custom-nix-updates.ready {
+    border-bottom: 3px solid #f39c12;
+}
+
+#custom-nix-updates.building {
+    border-bottom: 3px solid #3498db;
+}
+
+#custom-nix-updates.failed {
+    border-bottom: 3px solid #e74c3c;
+}
+
+#custom-nix-updates.unknown {
+    border-bottom: 3px solid #64727D;
 }

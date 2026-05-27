@@ -6,6 +6,8 @@
 
   custom.graphical = true;
 
+  services.nix-updater.enable = true;
+
   programs.helix.enable = true;
 
   programs.git = {

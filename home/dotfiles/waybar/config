@@ -23,6 +23,7 @@
         , "temperature"
         , "backlight"
         , "battery"
+        , "custom/nix-updates"
         , "clock"
         , "tray"
         ],
@@ -190,6 +191,13 @@
             "default": ["<span font=\"Font Awesome 7 Free\"></span>", "<span font=\"Font Awesome 7 Free\"></span>", "<span font=\"Font Awesome 7 Free\"></span>"]
         },
         "on-click": "pavucontrol"
+    },
+    "custom/nix-updates": {
+        "format": "{}",
+        "return-type": "json",
+        "interval": 30,
+        "exec": "nix-updater-waybar",
+        "on-click": "kitty --class nix-updater -e nix-updater-apply both"
     }
     //"custom/media": {
     //    "format": "{icon} {}",
