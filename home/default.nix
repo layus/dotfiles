@@ -1,8 +1,9 @@
-{ self, homeManager, localConfig, nixpkgs, lib ? nixpkgs.lib, ... }@args:
+{ self, homeManager, localConfig, nixpkgs, nixvim, lib ? nixpkgs.lib, ... }@args:
 name: machine:
 
 homeManager.lib.homeManagerConfiguration {
   modules = [
+    nixvim.homeModules.nixvim
     (./users + "/${name}@${machine}.nix")
     (localConfig.home-overlay or { })
 

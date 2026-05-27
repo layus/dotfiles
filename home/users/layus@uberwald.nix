@@ -24,7 +24,6 @@
 
   nixpkgs.config.allowUnfree = true;
   imports = [
-    ../profiles/nvim.nix
     ../profiles/helix.nix
   ];
 

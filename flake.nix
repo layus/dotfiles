@@ -4,6 +4,9 @@
   inputs.homeManager.url = "github:nix-community/home-manager";
   inputs.homeManager.inputs.nixpkgs.follows = "nixpkgs";
 
+  inputs.nixvim.url = "github:nix-community/nixvim";
+  inputs.nixvim.inputs.nixpkgs.follows = "nixpkgs";
+
   inputs.localConfig.url = "path:./local-default";
 
   #inputs.dwarffs.url = "github:edolstra/dwarffs";
