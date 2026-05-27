@@ -4,6 +4,7 @@ set -euo pipefail
 host="$(hostname)"
 user="$USER"
 flake_dir="@flakeDir@"
+cd "$flake_dir"
 state_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/nix-updater"
 mkdir -p "$log_dir"
