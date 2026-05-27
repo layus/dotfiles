@@ -57,6 +57,8 @@
       #  patches = oldAttrs.patches or [] ++ [ ./wlroots-reversed.patch ];
       #});
 
+      readlinks = super.callPackage ../pkgs/by-name/re/readlinks { };
+
       timesheets-prompt = super.callPackage ../pkgs/by-name/ti/timesheets-prompt { };
 
       windsurf-wrapper = super.callPackage ../pkgs/by-name/wi/windsurf { };
@@ -318,7 +320,7 @@
       binutils
       gdb
       #mypkgs.EMV-CAP
-      #readlinks
+      readlinks
       #mypkgs.monitormonitors
       sqlite-interactive
       inotify-tools
