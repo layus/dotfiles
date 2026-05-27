@@ -45,7 +45,7 @@
       terminus_font
       theano
       ttf_bitstream_vera
-      ubuntu_font_family
+      ubuntu-classic
       #vistafonts
       noto-fonts
       font-awesome

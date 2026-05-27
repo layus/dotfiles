@@ -47,10 +47,9 @@ in
   nix.package = pkgs.nixVersions.latest;
   nix.extraOptions = ''
     extra-experimental-features = nix-command flakes ca-derivations impure-derivations configurable-impure-env auto-allocate-uids cgroups recursive-nix
-    extra-substituters = https://cache.ngi0.nixos.org/
-    extra-trusted-public-keys = cache.ngi0.nixos.org-1:KqH5CBLNSyX184S9BKZJo1LxrxJ9ltnY2uAs5c/f1MA=
     builders-use-substitutes = true
     max-substitution-jobs = 64
+    extra-system-features = recursive-nix
   '';
   nix.settings.trusted-users = [ "@wheel" ]; # or just your username
   nix.buildMachines = [
@@ -76,7 +75,6 @@ in
   networking.hostName = "uberwald"; # Define your hostname.
   networking.networkmanager.enable = true;
   systemd.services.NetworkManager-wait-online.enable = false; # disable due to bug https://github.com/NixOS/nixpkgs/issues/180175
-  networking.wireless.enable = false; # Enables wireless support via wpa_supplicant.
 
   # Set your time zone. `null` allows dynamic changes.
   time.timeZone = null;
@@ -95,7 +93,7 @@ in
   #hardware.video.hidpi.enable = true;
   hardware.graphics.enable = true;
   hardware.graphics.enable32Bit = true;
-  hardware.graphics.extraPackages = with pkgs; [ vaapiIntel vaapiVdpau intel-media-driver ];
+  hardware.graphics.extraPackages = with pkgs; [ intel-vaapi-driver libva-vdpau-driver intel-media-driver ];
 
 
   # Select internationalisation properties.
@@ -111,6 +109,8 @@ in
   nixpkgs.config.allowUnfree = true;
 
   programs.sway.enable = true;
+
+  programs.kdeconnect.enable = true;
 
   # Enable sound.
   # sound.enable = true;
@@ -136,6 +136,7 @@ in
       "qemu-libvirtd"
       "tss" # access tpm (secure enclave)
       "uhid" # access fake usb device
+      "ydotool"  # access fake input device
     ];
     openssh.authorizedKeys.keys = builtins.attrValues {
       inherit (cfg.ssh.pubkeys)
@@ -159,9 +160,10 @@ in
     neovim
     rxvt-unicode-unwrapped.terminfo
     termite.terminfo
+    android-tools
 
     #pkgs.linuxPackages.nvidia_x11.bin
-    cudatoolkit
+    #cudatoolkit
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -185,6 +187,14 @@ in
 
   services.earlyoom.enable = true;
   services.earlyoom.enableNotifications = true;
+  services.earlyoom.extraArgs = ["--ignore-root-user" "--sort-by-rss" "--avoid=[Ssway]"];
+  services.earlyoom.freeMemThreshold = 10;
+  services.earlyoom.freeSwapThreshold = 90;
+  # debugging
+  services.earlyoom.enableDebugInfo = true;
+  services.earlyoom.reportInterval = 1;
+
+  services.gnome.gnome-keyring.enable = true; # fixes electron
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
@@ -201,7 +211,6 @@ in
   system.stateVersion = "21.11"; # Did you read the comment?
 
   programs.wireshark.enable = true;
-  programs.adb.enable = true;
 
   services.greetd = {
     enable = true;
@@ -210,7 +219,7 @@ in
         command = ''${config.services.greetd.package}/bin/agreety --cmd "${config.services.greetd.settings.initial_session.command}"'';
       };
       initial_session = {
-        command = "/var/run/current-system/sw/bin/zsh -lc sway";
+        command = "/var/run/current-system/sw/bin/zsh -lc 'sway --debug 2> ~/.cache/sway/sway.errlog > ~/.cache/sway/sway.log' ";
         user = "layus";
       };
     };

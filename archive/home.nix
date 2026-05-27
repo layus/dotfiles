@@ -223,8 +223,8 @@
 
   programs.git = {
     enable = true;
-    userName = "Guillaume Maudoux";
-    userEmail = "guillaume.maudoux@uclouvain.be";
+    settings.user.name = "Guillaume Maudoux";
+    settings.user.email = "guillaume.maudoux@uclouvain.be";
   };
 
   wayland.windowManager.sway = {
