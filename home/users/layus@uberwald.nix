@@ -6,8 +6,8 @@
 
   custom.graphical = true;
 
-  services.nix-updater.enable = true;
-  services.nix-updater.overrideInputs.localConfig = "path:./local";
+  services.nix-update.enable = true;
+  services.nix-update.overrideInputs.localConfig = "path:./local";
 
   programs.helix.enable = true;
 

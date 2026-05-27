@@ -1,7 +1,7 @@
 [
   ./custom.nix
   ./defaults.nix
-  ./nix-updater.nix
+  ./nix-update.nix
   ./packages.nix
   ../profiles/nixvim.nix
 ]

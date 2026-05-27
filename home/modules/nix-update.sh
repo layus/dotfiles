@@ -6,7 +6,7 @@ user="$USER"
 flake_dir="@flakeDir@"
 cd "$flake_dir"
 state_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/nix-updater"
+log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/nix-update"
 mkdir -p "$log_dir"
 
 # Nix-injected flags (may be empty)
@@ -55,7 +55,7 @@ resolve_target() {
       ;;
     *) echo "Unknown target: $t" >&2; exit 1 ;;
   esac
-  state_file="$state_dir/nix-updater-$t.json"
+  state_file="$state_dir/nix-update-$t.json"
   log_file="$log_dir/$t.log"
   result_link="$log_dir/result-$t"
   lock_file="$log_dir/flake-lock-$t.json"
@@ -83,7 +83,7 @@ cmd_build() {
 
   stamp_verified_rev
   write_state "building"
-  echo "=== nix-updater build ($target) started at $(date) ===" > "$log_file"
+  echo "=== nix-update build ($target) started at $(date) ===" > "$log_file"
 
   local -a build_flags=()
   for input in "${update_inputs[@]}"; do
@@ -127,7 +127,7 @@ cmd_build() {
 }
 
 cmd_apply() {
-  local target="$1" do_rebuild="$2"
+  local target="$1" do_rebuild="$2" do_switch="$3"
 
   apply_one() {
     local t="$1"
@@ -139,7 +139,7 @@ cmd_apply() {
     fi
 
     if [ ! -f "$state_file" ]; then
-      echo "No state file for $t — run 'nix-updater build $t' first."
+      echo "No state file for $t — run 'nix-update build $t' first."
       return 1
     fi
 
@@ -156,11 +156,18 @@ cmd_apply() {
     stamp_verified_rev
 
     local -a apply_flags=("${override_inputs[@]}")
+    local new_status="current"
 
     case "$t" in
       nixos)
-        echo "Running: sudo nixos-rebuild boot --flake $flake_dir#$host ${apply_flags[*]}"
-        sudo nixos-rebuild boot --flake "$flake_dir#$host" "${apply_flags[@]}"
+        if [ "$do_switch" = "1" ]; then
+          echo "Running: sudo nixos-rebuild switch --flake $flake_dir#$host ${apply_flags[*]}"
+          sudo nixos-rebuild switch --flake "$flake_dir#$host" "${apply_flags[@]}"
+        else
+          echo "Running: sudo nixos-rebuild boot --flake $flake_dir#$host ${apply_flags[*]}"
+          sudo nixos-rebuild boot --flake "$flake_dir#$host" "${apply_flags[@]}"
+          new_status="pending"
+        fi
         ;;
       hm)
         echo "Running: home-manager switch --flake $flake_dir#$user@$host ${apply_flags[*]}"
@@ -170,8 +177,8 @@ cmd_apply() {
 
     local result
     result="$(jq -r .result "$state_file")"
-    jq --arg timestamp "$(date -Iseconds)" \
-       '.status = "current" | .timestamp = $timestamp' \
+    jq --arg timestamp "$(date -Iseconds)" --arg new_status "$new_status" \
+       '.status = $new_status | .timestamp = $timestamp' \
        "$state_file" > "$state_file.tmp" \
        && mv "$state_file.tmp" "$state_file"
 
@@ -189,6 +196,11 @@ cmd_apply() {
       ;;
     *) echo "Unknown target: $target" >&2; exit 1 ;;
   esac
+}
+
+cmd_switch() {
+  local target="$1" do_rebuild="$2"
+  cmd_apply "$target" "$do_rebuild" 1
 }
 
 cmd_status() {
@@ -213,8 +225,12 @@ cmd_status() {
     echo "  Status:    $status"
     echo "  Timestamp: $timestamp"
 
-    if [ "$status" = "ready" ] && [ -n "$result" ]; then
+    if ([ "$status" = "ready" ] || [ "$status" = "pending" ]) && [ -n "$result" ]; then
       echo "  Result:    $result"
+    fi
+
+    if [ "$status" = "pending" ]; then
+      echo "  (will activate on next boot)"
     fi
 
     if [ -n "$diff_summary" ] && [ "$diff_summary" != "null" ] && [ "$diff_summary" != "" ]; then
@@ -236,7 +252,7 @@ cmd_status() {
 
   echo ""
   echo "╔══════════════════════════════════╗"
-  echo "║     nix-updater status           ║"
+  echo "║     nix-update status           ║"
   echo "╚══════════════════════════════════╝"
   echo ""
 
@@ -244,17 +260,17 @@ cmd_status() {
   show_target hm
 
   echo "━━━ Commands ━━━"
-  echo "  nix-updater build <nixos|hm>            Build an update"
-  echo "  nix-updater apply <nixos|hm|both>       Apply last build"
-  echo "  nix-updater apply --rebuild <nixos|hm|both>  Rebuild + apply"
-  echo "  nix-updater status                      Show this status"
-  echo "  nix-updater waybar                      Output JSON for waybar"
+  echo "  nix-update build <nixos|hm>                   Build an update"
+  echo "  nix-update apply [--rebuild] [--switch] <target>  Apply (boot for nixos, switch for hm)"
+  echo "  nix-update switch [--rebuild] <target>            Apply + switch (nixos-rebuild switch)"
+  echo "  nix-update status                                Show this status"
+  echo "  nix-update waybar                                Output JSON for waybar"
   echo ""
 }
 
 cmd_waybar() {
   read_status() {
-    local file="$state_dir/nix-updater-$1.json"
+    local file="$state_dir/nix-update-$1.json"
     if [ -f "$file" ]; then
       jq -r .status "$file" 2>/dev/null || echo "unknown"
     else
@@ -263,7 +279,7 @@ cmd_waybar() {
   }
 
   read_tooltip() {
-    local file="$state_dir/nix-updater-$1.json"
+    local file="$state_dir/nix-update-$1.json"
     if [ -f "$file" ]; then
       local status timestamp diff_summary error
       status="$(jq -r .status "$file" 2>/dev/null)"
@@ -292,6 +308,7 @@ cmd_waybar() {
       failed)   echo "✗" ;;
       building) echo "…" ;;
       ready)    echo "⬆" ;;
+      pending)  echo "⏻" ;;
       current)  echo "✓" ;;
       *)        echo "?" ;;
     esac
@@ -306,6 +323,7 @@ cmd_waybar() {
     case "$s" in
       failed)   class="failed" ;;
       building) [ "$class" != "failed" ] && class="building" ;;
+      pending)  [ "$class" != "failed" ] && [ "$class" != "building" ] && class="pending" ;;
       ready)    [ "$class" != "failed" ] && [ "$class" != "building" ] && class="ready" ;;
     esac
   done
@@ -319,13 +337,14 @@ cmd_waybar() {
 # --- main ---
 
 usage() {
-  echo "Usage: nix-updater <command> [options] [target]" >&2
+  echo "Usage: nix-update <command> [options] [target]" >&2
   echo "" >&2
   echo "Commands:" >&2
-  echo "  build <nixos|hm>              Build an update" >&2
-  echo "  apply [--rebuild] <nixos|hm|both>  Apply (optionally rebuild first)" >&2
-  echo "  status                        Show update status" >&2
-  echo "  waybar                        Output JSON for waybar" >&2
+  echo "  build <nixos|hm>                            Build an update" >&2
+  echo "  apply [--rebuild] [--switch] <nixos|hm|both>  Apply (boot for nixos, switch for hm)" >&2
+  echo "  switch [--rebuild] <nixos|hm|both>           Apply + switch (nixos-rebuild switch)" >&2
+  echo "  status                                      Show update status" >&2
+  echo "  waybar                                      Output JSON for waybar" >&2
   exit 1
 }
 
@@ -334,17 +353,30 @@ shift || true
 
 case "$cmd" in
   build)
-    target="${1:?Usage: nix-updater build <nixos|hm>}"
+    target="${1:?Usage: nix-update build <nixos|hm>}"
     cmd_build "$target"
     ;;
   apply)
+    do_rebuild=0
+    do_switch=0
+    while [[ "${1:-}" == --* ]]; do
+      case "$1" in
+        --rebuild) do_rebuild=1; shift ;;
+        --switch)  do_switch=1; shift ;;
+        *) echo "Unknown flag: $1" >&2; exit 1 ;;
+      esac
+    done
+    target="${1:?Usage: nix-update apply [--rebuild] [--switch] <nixos|hm|both>}"
+    cmd_apply "$target" "$do_rebuild" "$do_switch"
+    ;;
+  switch)
     do_rebuild=0
     if [ "${1:-}" = "--rebuild" ]; then
       do_rebuild=1
       shift
     fi
-    target="${1:?Usage: nix-updater apply [--rebuild] <nixos|hm|both>}"
-    cmd_apply "$target" "$do_rebuild"
+    target="${1:?Usage: nix-update switch [--rebuild] <nixos|hm|both>}"
+    cmd_switch "$target" "$do_rebuild"
     ;;
   status)
     cmd_status

@@ -28,7 +28,7 @@ homeManager.lib.homeManagerConfiguration {
       home.activation.requireCleanConfig = lib.hm.dag.entryBefore [ "writeBoundary" ] ''
         if [ ! -f "$newGenPath/home-files/.config/hm-config-rev" ]; then
           echo "ERROR: Refusing to activate — HM config was built from a dirty tree."
-          echo "       Use nix-updater or rebuild.sh to build from a clean tree."
+          echo "       Use nix-update or rebuild.sh to build from a clean tree."
           exit 1
         fi
       '';

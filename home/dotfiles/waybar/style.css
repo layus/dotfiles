@@ -27,7 +27,7 @@ window#waybar.solo {
 }
 */
 
-window#waybar.termite {
+window#waybar.kitty {
     background-color: #3F3F3F;
 }
 
@@ -207,6 +207,10 @@ label:focus {
 
 #custom-nix-updates.ready {
     border-bottom: 3px solid #f39c12;
+}
+
+#custom-nix-updates.pending {
+    border-bottom: 3px solid #9b59b6;
 }
 
 #custom-nix-updates.building {

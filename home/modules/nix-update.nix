@@ -1,7 +1,7 @@
 { config, pkgs, lib, ... }:
 
 let
-  cfg = config.services.nix-updater;
+  cfg = config.services.nix-update;
 
   # Pre-compute substitution values for the bash script
   updateInputFlags = lib.escapeShellArgs cfg.updateInputs;
@@ -10,8 +10,8 @@ let
   );
 
   mainScript = pkgs.stdenv.mkDerivation {
-    name = "nix-updater";
-    src = pkgs.replaceVars ./nix-updater.sh {
+    name = "nix-update";
+    src = pkgs.replaceVars ./nix-update.sh {
       flakeDir = cfg.flakeDir;
       inherit updateInputFlags overrideInputFlags;
     };
@@ -19,16 +19,16 @@ let
     runtimeDeps = with pkgs; [ coreutils hostname jq nix ];
     nativeBuildInputs = [ pkgs.makeWrapper ];
     installPhase = ''
-      install -Dm755 $src $out/bin/nix-updater
-      wrapProgram $out/bin/nix-updater \
+      install -Dm755 $src $out/bin/nix-update
+      wrapProgram $out/bin/nix-update \
         --prefix PATH : ${lib.makeBinPath (with pkgs; [ coreutils hostname jq nix ])}
     '';
   };
 
 in {
 
-  options.services.nix-updater = {
-    enable = lib.mkEnableOption "background NixOS/home-manager update builder";
+  options.services.nix-update = {
+    enable = lib.mkEnableOption "background NixOS/home-manager update builder (nix-update)";
 
     flakeDir = lib.mkOption {
       type = lib.types.str;
@@ -59,18 +59,18 @@ in {
   config = lib.mkIf cfg.enable {
 
     # NixOS updater service + timer
-    systemd.user.services.nix-updater-nixos = {
+    systemd.user.services.nix-update-nixos = {
       Unit.Description = "Build NixOS config update in background";
       Service = {
         Type = "oneshot";
-        ExecStart = "${mainScript}/bin/nix-updater build nixos";
+        ExecStart = "${mainScript}/bin/nix-update build nixos";
         # Don't let a long build starve the system
         Nice = 19;
         IOSchedulingClass = "idle";
       };
     };
 
-    systemd.user.timers.nix-updater-nixos = {
+    systemd.user.timers.nix-update-nixos = {
       Unit.Description = "Timer for background NixOS config builds";
       Timer = {
         OnCalendar = cfg.calendar;
@@ -81,17 +81,17 @@ in {
     };
 
     # Home-manager updater service + timer
-    systemd.user.services.nix-updater-hm = {
+    systemd.user.services.nix-update-hm = {
       Unit.Description = "Build home-manager config update in background";
       Service = {
         Type = "oneshot";
-        ExecStart = "${mainScript}/bin/nix-updater build hm";
+        ExecStart = "${mainScript}/bin/nix-update build hm";
         Nice = 19;
         IOSchedulingClass = "idle";
       };
     };
 
-    systemd.user.timers.nix-updater-hm = {
+    systemd.user.timers.nix-update-hm = {
       Unit.Description = "Timer for background home-manager config builds";
       Timer = {
         OnCalendar = cfg.calendar;

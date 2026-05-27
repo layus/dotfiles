@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Bootstrap rebuild script — use when nix-updater is not yet installed or broken.
+# Bootstrap rebuild script — use when nix-update is not yet installed or broken.
 # Usage:
 #   ./rebuild.sh hm          # home-manager switch
 #   ./rebuild.sh nixos        # sudo nixos-rebuild boot
