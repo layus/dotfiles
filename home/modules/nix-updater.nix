@@ -5,6 +5,11 @@ let
 
   flakeDir = cfg.flakeDir;
 
+  # Pre-compute the --override-input flags as a flat shell-escaped string
+  overrideFlags = lib.escapeShellArgs (
+    lib.concatLists (lib.mapAttrsToList (name: url: [ "--override-input" name url ]) cfg.overrideInputs)
+  );
+
   # Shared build script, parameterized by target (nixos or hm)
   buildScript = pkgs.writeShellApplication {
     name = "nix-updater-build";
@@ -68,10 +73,8 @@ let
       for input in ${lib.escapeShellArgs cfg.updateInputs}; do
         build_flags+=(--update-input "$input")
       done
-      for override in ${lib.escapeShellArgs (lib.mapAttrsToList (name: url: "${name} ${url}") cfg.overrideInputs)}; do
-        IFS=' ' read -r input_name input_url <<< "$override"
-        build_flags+=(--override-input "$input_name" "$input_url")
-      done
+      # shellcheck disable=SC2086
+      build_flags+=(${overrideFlags})
 
       if nix build \
           "$flake_dir#$attr" \
@@ -137,11 +140,8 @@ let
         echo "=== Applying $t update ==="
 
         # Build override flags to match what the build used
-        local -a override_flags=()
-        for override in ${lib.escapeShellArgs (lib.mapAttrsToList (name: url: "${name} ${url}") cfg.overrideInputs)}; do
-          IFS=' ' read -r input_name input_url <<< "$override"
-          override_flags+=(--override-input "$input_name" "$input_url")
-        done
+        # shellcheck disable=SC2086
+        local -a override_flags=(${overrideFlags})
 
         # Use the recorded lock file so the apply uses the same inputs as the build
         local recorded_lock
