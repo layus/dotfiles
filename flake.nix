@@ -4,6 +4,7 @@
   inputs.homeManager.url = "github:nix-community/home-manager";
   inputs.homeManager.inputs.nixpkgs.follows = "nixpkgs";
 
+
   #inputs.dwarffs.url = "github:edolstra/dwarffs";
   #inputs.dwarffs.inputs.nixpkgs.follows = "nixpkgs";
   #inputs.dwarffs.inputs.nix.inputs.nixpkgs.follows = "nixpkgs";

@@ -33,8 +33,8 @@
       programs.git = {
         enable = true;
         package = pkgs.gitFull;
-        userName = lib.mkDefault "Guillaume @layus Maudoux";
-        userEmail = lib.mkDefault "layus.on@gmail.com";
+        settings.user.name = lib.mkDefault "Guillaume @layus Maudoux";
+        settings.user.email = lib.mkDefault "layus.on@gmail.com";
         includes = [{ path = ../gitconfig.inc; }];
         lfs.enable = true;
       };

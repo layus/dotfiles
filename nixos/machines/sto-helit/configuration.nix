@@ -257,7 +257,7 @@
   #    </Pass>
   #  '';
   #  useSSL = true;
-  #  userName = "layus";
+  #  settings.user.name = "layus";
   #  port = 3333;
   #};
 
