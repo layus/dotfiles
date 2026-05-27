@@ -51,7 +51,9 @@
       programs.dircolors.enable = true;
       #programs.keychain.enable = true;  # Nope, deal with it ourselves.
 
-      programs.fish.enable = true;
+      # Disable fish. Generating completions takes ages.
+      #programs.fish.enable = true;
+
       programs.zsh.enable = true;
       programs.zsh.autocd = true;
       programs.zsh.history.path = "${config.home.homeDirectory}/.histfile";
@@ -100,55 +102,55 @@
       ];
       programs.neovim.plugins = with pkgs.vimPlugins; [
         ale
-        vim-easymotion
-        #switch.vim
-        supertab
-        vim-fugitive
-        vim-rhubarb
-        vim-sleuth
-        nerdtree
-        csapprox
-        vim-colors-solarized
-        vim-surround
-        vim-unimpaired
-        vim-airline
-        vim-airline-themes
-        nerdcommenter
-        neoformat
-        #vim-oz
-        #vim-alloy
-        #jsonc.vim
-        #vim-i3-config-syntax
-        #sway-vim-syntax
-        vim-loves-dafny
-        vim-scala
-        vim-nix
-        #vim-zimwiki-syntax
-        #vim-jenkinsfile
-        #vim-mustache-handlebars
-        #groovy.vim
-        vim-pandoc
-        vim-pandoc-syntax
-        #zotcite
-        limelight-vim
-        goyo
-        #unicode
-        #vim-ingo-library
-        vim-SyntaxRange
-        vim-endwise
-        deoplete-nvim
-        #nvim-lspconfig
-        nvim-yarp
-        #vim-hug-neovim-rpc
-        #neocomplcache
-        #neco-ghc -- needs more of ghc installed
-        editorconfig-vim
-        syntastic
-        #vim-latex
-        rust-vim #rust.vim
-        vim-racer
-        fzf-vim
-        vim-bazel
+        # vim-easymotion
+        # #switch.vim
+        # supertab
+        # vim-fugitive
+        # vim-rhubarb
+        # vim-sleuth
+        # #nerdtree
+        # csapprox
+        # vim-colors-solarized
+        # vim-surround
+        # vim-unimpaired
+        # vim-airline
+        # vim-airline-themes
+        # nerdcommenter
+        # neoformat
+        # #vim-oz
+        # #vim-alloy
+        # #jsonc.vim
+        # #vim-i3-config-syntax
+        # #sway-vim-syntax
+        # vim-loves-dafny
+        # vim-scala
+        # vim-nix
+        # #vim-zimwiki-syntax
+        # #vim-jenkinsfile
+        # #vim-mustache-handlebars
+        # #groovy.vim
+        # vim-pandoc
+        # vim-pandoc-syntax
+        # #zotcite
+        # limelight-vim
+        # goyo
+        # #unicode
+        # #vim-ingo-library
+        # vim-SyntaxRange
+        # vim-endwise
+        # deoplete-nvim
+        # #nvim-lspconfig
+        # nvim-yarp
+        # #vim-hug-neovim-rpc
+        # #neocomplcache
+        # #neco-ghc -- needs more of ghc installed
+        # editorconfig-vim
+        # syntastic
+        # #vim-latex
+        # rust-vim #rust.vim
+        # vim-racer
+        # fzf-vim
+        # vim-bazel
       ];
 
       home.file.".bash_aliases".source = ../dotfiles/bash_aliases;
@@ -157,6 +159,7 @@
       xdg.mime.enable = true;
       xdg.mimeApps.enable = true;
       xdg.configFile."mimeapps.list".source = lib.mkForce ../dotfiles/mimeapps.list;
+      xdg.configFile."mimeapps.list".force = true;
 
       programs.ssh.enable = true;
       programs.ssh.enableDefaultConfig = false;
@@ -212,7 +215,7 @@
             ${pkgs.imagemagick}/bin/convert ${../dotfiles/background.webp} -resize "3840x2400^" -gravity Center -extent 3840x2400+250 $out
           '';
           zim = super.zim.overrideAttrs (oldAttrs: {
-            propagatedBuildInputs = oldAttrs.propagatedBuildInputs or [ ] ++ [ self.python3Packages.Babel ];
+            propagatedBuildInputs = oldAttrs.propagatedBuildInputs or [ ] ++ [ self.python3Packages.babel ];
             preFixup =
               oldAttrs.preFixup
                 or ""
