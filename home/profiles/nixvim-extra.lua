@@ -1,14 +1,5 @@
--- Starlark tree-sitter parser config
-local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
-parser_config.starlark = {
-  install_info = {
-    url = "~/projects/tree-sitter-starlark",
-    files = {"src/parser.c", "src/scanner.c"},
-    branch = "main",
-    generate_requires_npm = false,
-    requires_generate_from_grammar = true,
-  },
-}
+-- Starlark: reuse the python tree-sitter parser for .star / .bzl files
+vim.treesitter.language.register('python', 'starlark')
 
 -- LSP: starlark_rust (not natively supported by nixvim)
 vim.lsp.enable('starlark_rust')
