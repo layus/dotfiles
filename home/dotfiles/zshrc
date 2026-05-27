@@ -211,4 +211,14 @@ fi
 # See programs.direnv.*
 # eval "$(direnv hook zsh)"
 
+# Advisory check for upstream divergence in dotfiles repo
+dotfiles-check() {
+    local repo=~/.config/nixpkgs
+    git -C "$repo" fetch origin --quiet 2>/dev/null || return 0
+    local behind=$(git -C "$repo" rev-list HEAD..origin/main --count 2>/dev/null)
+    [ "${behind:-0}" -gt 0 ] && echo "⚠ dotfiles: $behind commit(s) on origin/main not yet merged"
+    local ahead=$(git -C "$repo" rev-list origin/main..HEAD --count 2>/dev/null)
+    [ "${ahead:-0}" -gt 0 ] && echo "⚠ dotfiles: $ahead commit(s) ahead of origin/main (push?)"
+}
+
 # vim: set et, sw=4, ts=4
