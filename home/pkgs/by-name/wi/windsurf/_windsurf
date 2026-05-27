@@ -1,0 +1,33 @@
+#compdef windsurf
+
+_windsurf_folder() {
+  # Find remote host from -r/--remote option
+  local remote_host=""
+  local i
+  for ((i = 2; i < CURRENT; i++)); do
+    if [[ "${words[$i]}" == (-r|--remote) ]]; then
+      remote_host="${words[$((i+1))]}"
+      break
+    fi
+  done
+
+  if [[ -z "$remote_host" ]]; then
+    _files -/
+  elif [[ -z "${words[CURRENT]}" ]]; then
+    # Default to remote home directory
+    local ssh_user
+    ssh_user=$(ssh -G "$remote_host" 2>/dev/null | awk '/^user / { print $2; exit }')
+    compadd -S "" -- "/home/${ssh_user:-}/"
+  else
+    _remote_files -/ -h "$remote_host" -- ssh
+  fi
+}
+
+_windsurf() {
+  _arguments \
+    '(-h --help)'{-h,--help}'[Show this help message]' \
+    '(-r --remote)'{-r,--remote}'[Connect to remote host]:host:_ssh_hosts' \
+    '1:folder:_windsurf_folder'
+}
+
+_windsurf "$@"
