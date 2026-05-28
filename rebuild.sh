@@ -66,6 +66,12 @@ if [ -d "$flake_dir/local" ]; then
   override_flags=(--override-input localConfig "path:$flake_dir/local")
 fi
 
+# Resolve HM config name: try user@host first, fall back to bare user
+hm_config="$user@$host"
+if ! nix eval "$flake_dir#homeConfigurations.\"$user@$host\"" --no-update-lock-file --apply 'x: true' 2>/dev/null; then
+  hm_config="$user"
+fi
+
 stamp()  { echo "$verified_rev" > "$flake_dir/.verified-rev"; }
 clear()  { : > "$flake_dir/.verified-rev"; }
 trap clear EXIT
@@ -73,12 +79,12 @@ trap clear EXIT
 do_hm() {
   stamp
   if [ "$is_dirty" = 1 ]; then
-    echo "==> [DIRTY BUILD] nix build $flake_dir#homeConfigurations.\"$user@$host\".activationPackage ${override_flags[*]}"
-    nix build "$flake_dir#homeConfigurations.\"$user@$host\".activationPackage" --no-update-lock-file --no-link "${override_flags[@]}"
+    echo "==> [DIRTY BUILD] nix build $flake_dir#homeConfigurations.\"$hm_config\".activationPackage ${override_flags[*]}"
+    nix build "$flake_dir#homeConfigurations.\"$hm_config\".activationPackage" --no-update-lock-file --no-link "${override_flags[@]}"
     echo "==> Dirty build complete. Use 'nix-update' or rebuild from a clean tree to activate."
   else
-    echo "==> home-manager switch --flake $flake_dir#$user@$host ${override_flags[*]}"
-    home-manager switch --flake "$flake_dir#$user@$host" --no-update-lock-file "${override_flags[@]}"
+    echo "==> home-manager switch --flake $flake_dir#$hm_config ${override_flags[*]}"
+    home-manager switch --flake "$flake_dir#$hm_config" --no-update-lock-file "${override_flags[@]}"
   fi
   clear
 }

@@ -13,6 +13,12 @@ mkdir -p "$log_dir"
 update_inputs=(@updateInputFlags@)
 override_inputs=(@overrideInputFlags@)
 
+# Resolve HM config name: try user@host first, fall back to bare user
+hm_config="$user@$host"
+if ! nix eval "$flake_dir#homeConfigurations.\"$user@$host\"" --no-update-lock-file --apply 'x: true' 2>/dev/null; then
+  hm_config="$user"
+fi
+
 # --- helpers ---
 
 is_tree_dirty() {
@@ -53,7 +59,7 @@ resolve_target() {
       current="/run/current-system"
       ;;
     hm)
-      attr="homeConfigurations.\"$user@$host\".activationPackage"
+      attr="homeConfigurations.\"$hm_config\".activationPackage"
       current="$HOME/.local/state/nix/profiles/home-manager"
       if [ ! -e "$current" ] && [ -e "$HOME/.local/state/home-manager/gcroots/current-home" ]; then
         current="$HOME/.local/state/home-manager/gcroots/current-home"
@@ -198,8 +204,8 @@ cmd_apply() {
         fi
         ;;
       hm)
-        echo "Running: home-manager switch --flake $flake_dir#$user@$host ${apply_flags[*]}"
-        home-manager switch --flake "$flake_dir#$user@$host" "${apply_flags[@]}"
+        echo "Running: home-manager switch --flake $flake_dir#$hm_config ${apply_flags[*]}"
+        home-manager switch --flake "$flake_dir#$hm_config" "${apply_flags[@]}"
         ;;
     esac
 
