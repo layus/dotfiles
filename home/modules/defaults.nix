@@ -91,11 +91,6 @@
       home.file.".bash_aliases".source = ../dotfiles/bash_aliases;
       home.file.".bash_aliases.git".source = ../dotfiles/bash_aliases.git;
 
-      xdg.mime.enable = true;
-      xdg.mimeApps.enable = true;
-      xdg.configFile."mimeapps.list".source = lib.mkForce ../dotfiles/mimeapps.list;
-      xdg.configFile."mimeapps.list".force = true;
-
       programs.ssh.enable = true;
       programs.ssh.enableDefaultConfig = false;
       home.file.".ssh/config".text = lib.mkOrder 999 (builtins.readFile ../dotfiles/ssh/config);

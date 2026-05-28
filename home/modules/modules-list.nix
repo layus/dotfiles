@@ -1,6 +1,7 @@
 [
   ./custom.nix
   ./defaults.nix
+  ./mimeapps.nix
   ./nix-update.nix
   ./packages.nix
   ../profiles/nixvim.nix
