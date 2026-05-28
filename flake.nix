@@ -33,6 +33,10 @@
           // lib.optionalAttrs (machine == "headless") { "${user}" = import ./home args user machine; }
       ) userFiles;
     in {
+      packages.x86_64-linux = {
+        nix = nixpkgs.legacyPackages.x86_64-linux.nix;
+      };
+
       nixosConfigurations =
         lib.attrsets.mapAttrs
           (machine: _: import ./nixos args machine)

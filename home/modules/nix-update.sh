@@ -15,13 +15,19 @@ override_inputs=(@overrideInputFlags@)
 
 # --- helpers ---
 
-require_clean_tree() {
+is_tree_dirty() {
   if ! git -C "$flake_dir" diff --quiet -- ':!.verified-rev' 2>/dev/null; then
-    echo "ERROR: Flake directory has uncommitted changes. Commit first." >&2
-    exit 1
+    return 0
   fi
   if ! git -C "$flake_dir" diff --cached --quiet 2>/dev/null; then
-    echo "ERROR: Flake directory has staged but uncommitted changes. Commit first." >&2
+    return 0
+  fi
+  return 1
+}
+
+require_clean_tree() {
+  if is_tree_dirty; then
+    echo "ERROR: Flake directory has uncommitted changes. Commit first." >&2
     exit 1
   fi
   verified_rev="$(git -C "$flake_dir" rev-parse HEAD 2>/dev/null || echo "")"
@@ -78,12 +84,27 @@ write_state() {
 
 cmd_build() {
   local target="$1"
-  require_clean_tree
   resolve_target "$target"
+
+  local dirty=0
+  if is_tree_dirty; then
+    dirty=1
+    echo "WARNING: Flake directory is dirty — build will be marked as non-activatable." >&2
+    verified_rev=""
+  else
+    verified_rev="$(git -C "$flake_dir" rev-parse HEAD 2>/dev/null || echo "")"
+    if [ -z "$verified_rev" ]; then
+      echo "ERROR: Could not determine git revision." >&2
+      exit 1
+    fi
+  fi
 
   stamp_verified_rev
   write_state "building"
   echo "=== nix-update build ($target) started at $(date) ===" > "$log_file"
+  if [ "$dirty" = 1 ]; then
+    echo "WARNING: dirty build" >> "$log_file"
+  fi
 
   local -a build_flags=()
   for input in "${update_inputs[@]}"; do
@@ -109,7 +130,10 @@ cmd_build() {
       diff_summary="$(nix store diff-closures "$current" "$result" 2>/dev/null | head -30 || true)"
     fi
 
-    if [ -e "$current" ] && [ "$(readlink -f "$current")" = "$result" ]; then
+    if [ "$dirty" = 1 ]; then
+      write_state "dirty" "$result" "$diff_summary" ""
+      echo "Dirty build complete: $result (will NOT be activated)" >> "$log_file"
+    elif [ -e "$current" ] && [ "$(readlink -f "$current")" = "$result" ]; then
       write_state "current" "$result" "" ""
       echo "Already up to date." >> "$log_file"
     else
@@ -145,6 +169,10 @@ cmd_apply() {
 
     local status
     status="$(jq -r .status "$state_file")"
+    if [ "$status" = "dirty" ]; then
+      echo "$t: build was from a dirty tree — refusing to activate. Commit and rebuild first."
+      return 1
+    fi
     if [ "$status" != "ready" ]; then
       echo "$t: status is '$status', not 'ready'. Nothing to apply."
       return 1
@@ -306,6 +334,7 @@ cmd_waybar() {
   status_icon() {
     case "$1" in
       failed)   echo "✗" ;;
+      dirty)    echo "⚠" ;;
       building) echo "…" ;;
       ready)    echo "⬆" ;;
       pending)  echo "⏻" ;;
@@ -322,9 +351,10 @@ cmd_waybar() {
   for s in "$nixos_status" "$hm_status"; do
     case "$s" in
       failed)   class="failed" ;;
-      building) [ "$class" != "failed" ] && class="building" ;;
-      pending)  [ "$class" != "failed" ] && [ "$class" != "building" ] && class="pending" ;;
-      ready)    [ "$class" != "failed" ] && [ "$class" != "building" ] && class="ready" ;;
+      dirty)    [ "$class" != "failed" ] && class="dirty" ;;
+      building) [ "$class" != "failed" ] && [ "$class" != "dirty" ] && class="building" ;;
+      pending)  [ "$class" != "failed" ] && [ "$class" != "dirty" ] && [ "$class" != "building" ] && class="pending" ;;
+      ready)    [ "$class" != "failed" ] && [ "$class" != "dirty" ] && [ "$class" != "building" ] && class="ready" ;;
     esac
   done
 

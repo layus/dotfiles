@@ -43,6 +43,7 @@
     },
     "localConfig": {
       "locked": {
+        "narHash": "sha256-0000000000000000000000000000000000000000000=",
         "path": "./local-default",
         "type": "path"
       },

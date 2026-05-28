@@ -11,16 +11,55 @@ host="$(hostname)"
 user="$USER"
 target="${1:?Usage: $0 <hm|nixos|both>}"
 
-# Enforce clean git tree (ignoring .verified-rev itself)
+# Check if Nix version is at least 2.32
+check_nix_version() {
+  local version
+  version=$(nix --version | grep -oP '(?<=nix \(Nix\) )\d+\.\d+' || echo "0.0")
+  local major minor
+  major=$(echo "$version" | cut -d. -f1)
+  minor=$(echo "$version" | cut -d. -f2)
+  
+  if [ "$major" -lt 2 ] || ([ "$major" -eq 2 ] && [ "$minor" -lt 32 ]); then
+    return 1
+  fi
+  return 0
+}
+
+# Build and use a newer Nix if needed
+ensure_nix_version() {
+  if check_nix_version; then
+    return 0
+  fi
+  
+  echo "==> Nix version < 2.32 detected. Building Nix from flake..."
+  
+  echo "==> Building Nix..."
+  nix_path=$(nix build "$flake_dir#nix^out" --no-link --print-out-paths) || {
+    echo "ERROR: Could not build Nix from flake" >&2
+    return 1
+  }
+  
+  export PATH="$nix_path/bin:$PATH"
+  echo "==> Using Nix from: $nix_path/bin"
+}
+
+ensure_nix_version
+
+# Detect dirty tree (ignoring .verified-rev itself)
+is_dirty=0
 if ! git -C "$flake_dir" diff --quiet -- ':!.verified-rev' 2>/dev/null; then
-  echo "ERROR: Flake directory has uncommitted changes. Commit first." >&2
-  exit 1
+  is_dirty=1
 fi
 if ! git -C "$flake_dir" diff --cached --quiet 2>/dev/null; then
-  echo "ERROR: Flake directory has staged but uncommitted changes. Commit first." >&2
-  exit 1
+  is_dirty=1
 fi
-verified_rev="$(git -C "$flake_dir" rev-parse HEAD)"
+
+if [ "$is_dirty" = 1 ]; then
+  echo "WARNING: Flake directory is dirty — build will be marked as non-activatable." >&2
+  verified_rev=""
+else
+  verified_rev="$(git -C "$flake_dir" rev-parse HEAD)"
+fi
 
 override_flags=()
 if [ -d "$flake_dir/local" ]; then
@@ -33,15 +72,27 @@ trap clear EXIT
 
 do_hm() {
   stamp
-  echo "==> home-manager switch --flake $flake_dir#$user@$host ${override_flags[*]}"
-  home-manager switch --flake "$flake_dir#$user@$host" "${override_flags[@]}"
+  if [ "$is_dirty" = 1 ]; then
+    echo "==> [DIRTY BUILD] nix build $flake_dir#homeConfigurations.\"$user@$host\".activationPackage ${override_flags[*]}"
+    nix build "$flake_dir#homeConfigurations.\"$user@$host\".activationPackage" --no-update-lock-file --no-link "${override_flags[@]}"
+    echo "==> Dirty build complete. Use 'nix-update' or rebuild from a clean tree to activate."
+  else
+    echo "==> home-manager switch --flake $flake_dir#$user@$host ${override_flags[*]}"
+    home-manager switch --flake "$flake_dir#$user@$host" --no-update-lock-file "${override_flags[@]}"
+  fi
   clear
 }
 
 do_nixos() {
   stamp
-  echo "==> sudo nixos-rebuild boot --flake $flake_dir#$host ${override_flags[*]}"
-  sudo nixos-rebuild boot --flake "$flake_dir#$host" "${override_flags[@]}"
+  if [ "$is_dirty" = 1 ]; then
+    echo "==> [DIRTY BUILD] nix build $flake_dir#nixosConfigurations.$host.config.system.build.toplevel ${override_flags[*]}"
+    nix build "$flake_dir#nixosConfigurations.$host.config.system.build.toplevel" --no-update-lock-file --no-link "${override_flags[@]}"
+    echo "==> Dirty build complete. Use 'nix-update' or rebuild from a clean tree to activate."
+  else
+    echo "==> sudo nixos-rebuild boot --flake $flake_dir#$host ${override_flags[*]}"
+    sudo nixos-rebuild boot --flake "$flake_dir#$host" --no-update-lock-file "${override_flags[@]}"
+  fi
   clear
 }
 
