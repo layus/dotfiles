@@ -29,9 +29,9 @@
 
     # Too late, these nonsensical names are in muscle memory
     up = pull
-    lol =  log --decorate --oneline
-    lolg = log --decorate --oneline --graph
-    lola = log --decorate --oneline --graph --all
+    lol =  log --decorate --oneline --first-parent
+    lolg = log --decorate --oneline --first-parent --graph
+    lola = log --decorate --oneline --first-parent --graph --all
 
 [rebase]
     autosquash = true
