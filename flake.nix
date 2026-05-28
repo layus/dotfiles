@@ -5,7 +5,6 @@
   inputs.homeManager.inputs.nixpkgs.follows = "nixpkgs";
 
   inputs.nixvim.url = "github:nix-community/nixvim";
-  inputs.nixvim.inputs.nixpkgs.follows = "nixpkgs";
 
   inputs.localConfig.url = "path:./local-default";
 

@@ -38,7 +38,7 @@ in {
 
     updateInputs = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ "nixpkgs" "homeManager" ];
+      default = [ "nixpkgs" "homeManager" "nixvim" ];
       description = "Flake inputs to update (via --update-input) before building.";
     };
 

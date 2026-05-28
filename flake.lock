@@ -50,8 +50,7 @@
       "original": {
         "path": "./local-default",
         "type": "path"
-      },
-      "parent": []
+      }
     },
     "nixpkgs": {
       "locked": {
@@ -69,12 +68,26 @@
         "type": "github"
       }
     },
+    "nixpkgs_nixvim": {
+      "locked": {
+        "lastModified": 1779877693,
+        "narHash": "sha256-NOF9NAREhxr50bbBfVcVOq+ArCMSoe8dP79Pk2uyARk=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "4100e830e085863741bc69b156ec4ccd53ab5be0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixpkgs-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixvim": {
       "inputs": {
         "flake-parts": "flake-parts",
-        "nixpkgs": [
-          "nixpkgs"
-        ],
+        "nixpkgs": "nixpkgs_nixvim",
         "systems": "systems"
       },
       "locked": {
