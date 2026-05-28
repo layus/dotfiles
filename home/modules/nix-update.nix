@@ -56,7 +56,14 @@ in {
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = {
+
+    # Always make the nix-update command available
+    home.packages = [
+      mainScript
+    ];
+
+  } // lib.mkIf cfg.enable {
 
     # NixOS updater service + timer
     systemd.user.services.nix-update-nixos = {
