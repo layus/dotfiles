@@ -56,61 +56,55 @@ in {
     };
   };
 
-  config = {
+  config = lib.mkMerge [
+    {
+      # Always make the nix-update command available
+      home.packages = [ mainScript ];
+    }
 
-    # Always make the nix-update command available
-    home.packages = [
-      mainScript
-    ];
-
-  } // lib.mkIf cfg.enable {
-
-    # NixOS updater service + timer
-    systemd.user.services.nix-update-nixos = {
-      Unit.Description = "Build NixOS config update in background";
-      Service = {
-        Type = "oneshot";
-        ExecStart = "${mainScript}/bin/nix-update build nixos";
-        # Don't let a long build starve the system
-        Nice = 19;
-        IOSchedulingClass = "idle";
+    (lib.mkIf cfg.enable {
+      # NixOS updater service + timer
+      systemd.user.services.nix-update-nixos = {
+        Unit.Description = "Build NixOS config update in background";
+        Service = {
+          Type = "oneshot";
+          ExecStart = "${mainScript}/bin/nix-update build nixos";
+          # Don't let a long build starve the system
+          Nice = 19;
+          IOSchedulingClass = "idle";
+        };
       };
-    };
 
-    systemd.user.timers.nix-update-nixos = {
-      Unit.Description = "Timer for background NixOS config builds";
-      Timer = {
-        OnCalendar = cfg.calendar;
-        Persistent = true;
-        RandomizedDelaySec = "30min";
+      systemd.user.timers.nix-update-nixos = {
+        Unit.Description = "Timer for background NixOS config builds";
+        Timer = {
+          OnCalendar = cfg.calendar;
+          Persistent = true;
+          RandomizedDelaySec = "30min";
+        };
+        Install.WantedBy = [ "timers.target" ];
       };
-      Install.WantedBy = [ "timers.target" ];
-    };
 
-    # Home-manager updater service + timer
-    systemd.user.services.nix-update-hm = {
-      Unit.Description = "Build home-manager config update in background";
-      Service = {
-        Type = "oneshot";
-        ExecStart = "${mainScript}/bin/nix-update build hm";
-        Nice = 19;
-        IOSchedulingClass = "idle";
+      # Home-manager updater service + timer
+      systemd.user.services.nix-update-hm = {
+        Unit.Description = "Build home-manager config update in background";
+        Service = {
+          Type = "oneshot";
+          ExecStart = "${mainScript}/bin/nix-update build hm";
+          Nice = 19;
+          IOSchedulingClass = "idle";
+        };
       };
-    };
 
-    systemd.user.timers.nix-update-hm = {
-      Unit.Description = "Timer for background home-manager config builds";
-      Timer = {
-        OnCalendar = cfg.calendar;
-        Persistent = true;
-        RandomizedDelaySec = "30min";
+      systemd.user.timers.nix-update-hm = {
+        Unit.Description = "Timer for background home-manager config builds";
+        Timer = {
+          OnCalendar = cfg.calendar;
+          Persistent = true;
+          RandomizedDelaySec = "30min";
+        };
+        Install.WantedBy = [ "timers.target" ];
       };
-      Install.WantedBy = [ "timers.target" ];
-    };
-
-    # Make scripts available in PATH
-    home.packages = [
-      mainScript
-    ];
-  };
+    })
+  ];
 }
