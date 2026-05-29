@@ -1,5 +1,15 @@
-{
+{ pkgs, lib, ... }: {
   services.radicale.enable = true;
+  services.radicale.pkg = pkgs.radicale.overrideAttrs (oldAttrs: {
+    src = pkgs.fetchFromGitHub {
+      owner = "Kozea";
+      repo = "Radicale";
+      rev = "8178b11e9e79edfd72068189a2d494eebf246920";
+      hash = "";
+    };
+
+    version = "unstable-2026-03-22-8178b11";
+  });
   services.radicale.configuration = ''
     # -*- mode: conf -*-
     # vim:ft=cfg
