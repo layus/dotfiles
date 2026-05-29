@@ -3,17 +3,11 @@
 let
   cfg = config.services.nix-update;
 
-  # Pre-compute substitution values for the bash script
-  updateInputFlags = lib.escapeShellArgs cfg.updateInputs;
-  overrideInputFlags = lib.escapeShellArgs (
-    lib.concatLists (lib.mapAttrsToList (name: url: [ "--override-input" name url ]) cfg.overrideInputs)
-  );
-
   mainScript = pkgs.stdenv.mkDerivation {
     name = "nix-update";
     src = pkgs.replaceVars ./nix-update.sh {
       flakeDir = cfg.flakeDir;
-      inherit updateInputFlags overrideInputFlags;
+      nixLib = ./nix-lib.sh;
     };
     dontUnpack = true;
     runtimeDeps = with pkgs; [ coreutils hostname jq nix ];
@@ -34,19 +28,6 @@ in {
       type = lib.types.str;
       default = "${config.home.homeDirectory}/.config/nixpkgs";
       description = "Path to the flake directory.";
-    };
-
-    updateInputs = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ "nixpkgs" "homeManager" "nixvim" ];
-      description = "Flake inputs to update (via --update-input) before building.";
-    };
-
-    overrideInputs = lib.mkOption {
-      type = lib.types.attrsOf lib.types.str;
-      default = {};
-      example = { localConfig = "path:./local"; };
-      description = "Flake inputs to override (via --override-input) on every build.";
     };
 
     calendar = lib.mkOption {

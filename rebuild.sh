@@ -45,6 +45,10 @@ ensure_nix_version() {
 
 ensure_nix_version
 
+# Source shared nix command library (sets override_inputs, update_inputs, hm_config, etc.)
+# shellcheck source=home/modules/nix-lib.sh
+source "$flake_dir/home/modules/nix-lib.sh"
+
 # Detect dirty tree (ignoring .verified-rev itself)
 is_dirty=0
 if ! git -C "$flake_dir" diff --quiet -- ':!.verified-rev' 2>/dev/null; then
@@ -61,19 +65,6 @@ else
   verified_rev="$(git -C "$flake_dir" rev-parse HEAD)"
 fi
 
-override_flags=()
-if [ -d "$flake_dir/local" ]; then
-  override_flags=(--override-input localConfig "path:$flake_dir/local")
-fi
-
-# Resolve HM config name: try user@host first, fall back to bare user
-set -x
-hm_config="$user@$host"
-if ! nix eval "$flake_dir#homeConfigurations.\"$user@$host\"" --no-write-lock-file --apply 'x: true' 2>/dev/null; then
-  hm_config="$user"
-fi
-set +x
-
 stamp()  { echo "$verified_rev" > "$flake_dir/.verified-rev"; }
 clear()  { : > "$flake_dir/.verified-rev"; }
 trap clear EXIT
@@ -81,12 +72,12 @@ trap clear EXIT
 do_hm() {
   stamp
   if [ "$is_dirty" = 1 ]; then
-    echo "==> [DIRTY BUILD] nix build $flake_dir#homeConfigurations.\"$hm_config\".activationPackage ${override_flags[*]}"
-    nix build "$flake_dir#homeConfigurations.\"$hm_config\".activationPackage" --no-write-lock-file --no-link "${override_flags[@]}"
+    echo "==> [DIRTY BUILD] building hm"
+    run_nix_build hm --no-update-lock-file --no-link
     echo "==> Dirty build complete. Use 'nix-update' or rebuild from a clean tree to activate."
   else
-    echo "==> home-manager switch --flake $flake_dir#$hm_config ${override_flags[*]}"
-    home-manager switch --flake "$flake_dir#$hm_config" --no-write-lock-file "${override_flags[@]}"
+    echo "==> activating hm"
+    run_activate hm switch
   fi
   clear
 }
@@ -94,12 +85,12 @@ do_hm() {
 do_nixos() {
   stamp
   if [ "$is_dirty" = 1 ]; then
-    echo "==> [DIRTY BUILD] nix build $flake_dir#nixosConfigurations.$host.config.system.build.toplevel ${override_flags[*]}"
-    nix build "$flake_dir#nixosConfigurations.$host.config.system.build.toplevel" --no-write-lock-file --no-link "${override_flags[@]}"
+    echo "==> [DIRTY BUILD] building nixos"
+    run_nix_build nixos --no-update-lock-file --no-link
     echo "==> Dirty build complete. Use 'nix-update' or rebuild from a clean tree to activate."
   else
-    echo "==> sudo nixos-rebuild boot --flake $flake_dir#$host ${override_flags[*]}"
-    sudo nixos-rebuild boot --flake "$flake_dir#$host" --no-write-lock-file "${override_flags[@]}"
+    echo "==> activating nixos (boot)"
+    run_activate nixos boot
   fi
   clear
 }

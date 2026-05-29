@@ -9,15 +9,9 @@ state_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/nix-update"
 mkdir -p "$log_dir"
 
-# Nix-injected flags (may be empty)
-update_inputs=(@updateInputFlags@)
-override_inputs=(@overrideInputFlags@)
-
-# Resolve HM config name: try user@host first, fall back to bare user
-hm_config="$user@$host"
-if ! nix eval "$flake_dir#homeConfigurations.\"$user@$host\"" --no-write-lock-file --apply 'x: true' &>/dev/null; then
-  hm_config="$user"
-fi
+# Source shared nix command library (sets update_inputs, override_inputs, hm_config, etc.)
+# shellcheck source=nix-lib.sh
+source "@nixLib@"
 
 # --- helpers ---
 
@@ -51,22 +45,10 @@ clear_verified_rev() {
   : > "$flake_dir/.verified-rev"
 }
 
+# Extend _resolve_target from nix-lib.sh with nix-update-specific state paths.
 resolve_target() {
   local t="$1"
-  case "$t" in
-    nixos)
-      attr="nixosConfigurations.$host.config.system.build.toplevel"
-      current="/run/current-system"
-      ;;
-    hm)
-      attr="homeConfigurations.\"$hm_config\".activationPackage"
-      current="$HOME/.local/state/nix/profiles/home-manager"
-      if [ ! -e "$current" ] && [ -e "$HOME/.local/state/home-manager/gcroots/current-home" ]; then
-        current="$HOME/.local/state/home-manager/gcroots/current-home"
-      fi
-      ;;
-    *) echo "Unknown target: $t" >&2; exit 1 ;;
-  esac
+  _resolve_target "$t"
   state_file="$state_dir/nix-update-$t.json"
   log_file="$log_dir/$t.log"
   result_link="$log_dir/result-$t"
@@ -116,17 +98,12 @@ cmd_build() {
   for input in "${update_inputs[@]}"; do
     build_flags+=(--update-input "$input")
   done
-  build_flags+=("${override_inputs[@]}")
+  build_flags+=(--out-link "$result_link" --output-lock-file "$lock_file" --log-format bar-with-logs)
 
   local interactive=0
   [ -t 1 ] && interactive=1
 
-  if nix build \
-      "$flake_dir#$attr" \
-      "${build_flags[@]}" \
-      --out-link "$result_link" \
-      --output-lock-file "$lock_file" \
-      --log-format bar-with-logs \
+  if run_nix_build "$target" "${build_flags[@]}" \
       2>&1 | if [ "$interactive" = 1 ]; then tee -a "$log_file"; else cat >> "$log_file"; fi; then
 
     result="$(readlink -f "$result_link")"
@@ -189,23 +166,22 @@ cmd_apply() {
     require_clean_tree
     stamp_verified_rev
 
-    local -a apply_flags=("${override_inputs[@]}")
     local new_status="current"
 
     case "$t" in
       nixos)
         if [ "$do_switch" = "1" ]; then
-          echo "Running: sudo nixos-rebuild switch --flake $flake_dir#$host ${apply_flags[*]}"
-          sudo nixos-rebuild switch --flake "$flake_dir#$host" "${apply_flags[@]}"
+          echo "Running: nixos-rebuild switch for $host"
+          run_activate "$t" switch
         else
-          echo "Running: sudo nixos-rebuild boot --flake $flake_dir#$host ${apply_flags[*]}"
-          sudo nixos-rebuild boot --flake "$flake_dir#$host" "${apply_flags[@]}"
+          echo "Running: nixos-rebuild boot for $host"
+          run_activate "$t" boot
           new_status="pending"
         fi
         ;;
       hm)
-        echo "Running: home-manager switch --flake $flake_dir#$hm_config ${apply_flags[*]}"
-        home-manager switch --flake "$flake_dir#$hm_config" "${apply_flags[@]}"
+        echo "Running: home-manager switch for $hm_config"
+        run_activate "$t" switch
         ;;
     esac
 
@@ -285,9 +261,9 @@ cmd_status() {
   }
 
   echo ""
-  echo "╔══════════════════════════════════╗"
-  echo "║     nix-update status           ║"
-  echo "╚══════════════════════════════════╝"
+  echo "╔═══════════════════════════╗"
+  echo "║     nix-update status     ║"
+  echo "╚═══════════════════════════╝"
   echo ""
 
   show_target nixos
