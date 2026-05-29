@@ -15,7 +15,7 @@ override_inputs=(@overrideInputFlags@)
 
 # Resolve HM config name: try user@host first, fall back to bare user
 hm_config="$user@$host"
-if ! nix eval "$flake_dir#homeConfigurations.\"$user@$host\"" --no-write-lock-file --apply 'x: true' 2>/dev/null; then
+if ! nix eval "$flake_dir#homeConfigurations.\"$user@$host\"" --no-write-lock-file --apply 'x: true' &>/dev/null; then
   hm_config="$user"
 fi
 
