@@ -67,10 +67,12 @@ if [ -d "$flake_dir/local" ]; then
 fi
 
 # Resolve HM config name: try user@host first, fall back to bare user
+set -x
 hm_config="$user@$host"
-if ! nix eval "$flake_dir#homeConfigurations.\"$user@$host\"" --no-update-lock-file --apply 'x: true' 2>/dev/null; then
+if ! nix eval "$flake_dir#homeConfigurations.\"$user@$host\"" --no-write-lock-file --apply 'x: true' 2>/dev/null; then
   hm_config="$user"
 fi
+set +x
 
 stamp()  { echo "$verified_rev" > "$flake_dir/.verified-rev"; }
 clear()  { : > "$flake_dir/.verified-rev"; }
@@ -80,11 +82,11 @@ do_hm() {
   stamp
   if [ "$is_dirty" = 1 ]; then
     echo "==> [DIRTY BUILD] nix build $flake_dir#homeConfigurations.\"$hm_config\".activationPackage ${override_flags[*]}"
-    nix build "$flake_dir#homeConfigurations.\"$hm_config\".activationPackage" --no-update-lock-file --no-link "${override_flags[@]}"
+    nix build "$flake_dir#homeConfigurations.\"$hm_config\".activationPackage" --no-write-lock-file --no-link "${override_flags[@]}"
     echo "==> Dirty build complete. Use 'nix-update' or rebuild from a clean tree to activate."
   else
     echo "==> home-manager switch --flake $flake_dir#$hm_config ${override_flags[*]}"
-    home-manager switch --flake "$flake_dir#$hm_config" --no-update-lock-file "${override_flags[@]}"
+    home-manager switch --flake "$flake_dir#$hm_config" --no-write-lock-file "${override_flags[@]}"
   fi
   clear
 }
@@ -93,11 +95,11 @@ do_nixos() {
   stamp
   if [ "$is_dirty" = 1 ]; then
     echo "==> [DIRTY BUILD] nix build $flake_dir#nixosConfigurations.$host.config.system.build.toplevel ${override_flags[*]}"
-    nix build "$flake_dir#nixosConfigurations.$host.config.system.build.toplevel" --no-update-lock-file --no-link "${override_flags[@]}"
+    nix build "$flake_dir#nixosConfigurations.$host.config.system.build.toplevel" --no-write-lock-file --no-link "${override_flags[@]}"
     echo "==> Dirty build complete. Use 'nix-update' or rebuild from a clean tree to activate."
   else
     echo "==> sudo nixos-rebuild boot --flake $flake_dir#$host ${override_flags[*]}"
-    sudo nixos-rebuild boot --flake "$flake_dir#$host" --no-update-lock-file "${override_flags[@]}"
+    sudo nixos-rebuild boot --flake "$flake_dir#$host" --no-write-lock-file "${override_flags[@]}"
   fi
   clear
 }
