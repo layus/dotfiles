@@ -9,9 +9,12 @@ state_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/nix-update"
 mkdir -p "$log_dir"
 
-# Source shared nix command library (sets update_inputs, override_inputs, hm_config, etc.)
+# Source shared nix command library (sets override_inputs, hm_config, etc.)
 # shellcheck source=nix-lib.sh
 source "@nixLib@"
+
+# Inputs to update (via --update-input) when building updates.
+update_inputs=(nixpkgs homeManager nixvim)
 
 # --- helpers ---
 

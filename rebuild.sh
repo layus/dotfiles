@@ -45,7 +45,7 @@ ensure_nix_version() {
 
 ensure_nix_version
 
-# Source shared nix command library (sets override_inputs, update_inputs, hm_config, etc.)
+# Source shared nix command library (sets override_inputs, hm_config, etc.)
 # shellcheck source=home/modules/nix-lib.sh
 source "$flake_dir/home/modules/nix-lib.sh"
 

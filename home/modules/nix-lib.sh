@@ -4,9 +4,6 @@
 #   host             — hostname (must be set before sourcing)
 #   user             — username (must be set before sourcing)
 
-# Inputs to update (via --update-input) when building updates.
-update_inputs=(nixpkgs homeManager nixvim)
-
 # Inputs to override on every nix invocation.
 override_inputs=()
 if [ -d "$flake_dir/local" ]; then
