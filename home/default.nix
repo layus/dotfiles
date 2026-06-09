@@ -6,6 +6,7 @@ homeManager.lib.homeManagerConfiguration {
     nixvim.homeModules.nixvim
     (./users + "/${name}@${machine}.nix")
     (localConfig.home-overlay or { })
+    { custom.hostname = machine; }
 
     # config integrity: capture revision + enforce clean builds
     # self.rev is present when the tree + lock are clean.  --override-input

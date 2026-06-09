@@ -2,7 +2,11 @@
 , pkgs
 , lib
 , ...
-}: {
+}:
+let
+  pubkeyFile = ../dotfiles/ssh/pubkeys + "/${config.custom.hostname}_ecdsa.pub";
+  hasPubkey = builtins.pathExists pubkeyFile;
+in {
   config = lib.mkMerge [
     {
       # Let Home Manager install and manage itself.
@@ -98,7 +102,10 @@
         source = ../dotfiles/ssh/pubkeys;
         recursive = true;
       };
-      home.file.".ssh/id_ecdsa.pub".source = ../dotfiles/ssh/pubkeys/uberwald_ecdsa.pub;
+      home.file.".ssh/id_ecdsa.pub" = lib.mkIf hasPubkey {
+        source = pubkeyFile;
+        force = true;
+      };
 
       xdg.userDirs = {
         enable = true;
