@@ -1,4 +1,5 @@
 [
+  ./config-integrity.nix
   ./custom.nix
   ./defaults.nix
   ./mimeapps.nix
