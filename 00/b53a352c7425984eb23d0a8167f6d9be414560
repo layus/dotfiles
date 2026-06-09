@@ -1,0 +1,25 @@
+home/default.nix
+  6119075c4e47ec59 5
+home/modules/modules-list.nix
+  6119075c4e47ec59 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "00b53a352c7425984eb23d0a8167f6d9be414560",
+  "prompts": {
+    "6119075c4e47ec59": {
+      "agent_id": {
+        "tool": "windsurf",
+        "id": "3606e650-5e70-4256-a683-1adabbd31423",
+        "model": "Claude Opus 4.6"
+      },
+      "human_author": "Guillaume Maudoux",
+      "messages": [],
+      "total_additions": 33,
+      "total_deletions": 31,
+      "accepted_lines": 28,
+      "overriden_lines": 0
+    }
+  }
+}
