@@ -65,7 +65,8 @@ window#waybar.solo {
 #network,
 #pulseaudio,
 #custom-media,
-#custom-nix-updates,
+#custom-nix-updates-nixos,
+#custom-nix-updates-hm,
 #tray,
 #mode,
 #idle_inhibitor {
@@ -188,30 +189,37 @@ label:focus {
     border-bottom: 3px solid #51a37a;
 }
 
-#custom-nix-updates {
+#custom-nix-updates-nixos,
+#custom-nix-updates-hm {
     border-bottom: 3px solid #64727D;
 }
 
-#custom-nix-updates.current {
+#custom-nix-updates-nixos.current,
+#custom-nix-updates-hm.current {
     border-bottom: 3px solid #2ecc71;
 }
 
-#custom-nix-updates.ready {
+#custom-nix-updates-nixos.ready,
+#custom-nix-updates-hm.ready {
     border-bottom: 3px solid #f39c12;
 }
 
-#custom-nix-updates.pending {
+#custom-nix-updates-nixos.pending,
+#custom-nix-updates-hm.pending {
     border-bottom: 3px solid #9b59b6;
 }
 
-#custom-nix-updates.building {
+#custom-nix-updates-nixos.building,
+#custom-nix-updates-hm.building {
     border-bottom: 3px solid #3498db;
 }
 
-#custom-nix-updates.failed {
+#custom-nix-updates-nixos.failed,
+#custom-nix-updates-hm.failed {
     border-bottom: 3px solid #e74c3c;
 }
 
-#custom-nix-updates.unknown {
+#custom-nix-updates-nixos.unknown,
+#custom-nix-updates-hm.unknown {
     border-bottom: 3px solid #64727D;
 }

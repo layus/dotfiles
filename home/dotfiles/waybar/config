@@ -23,7 +23,8 @@
         , "temperature"
         , "backlight"
         , "battery"
-        , "custom/nix-updates"
+        , "custom/nix-updates-nixos"
+        , "custom/nix-updates-hm"
         , "clock"
         , "tray"
         ],
@@ -192,12 +193,19 @@
         },
         "on-click": "pavucontrol"
     },
-    "custom/nix-updates": {
+    "custom/nix-updates-nixos": {
         "format": "{}",
         "return-type": "json",
         "interval": 30,
-        "exec": "nix-update waybar",
-        "on-click": "alacritty --class nix-update -e bash -c 'nix-update status; exec bash'"
+        "exec": "nix-update nixos waybar",
+        "on-click": "alacritty --class nix-update -e bash -c 'nix-update nixos status; exec zsh'"
+    },
+    "custom/nix-updates-hm": {
+        "format": "{}",
+        "return-type": "json",
+        "interval": 30,
+        "exec": "nix-update hm waybar",
+        "on-click": "alacritty --class nix-update -e bash -c 'nix-update hm status; exec zsh'"
     }
     //"custom/media": {
     //    "format": "{icon} {}",

@@ -6,14 +6,14 @@ targets=(
   'nixos:operate on NixOS configuration'
   'hm:operate on Home Manager configuration'
   'both:operate on both configurations'
-  'status:show update status'
-  'waybar:output waybar json'
 )
 
 commands=(
   'build:build an update'
   'apply:apply prebuilt update (default)'
   'switch:apply and switch now'
+  'status:show update status'
+  'waybar:output waybar json'
 )
 
 common_opts=(
@@ -22,11 +22,6 @@ common_opts=(
 
 if (( CURRENT == 2 )); then
   _describe -t targets 'target' targets
-  return
-fi
-
-if [[ ${words[2]} == status || ${words[2]} == waybar ]]; then
-  _describe -t options 'options' common_opts
   return
 fi
 
@@ -49,6 +44,9 @@ case ${words[3]} in
     _arguments \
       ${common_opts[@]} \
       '--rebuild[Rebuild before switch]'
+    ;;
+  status|waybar)
+    _describe -t options 'options' common_opts
     ;;
   *)
     _describe -t options 'options' common_opts

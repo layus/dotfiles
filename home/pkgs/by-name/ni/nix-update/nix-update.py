@@ -349,15 +349,31 @@ class App:
 
     def _status_icon(self, status: str) -> str:
         return {
-            "failed": "x",
-            "dirty": "!",
-            "building": "...",
-            "ready": "^",
-            "pending": "*",
-            "current": "ok",
+            "failed": "✗",
+            "dirty": "⚠",
+            "building": "…",
+            "ready": "⬆",
+            "pending": "⏻",
+            "current": "✓",
         }.get(status, "?")
 
-    def cmd_waybar(self) -> int:
+    def _status_class(self, statuses: tuple[str, ...]) -> str:
+        cls = "current"
+        for s in statuses:
+            if s == "failed":
+                cls = "failed"
+                break
+            if s == "dirty" and cls != "failed":
+                cls = "dirty"
+            elif s == "building" and cls not in {"failed", "dirty"}:
+                cls = "building"
+            elif s == "pending" and cls not in {"failed", "dirty", "building"}:
+                cls = "pending"
+            elif s == "ready" and cls not in {"failed", "dirty", "building"}:
+                cls = "ready"
+        return cls
+
+    def cmd_waybar(self, scope: str = "both") -> int:
         def read_status(name: str) -> str:
             f = self.state_dir / f"nix-update-{name}.json"
             if not f.exists():
@@ -386,38 +402,38 @@ class App:
 
         nixos_status = read_status("nixos")
         hm_status = read_status("hm")
-        text = f"N{self._status_icon(nixos_status)} H{self._status_icon(hm_status)}"
 
-        cls = "current"
-        for s in (nixos_status, hm_status):
-            if s == "failed":
-                cls = "failed"
-                break
-            if s == "dirty" and cls != "failed":
-                cls = "dirty"
-            elif s == "building" and cls not in {"failed", "dirty"}:
-                cls = "building"
-            elif s == "pending" and cls not in {"failed", "dirty", "building"}:
-                cls = "pending"
-            elif s == "ready" and cls not in {"failed", "dirty", "building"}:
-                cls = "ready"
-
-        payload = {
-            "text": text,
-            "tooltip": read_tooltip("nixos") + "\n" + read_tooltip("hm"),
-            "class": cls,
-        }
+        if scope == "nixos":
+            payload = {
+                "text": f"❄{self._status_icon(nixos_status)}",
+                "tooltip": read_tooltip("nixos"),
+                "class": self._status_class((nixos_status,)),
+            }
+        elif scope == "hm":
+            payload = {
+                "text": f"🏠{self._status_icon(hm_status)}",
+                "tooltip": read_tooltip("hm"),
+                "class": self._status_class((hm_status,)),
+            }
+        else:
+            payload = {
+                "text": f"❄{self._status_icon(nixos_status)} 🏠{self._status_icon(hm_status)}",
+                "tooltip": read_tooltip("nixos") + "\n" + read_tooltip("hm"),
+                "class": self._status_class((nixos_status, hm_status)),
+            }
         print(json.dumps(payload))
         return 0
 
-    def cmd_status(self) -> int:
+    def cmd_status(self, scope: str = "both") -> int:
         print()
         print("+---------------------------+")
         print("|     nix-update status     |")
         print("+---------------------------+")
         print()
 
-        for target in ("nixos", "hm"):
+        targets = ("nixos", "hm") if scope == "both" else (scope,)
+
+        for target in targets:
             ctx = self.resolve_target(target)
             print(f"--- {target} ---")
             state = self.read_state(ctx)
@@ -456,8 +472,8 @@ class App:
         print("  nix-update <nixos|hm> build")
         print("  nix-update <nixos|hm|both> apply [--rebuild]")
         print("  nix-update <nixos|hm|both> switch [--rebuild]")
-        print("  nix-update status")
-        print("  nix-update waybar")
+        print("  nix-update <nixos|hm|both> status")
+        print("  nix-update <nixos|hm|both> waybar")
         print()
         return 0
 
@@ -466,10 +482,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="nix-update",
         add_help=True,
-        usage="%(prog)s [--flake-dir PATH] <nixos|hm|both|status|waybar> [build|apply|switch] [options]",
+        usage="%(prog)s [--flake-dir PATH] <nixos|hm|both> [build|apply|switch|status|waybar] [options]",
     )
     parser.add_argument("--flake-dir", default=str(Path.home() / ".config/nixpkgs"), help="Path to the flake directory")
-    parser.add_argument("target_or_cmd", help="nixos|hm|both|status|waybar")
+    parser.add_argument("target", help="nixos|hm|both")
     parser.add_argument("subcmd", nargs="?", default="apply")
     parser.add_argument("rest", nargs=argparse.REMAINDER)
     return parser.parse_args(argv)
@@ -492,14 +508,9 @@ def main(argv: list[str]) -> int:
     ns = parse_args(argv)
     app = App(Path(ns.flake_dir).expanduser())
 
-    target = ns.target_or_cmd
+    target = ns.target
     subcmd = ns.subcmd
     rest = ns.rest
-
-    if target == "status":
-        return app.cmd_status()
-    if target == "waybar":
-        return app.cmd_waybar()
 
     if target not in {"nixos", "hm", "both"}:
         raise NixUpdateError(f"Unknown target: {target}")
@@ -514,6 +525,14 @@ def main(argv: list[str]) -> int:
     if subcmd == "switch":
         do_rebuild, _ = parse_flags(rest, {"rebuild"})
         return app.cmd_switch(target, do_rebuild)
+    if subcmd == "status":
+        if rest:
+            raise NixUpdateError(f"Unknown argument(s): {' '.join(rest)}")
+        return app.cmd_status(target)
+    if subcmd == "waybar":
+        if rest:
+            raise NixUpdateError(f"Unknown argument(s): {' '.join(rest)}")
+        return app.cmd_waybar(target)
 
     raise NixUpdateError(f"Unknown command: {subcmd}")
 
