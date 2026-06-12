@@ -3,20 +3,8 @@
 let
   cfg = config.services.nix-update;
 
-  mainScript = pkgs.stdenv.mkDerivation {
-    name = "nix-update";
-    src = pkgs.replaceVars ./nix-update.sh {
-      flakeDir = cfg.flakeDir;
-      nixLib = ./nix-lib.sh;
-    };
-    dontUnpack = true;
-    runtimeDeps = with pkgs; [ coreutils hostname jq nix ];
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-    installPhase = ''
-      install -Dm755 $src $out/bin/nix-update
-      wrapProgram $out/bin/nix-update \
-        --prefix PATH : ${lib.makeBinPath (with pkgs; [ coreutils hostname jq nix ])}
-    '';
+  nixUpdatePkg = pkgs.callPackage ../pkgs/by-name/ni/nix-update {
+    flakeDir = cfg.flakeDir;
   };
 
 in {
@@ -40,7 +28,7 @@ in {
   config = lib.mkMerge [
     {
       # Always make the nix-update command available
-      home.packages = [ mainScript ];
+      home.packages = [ nixUpdatePkg ];
     }
 
     (lib.mkIf cfg.enable {
@@ -49,7 +37,7 @@ in {
         Unit.Description = "Build NixOS config update in background";
         Service = {
           Type = "oneshot";
-          ExecStart = "${mainScript}/bin/nix-update build nixos";
+          ExecStart = "${nixUpdatePkg}/bin/nix-update nixos build";
           # Don't let a long build starve the system
           Nice = 19;
           IOSchedulingClass = "idle";
@@ -71,7 +59,7 @@ in {
         Unit.Description = "Build home-manager config update in background";
         Service = {
           Type = "oneshot";
-          ExecStart = "${mainScript}/bin/nix-update build hm";
+          ExecStart = "${nixUpdatePkg}/bin/nix-update hm build";
           Nice = 19;
           IOSchedulingClass = "idle";
         };

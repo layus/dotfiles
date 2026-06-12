@@ -1,0 +1,56 @@
+#compdef nix-update
+
+local -a targets commands common_opts
+
+targets=(
+  'nixos:operate on NixOS configuration'
+  'hm:operate on Home Manager configuration'
+  'both:operate on both configurations'
+  'status:show update status'
+  'waybar:output waybar json'
+)
+
+commands=(
+  'build:build an update'
+  'apply:apply prebuilt update (default)'
+  'switch:apply and switch now'
+)
+
+common_opts=(
+  '--flake-dir[Path to flake directory]:flake dir:_files -/'
+)
+
+if (( CURRENT == 2 )); then
+  _describe -t targets 'target' targets
+  return
+fi
+
+if [[ ${words[2]} == status || ${words[2]} == waybar ]]; then
+  _describe -t options 'options' common_opts
+  return
+fi
+
+if (( CURRENT == 3 )); then
+  _describe -t commands 'command' commands
+  return
+fi
+
+case ${words[3]} in
+  build)
+    _describe -t options 'options' common_opts
+    ;;
+  apply)
+    _arguments \
+      ${common_opts[@]} \
+      '--rebuild[Rebuild before apply]' \
+      '--switch[Switch immediately for nixos target]'
+    ;;
+  switch)
+    _arguments \
+      ${common_opts[@]} \
+      '--rebuild[Rebuild before switch]'
+    ;;
+  *)
+    _describe -t options 'options' common_opts
+    ;;
+esac

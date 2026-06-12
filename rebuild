@@ -1,0 +1,250 @@
+#!/usr/bin/env python3
+"""Bootstrap rebuild script.
+
+Use when nix-update is not yet installed or broken.
+Usage:
+  ./rebuild.sh hm     # home-manager switch
+  ./rebuild.sh nixos  # sudo nixos-rebuild boot
+  ./rebuild.sh both   # both
+"""
+
+from __future__ import annotations
+
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+
+def run(cmd: list[str], *, capture: bool = False, check: bool = True, cwd: Path | None = None) -> str:
+  proc = subprocess.run(
+    cmd,
+    cwd=str(cwd) if cwd else None,
+    check=False,
+    text=True,
+    stdout=subprocess.PIPE if capture else None,
+    stderr=subprocess.PIPE if capture else None,
+  )
+  if check and proc.returncode != 0:
+    err = (proc.stderr or "").strip()
+    raise RuntimeError(f"command failed ({proc.returncode}): {' '.join(cmd)}\n{err}")
+  return proc.stdout or ""
+
+
+def check_nix_version() -> bool:
+  out = run(["nix", "--version"], capture=True)
+  m = re.search(r"(\d+)\.(\d+)", out)
+  if not m:
+    return False
+  major, minor = int(m.group(1)), int(m.group(2))
+  return (major, minor) >= (2, 32)
+
+
+def ensure_nix_version(flake_dir: Path) -> None:
+  if check_nix_version():
+    return
+
+  print("==> Nix version < 2.32 detected. Building Nix from flake...")
+  print("==> Building Nix...")
+  try:
+    nix_path = run(["nix", "build", f"{flake_dir}#nix^out", "--no-link", "--print-out-paths"], capture=True).strip()
+  except RuntimeError as exc:
+    print(f"ERROR: Could not build Nix from flake\n{exc}", file=sys.stderr)
+    raise SystemExit(1)
+
+  os.environ["PATH"] = f"{nix_path}/bin:{os.environ.get('PATH', '')}"
+  print(f"==> Using Nix from: {nix_path}/bin")
+
+
+def is_dirty_tree(flake_dir: Path) -> bool:
+  p1 = subprocess.run(
+    ["git", "-C", str(flake_dir), "diff", "--quiet", "--", ":!.verified-rev"],
+    check=False,
+  )
+  if p1.returncode != 0:
+    return True
+  p2 = subprocess.run(["git", "-C", str(flake_dir), "diff", "--cached", "--quiet"], check=False)
+  return p2.returncode != 0
+
+
+def stamp_verified_rev(flake_dir: Path, rev: str) -> None:
+  (flake_dir / ".verified-rev").write_text(rev + "\n", encoding="utf-8")
+
+
+def clear_verified_rev(flake_dir: Path) -> None:
+  (flake_dir / ".verified-rev").write_text("", encoding="utf-8")
+
+
+def resolve_hm_config(flake_dir: Path, user: str, host: str, override_inputs: list[str]) -> str:
+  hm_config = f"{user}@{host}"
+  cmd = [
+    "nix",
+    "eval",
+    f"{flake_dir}#homeConfigurations.\"{hm_config}\"",
+    "--no-write-lock-file",
+    *override_inputs,
+    "--apply",
+    "x: true",
+  ]
+  proc = subprocess.run(cmd, cwd=str(flake_dir), check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+  return hm_config if proc.returncode == 0 else user
+
+
+def run_nix_build(
+  flake_dir: Path,
+  target: str,
+  host: str,
+  hm_config: str,
+  override_inputs: list[str],
+  extra: list[str],
+) -> None:
+  if target == "nixos":
+    attr = f"nixosConfigurations.{host}.config.system.build.toplevel"
+  elif target == "hm":
+    attr = f'homeConfigurations."{hm_config}".activationPackage'
+  else:
+    raise RuntimeError(f"Unknown target: {target}")
+
+  run(
+    [
+      "nix",
+      "build",
+      f"{flake_dir}#{attr}",
+      "--no-write-lock-file",
+      *override_inputs,
+      *extra,
+    ],
+    cwd=flake_dir,
+  )
+
+
+def run_activate(
+  flake_dir: Path,
+  target: str,
+  mode: str,
+  host: str,
+  hm_config: str,
+  override_inputs: list[str],
+) -> None:
+  if target == "nixos":
+    run(
+      [
+        "sudo",
+        "nixos-rebuild",
+        mode,
+        "--flake",
+        f"{flake_dir}#{host}",
+        "--no-update-lock-file",
+        "--no-write-lock-file",
+        *override_inputs,
+      ],
+      cwd=flake_dir,
+    )
+  elif target == "hm":
+    run(
+      [
+        "home-manager",
+        "switch",
+        "--flake",
+        f"{flake_dir}#{hm_config}",
+        "--no-update-lock-file",
+        "--no-write-lock-file",
+        *override_inputs,
+      ],
+      cwd=flake_dir,
+    )
+  else:
+    raise RuntimeError(f"Unknown target: {target}")
+
+
+def usage() -> None:
+  print(f"Usage: {Path(sys.argv[0]).name} <hm|nixos|both>", file=sys.stderr)
+
+
+def main() -> int:
+  if len(sys.argv) != 2:
+    usage()
+    return 1
+
+  target = sys.argv[1]
+  if target not in {"hm", "nixos", "both"}:
+    print(f"Unknown target: {target}. Use hm, nixos, or both.", file=sys.stderr)
+    return 1
+
+  flake_dir = Path(__file__).resolve().parent
+  host = run(["hostname"], capture=True).strip()
+  user = os.environ.get("USER", "")
+
+  ensure_nix_version(flake_dir)
+
+  override_inputs: list[str] = []
+  local_cfg = flake_dir / "local"
+  if local_cfg.is_dir():
+    override_inputs = ["--override-input", "localConfig", f"path:{local_cfg}"]
+
+  hm_config = resolve_hm_config(flake_dir, user, host, override_inputs)
+
+  dirty = is_dirty_tree(flake_dir)
+  if dirty:
+    print("WARNING: Flake directory is dirty - build will be marked as non-activatable.", file=sys.stderr)
+    verified_rev = ""
+  else:
+    verified_rev = run(["git", "-C", str(flake_dir), "rev-parse", "HEAD"], capture=True).strip()
+
+  try:
+    def do_hm() -> None:
+      stamp_verified_rev(flake_dir, verified_rev)
+      if dirty:
+        print("==> [DIRTY BUILD] building hm")
+        run_nix_build(
+          flake_dir,
+          "hm",
+          host,
+          hm_config,
+          override_inputs,
+          ["--no-update-lock-file", "--no-link"],
+        )
+        print("==> Dirty build complete. Use 'nix-update' or rebuild from a clean tree to activate.")
+      else:
+        print("==> activating hm")
+        run_activate(flake_dir, "hm", "switch", host, hm_config, override_inputs)
+      clear_verified_rev(flake_dir)
+
+    def do_nixos() -> None:
+      stamp_verified_rev(flake_dir, verified_rev)
+      if dirty:
+        print("==> [DIRTY BUILD] building nixos")
+        run_nix_build(
+          flake_dir,
+          "nixos",
+          host,
+          hm_config,
+          override_inputs,
+          ["--no-update-lock-file", "--no-link"],
+        )
+        print("==> Dirty build complete. Use 'nix-update' or rebuild from a clean tree to activate.")
+      else:
+        print("==> activating nixos (boot)")
+        run_activate(flake_dir, "nixos", "boot", host, hm_config, override_inputs)
+      clear_verified_rev(flake_dir)
+
+    if target == "hm":
+      do_hm()
+    elif target == "nixos":
+      do_nixos()
+    else:
+      do_nixos()
+      do_hm()
+  finally:
+    clear_verified_rev(flake_dir)
+
+  return 0
+
+
+if __name__ == "__main__":
+  try:
+    raise SystemExit(main())
+  except RuntimeError as exc:
+    print(str(exc), file=sys.stderr)
+    raise SystemExit(1)
