@@ -235,7 +235,7 @@ class App(CoreApp):
 
     # --- status -----------------------------------------------------------
 
-    def cmd_status(self, scope: str = "both") -> int:
+    def cmd_status(self, scope: str = "both", show_commands: bool = True) -> int:
         print()
         print("+---------------------------+")
         print("|     nix-update status     |")
@@ -279,14 +279,74 @@ class App(CoreApp):
 
             print()
 
+        if not show_commands:
+            return 0
+
         print("--- Commands ---")
         print("  nix-update <nixos|hm|both> build")
         print("  nix-update <nixos|hm|both> apply [--rebuild]")
         print("  nix-update <nixos|hm|both> switch [--rebuild]")
         print("  nix-update <nixos|hm|both> status")
         print("  nix-update <nixos|hm|both> waybar [--watch]")
+        print("  nix-update <nixos|hm> waybar --curses")
         print()
         return 0
+
+    # --- interactive REPL (waybar click target) ---------------------------
+
+    def cmd_curses(self, scope: str) -> int:
+        """Minimal interactive loop for a single target (hm or nixos).
+
+        A "glorified REPL": shows the current status, then offers build / apply
+        / (nixos only) switch, runs the chosen action with streaming output,
+        and loops -- reprinting the status each time. Not real curses; just a
+        plain menu so it works in any terminal opened by the waybar click.
+        """
+        if scope not in ("hm", "nixos"):
+            raise NixUpdateError("--curses requires a single target: nixos or hm")
+
+        # (key, label, action) -- action takes no args and returns an rc.
+        actions: list[tuple[str, str, "callable"]] = [
+            ("b", "build", lambda: self._guarded(lambda: self.cmd_build(scope))),
+            ("a", "apply", lambda: self._guarded(lambda: self.cmd_apply(scope, do_rebuild=False, do_switch=False))),
+        ]
+        if scope == "nixos":
+            actions.append(
+                ("s", "switch", lambda: self._guarded(lambda: self.cmd_switch(scope, do_rebuild=False)))
+            )
+        keymap = {key: (label, fn) for key, label, fn in actions}
+
+        title = {"hm": "home-manager", "nixos": "NixOS"}[scope]
+        while True:
+            self.cmd_status(scope, show_commands=False)
+            menu = "  ".join(f"[{key}] {label}" for key, label, _ in actions)
+            print(f"=== {title} === {menu}  [q] quit")
+            try:
+                choice = input("> ").strip().lower()
+            except (EOFError, KeyboardInterrupt):
+                print()
+                return 0
+
+            if choice in ("q", "quit", "exit"):
+                return 0
+            entry = keymap.get(choice)
+            if entry is None:
+                print(f"Unknown choice: {choice!r}\n")
+                continue
+
+            label, fn = entry
+            print(f"\n=== running {label} ===")
+            try:
+                fn()
+            except NixUpdateError as exc:
+                print(str(exc), file=sys.stderr)
+            print()
+
+    def _guarded(self, fn) -> int:
+        """Run an action behind the same up-to-date check as the CLI does."""
+        self.ensure_up_to_date()
+        return fn()
+
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -345,12 +405,20 @@ def main(argv: list[str]) -> int:
         return app.cmd_status(target)
     if subcmd == "waybar":
         watch = False
+        curses = False
         extra = list(rest)
         if "--watch" in extra:
             watch = True
             extra.remove("--watch")
+        if "--curses" in extra:
+            curses = True
+            extra.remove("--curses")
         if extra:
             raise NixUpdateError(f"Unknown argument(s): {' '.join(extra)}")
+        if watch and curses:
+            raise NixUpdateError("--watch and --curses are mutually exclusive.")
+        if curses:
+            return app.cmd_curses(target)
         return app.cmd_waybar(target, watch=watch)
 
     raise NixUpdateError(f"Unknown command: {subcmd}")

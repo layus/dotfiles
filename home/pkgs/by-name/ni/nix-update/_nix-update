@@ -51,7 +51,8 @@ case ${words[3]} in
   waybar)
     _arguments \
       ${common_opts[@]} \
-      '--watch[Stream updates continuously via inotify]'
+      '--watch[Stream updates continuously via inotify]' \
+      '--curses[Interactive build/apply/switch REPL for a single target]'
     ;;
   *)
     _describe -t options 'options' common_opts
