@@ -127,6 +127,46 @@ class App:
             raise NixUpdateError("ERROR: Could not determine git revision.")
         return rev
 
+    def ensure_up_to_date(self) -> None:
+        """Fetch upstream and fast-forward the checkout before rebuilding.
+
+        Always runs before a build/apply so we never rebuild against a stale
+        checkout. Errors out when the local branch has diverged from upstream
+        (a fast-forward is impossible), leaving resolution to the user.
+        """
+        upstream = self._git(
+            "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}", check=False
+        ).strip()
+        if not upstream:
+            print("==> No upstream tracking branch configured; skipping up-to-date check.")
+            return
+
+        print(f"==> Fetching {upstream} ...")
+        self._git("fetch", "--quiet")
+
+        local = self._git("rev-parse", "HEAD").strip()
+        remote = self._git("rev-parse", "@{u}").strip()
+        if local == remote:
+            return
+
+        base = self._git("merge-base", "HEAD", "@{u}").strip()
+        if remote == base:
+            # Local is ahead of upstream; nothing to pull.
+            return
+        if local != base:
+            raise NixUpdateError(
+                "ERROR: Local branch has diverged from upstream; cannot fast-forward.\n"
+                f"Reconcile with {upstream} (rebase/merge) before rebuilding."
+            )
+
+        print(f"==> Fast-forwarding to {upstream} ...")
+        rc = subprocess.run(
+            ["git", "-C", str(self.flake_dir), "merge", "--ff-only", "@{u}"],
+            check=False,
+        ).returncode
+        if rc != 0:
+            raise NixUpdateError(f"ERROR: Fast-forward to {upstream} failed.")
+
     def _resolve_hm_config(self) -> str:
         hm_config = f"{self.user}@{self.host}"
         cmd = [
@@ -729,12 +769,15 @@ def main(argv: list[str]) -> int:
     if subcmd == "build":
         if rest:
             raise NixUpdateError(f"Unknown argument(s): {' '.join(rest)}")
+        app.ensure_up_to_date()
         return app.cmd_build(target)
     if subcmd == "apply":
         do_rebuild, do_switch = parse_flags(rest, {"rebuild", "switch"})
+        app.ensure_up_to_date()
         return app.cmd_apply(target, do_rebuild, do_switch)
     if subcmd == "switch":
         do_rebuild, _ = parse_flags(rest, {"rebuild"})
+        app.ensure_up_to_date()
         return app.cmd_switch(target, do_rebuild)
     if subcmd == "status":
         if rest:
