@@ -196,15 +196,13 @@
     "custom/nix-updates-nixos": {
         "format": "{}",
         "return-type": "json",
-        "interval": 30,
-        "exec": "nix-update nixos waybar",
+        "exec": "nix-update nixos waybar --watch",
         "on-click": "alacritty --class nix-update -e bash -c 'nix-update nixos status; exec zsh'"
     },
     "custom/nix-updates-hm": {
         "format": "{}",
         "return-type": "json",
-        "interval": 30,
-        "exec": "nix-update hm waybar",
+        "exec": "nix-update hm waybar --watch",
         "on-click": "alacritty --class nix-update -e bash -c 'nix-update hm status; exec zsh'"
     }
     //"custom/media": {

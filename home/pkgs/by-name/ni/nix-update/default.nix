@@ -9,6 +9,7 @@
   jq,
   nix,
   hostname,
+  inotify-tools,
   flakeDir ? null,
 }:
 
@@ -28,7 +29,7 @@ stdenv.mkDerivation rec {
     install -Dm755 "$src/nix-update.py" "$out/libexec/nix-update.py"
     makeWrapper ${python3}/bin/python3 "$out/bin/nix-update" \
       --add-flags "$out/libexec/nix-update.py" \
-      --prefix PATH : ${lib.makeBinPath [ coreutils git jq nix hostname ]} \
+      --prefix PATH : ${lib.makeBinPath [ coreutils git jq nix hostname inotify-tools ]} \
       ${lib.optionalString (flakeDir != null) "--add-flags '--flake-dir ${flakeDir}'"}
 
     installShellCompletion --zsh "$src/_nix-update"

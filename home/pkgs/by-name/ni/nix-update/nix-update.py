@@ -7,10 +7,12 @@ import concurrent.futures
 import datetime as dt
 import json
 import os
+import select
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -228,6 +230,8 @@ class App:
             "timestamp": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
         }
         ctx.state_file.write_text(json.dumps(payload), encoding="utf-8")
+        # Keep the waybar message files in sync with every state change.
+        self.refresh_waybar()
 
     def _assemble_flake(self, dest: Path, verified_rev: str) -> None:
         """Assemble a fully self-contained flake in `dest`.
@@ -577,6 +581,8 @@ class App:
         state["status"] = new_status
         state["timestamp"] = dt.datetime.now().astimezone().isoformat(timespec="seconds")
         ctx.state_file.write_text(json.dumps(state), encoding="utf-8")
+        # Reflect the new status in the waybar message files immediately.
+        self.refresh_waybar()
 
         print(f"{target}: applied successfully ({result})")
         return 0
@@ -624,7 +630,18 @@ class App:
                 cls = "ready"
         return cls
 
-    def cmd_waybar(self, scope: str = "both") -> int:
+    def cmd_waybar(self, scope: str = "both", watch: bool = False) -> int:
+        if watch:
+            return self._waybar_watch(scope)
+        # One-shot: refresh the file and echo it (handy for manual testing).
+        self._write_waybar(scope)
+        sys.stdout.write(self._waybar_file(scope).read_text(encoding="utf-8"))
+        return 0
+
+    def _waybar_file(self, scope: str) -> Path:
+        return self.state_dir / f"nix-update-waybar-{scope}.json"
+
+    def _build_waybar_payload(self, scope: str) -> dict[str, str]:
         def read_status(name: str) -> str:
             f = self.state_dir / f"nix-update-{name}.json"
             if not f.exists():
@@ -655,25 +672,98 @@ class App:
         hm_status = read_status("hm")
 
         if scope == "nixos":
-            payload = {
+            return {
                 "text": f"❄{self._status_icon(nixos_status)}",
                 "tooltip": read_tooltip("nixos"),
                 "class": self._status_class((nixos_status,)),
             }
-        elif scope == "hm":
-            payload = {
+        if scope == "hm":
+            return {
                 "text": f"🏠{self._status_icon(hm_status)}",
                 "tooltip": read_tooltip("hm"),
                 "class": self._status_class((hm_status,)),
             }
-        else:
-            payload = {
-                "text": f"❄{self._status_icon(nixos_status)} 🏠{self._status_icon(hm_status)}",
-                "tooltip": read_tooltip("nixos") + "\n" + read_tooltip("hm"),
-                "class": self._status_class((nixos_status, hm_status)),
-            }
-        print(json.dumps(payload))
+        return {
+            "text": f"❄{self._status_icon(nixos_status)} 🏠{self._status_icon(hm_status)}",
+            "tooltip": read_tooltip("nixos") + "\n" + read_tooltip("hm"),
+            "class": self._status_class((nixos_status, hm_status)),
+        }
+
+    def _write_waybar(self, scope: str) -> None:
+        """Write the rendered waybar message for `scope` to its file.
+
+        Written in place: waybar (and our own watcher) only read on the
+        `close_write` inotify event, so they never observe a partial line.
+        """
+        line = json.dumps(self._build_waybar_payload(scope)) + "\n"
+        self._waybar_file(scope).write_text(line, encoding="utf-8")
+
+    def refresh_waybar(self) -> None:
+        """Update every waybar message file. Best-effort: never fails a build."""
+        for scope in ("nixos", "hm", "both"):
+            try:
+                self._write_waybar(scope)
+            except Exception:
+                pass
+
+    def _waybar_watch(self, scope: str) -> int:
+        """Continuous waybar module: emit the message file, then re-emit on change.
+
+        A one-shot `inotifywait` would race: a write landing between our read
+        and the next wait call would go unnoticed. Instead we start
+        `inotifywait -m` (monitor mode) *before* the first read, so the watch is
+        already established when we emit. Each event then triggers a re-emit,
+        and a burst of writes is drained into a single emit of the latest value.
+        Falls back to slow polling when inotifywait is unavailable.
+        """
+        f = self._waybar_file(scope)
+
+        def emit() -> None:
+            try:
+                line = f.read_text(encoding="utf-8").strip()
+            except FileNotFoundError:
+                self._write_waybar(scope)
+                line = f.read_text(encoding="utf-8").strip()
+            sys.stdout.write(line + "\n")
+            sys.stdout.flush()
+
+        inotifywait = shutil.which("inotifywait")
+        if not inotifywait:
+            self._write_waybar(scope)
+            emit()
+            while True:
+                time.sleep(5)
+                emit()
+
+        # The file must exist before inotifywait can watch it. Our writer edits
+        # the file in place (no inode swap), so watching the file directly is
+        # safe and survives across writes.
+        self._write_waybar(scope)
+        proc = subprocess.Popen(
+            [inotifywait, "-m", "-q", "-e", "close_write", str(f)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+        try:
+            # Monitor is now live; emit the current value. Any write that raced
+            # the startup above is reflected here, and any write from now on
+            # produces an event we consume below -- so nothing is missed.
+            emit()
+            assert proc.stdout is not None
+            for first in proc.stdout:  # blocks until the next event
+                if not first:
+                    break
+                # Drain events already queued so a burst collapses into one
+                # emit of the latest file contents.
+                while select.select([proc.stdout], [], [], 0)[0]:
+                    if not proc.stdout.readline():
+                        break
+                emit()
+        finally:
+            proc.terminate()
         return 0
+
 
     def cmd_status(self, scope: str = "both") -> int:
         print()
@@ -724,7 +814,7 @@ class App:
         print("  nix-update <nixos|hm|both> apply [--rebuild]")
         print("  nix-update <nixos|hm|both> switch [--rebuild]")
         print("  nix-update <nixos|hm|both> status")
-        print("  nix-update <nixos|hm|both> waybar")
+        print("  nix-update <nixos|hm|both> waybar [--watch]")
         print()
         return 0
 
@@ -784,9 +874,14 @@ def main(argv: list[str]) -> int:
             raise NixUpdateError(f"Unknown argument(s): {' '.join(rest)}")
         return app.cmd_status(target)
     if subcmd == "waybar":
-        if rest:
-            raise NixUpdateError(f"Unknown argument(s): {' '.join(rest)}")
-        return app.cmd_waybar(target)
+        watch = False
+        extra = list(rest)
+        if "--watch" in extra:
+            watch = True
+            extra.remove("--watch")
+        if extra:
+            raise NixUpdateError(f"Unknown argument(s): {' '.join(extra)}")
+        return app.cmd_waybar(target, watch=watch)
 
     raise NixUpdateError(f"Unknown command: {subcmd}")
 

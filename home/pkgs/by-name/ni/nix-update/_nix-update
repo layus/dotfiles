@@ -45,8 +45,13 @@ case ${words[3]} in
       ${common_opts[@]} \
       '--rebuild[Rebuild before switch]'
     ;;
-  status|waybar)
+  status)
     _describe -t options 'options' common_opts
+    ;;
+  waybar)
+    _arguments \
+      ${common_opts[@]} \
+      '--watch[Stream updates continuously via inotify]'
     ;;
   *)
     _describe -t options 'options' common_opts
