@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import datetime as dt
 import json
 import os
@@ -340,8 +341,28 @@ class App:
                 rc = r
         return rc
 
+    def _build_targets(self, target: str) -> int:
+        """Build every expanded target.
+
+        Builds are independent (separate flake assemblies, store paths, state
+        and log files), so when more than one target is requested they run in
+        parallel.  A single target builds inline.  Returns the last non-zero rc.
+        """
+        targets = self._expand(target)
+        if len(targets) <= 1:
+            return self._run_targets(target, self._build_one)
+
+        print(f"=== Building {', '.join(targets)} in parallel ===")
+        rc = 0
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(targets)) as pool:
+            futures = {pool.submit(self._build_one, t): t for t in targets}
+            for fut in concurrent.futures.as_completed(futures):
+                if fut.result() != 0:
+                    rc = fut.result()
+        return rc
+
     def cmd_build(self, target: str) -> int:
-        return self._run_targets(target, self._build_one)
+        return self._build_targets(target)
 
     def _build_one(self, target: str) -> int:
         ctx = self.resolve_target(target)
@@ -521,6 +542,15 @@ class App:
         return 0
 
     def cmd_apply(self, target: str, do_rebuild: bool, do_switch: bool) -> int:
+        # Builds are independent and may run in parallel, but activation must
+        # stay sequential and in canonical order (home-manager before nixos).
+        # So when rebuilding multiple targets, build them all in parallel first,
+        # then activate each one in order without rebuilding again.
+        if do_rebuild and len(self._expand(target)) > 1:
+            rc = self._build_targets(target)
+            if rc != 0:
+                return rc
+            do_rebuild = False
         return self._run_targets(
             target, lambda t: self._apply_one(t, do_rebuild, do_switch)
         )
