@@ -157,7 +157,35 @@
 
       telescope = {
         enable = true;
-        settings.defaults.wrap_results = true;
+        settings.defaults = {
+          wrap_results = true;
+          # Open all <Tab>-selected entries at once (falls back to the entry
+          # under the cursor when nothing is multi-selected).
+          mappings = let
+            multiopen = ''
+              function(prompt_bufnr)
+                local actions = require("telescope.actions")
+                local state = require("telescope.actions.state")
+                local picker = state.get_current_picker(prompt_bufnr)
+                local multi = picker:get_multi_selection()
+                if vim.tbl_isempty(multi) then
+                  actions.select_default(prompt_bufnr)
+                  return
+                end
+                actions.close(prompt_bufnr)
+                for _, entry in ipairs(multi) do
+                  local filename = entry.filename or entry.value
+                  if filename then
+                    vim.cmd(string.format("edit %s", vim.fn.fnameescape(filename)))
+                  end
+                end
+              end
+            '';
+          in {
+            i."<CR>".__raw = multiopen;
+            n."<CR>".__raw = multiopen;
+          };
+        };
         extensions.ui-select.enable = true;
       };
 
