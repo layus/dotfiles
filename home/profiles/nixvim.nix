@@ -54,6 +54,8 @@
       completeopt = "menuone,noselect";
       undofile = true;
       termguicolors = true;
+      spell = true;
+      spelllang = "en,fr,nl";
     };
 
     keymaps = [
@@ -77,6 +79,7 @@
     extraPackages = with pkgs; [
       fzf
       ripgrep
+      curl
     ];
 
     colorscheme = "NeoSolarized";
@@ -344,6 +347,42 @@
     extraConfigLuaPost = ''
       require('tabline').setup {}
       vim.g.gh_line_map_default = 0
+
+      -- Ensure en/fr/nl spell files are present. Neovim only bundles English,
+      -- so the missing dictionaries are downloaded on first start into a
+      -- writable runtimepath dir. Files only download if absent, so this is a
+      -- no-op once they exist.
+      do
+        local spelldir = vim.fn.stdpath("data") .. "/site/spell"
+        vim.fn.mkdir(spelldir, "p")
+        local base = "https://ftp.nluug.nl/pub/vim/runtime/spell/"
+        for _, lang in ipairs({ "en", "fr", "nl" }) do
+          for _, ext in ipairs({ "spl", "sug" }) do
+            local name = lang .. ".utf-8." .. ext
+            local dest = spelldir .. "/" .. name
+            if vim.fn.filereadable(dest) == 0 then
+              vim.system(
+                { "curl", "-fsSL", "-o", dest, base .. name },
+                { text = true },
+                function(res)
+                  if res.code ~= 0 then
+                    vim.schedule(function()
+                      vim.notify(
+                        "Failed to download spell file " .. name,
+                        vim.log.levels.WARN
+                      )
+                    end)
+                  end
+                end
+              )
+            end
+          end
+        end
+      end
+
+      -- Keep user-added words (zg/zw) in a writable location.
+      local userspell = vim.fn.stdpath("data") .. "/site/spell"
+      vim.opt.spellfile = userspell .. "/custom.utf-8.add"
     '';
     };
   };
