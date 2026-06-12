@@ -282,6 +282,7 @@
       yq
       tmux
       tmate
+      zellij
       nixpkgs-fmt
       quilt
       keychain
