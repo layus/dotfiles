@@ -14,11 +14,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import select
 import shutil
 import subprocess
 import sys
+import termios
 import time
+import tty
 from pathlib import Path
 
 from nix_update_lib import App as CoreApp, NixUpdateError
@@ -298,49 +301,122 @@ class App(CoreApp):
         """Minimal interactive loop for a single target (hm or nixos).
 
         A "glorified REPL": shows the current status, then offers build / apply
-        / (nixos only) switch, runs the chosen action with streaming output,
-        and loops -- reprinting the status each time. Not real curses; just a
-        plain menu so it works in any terminal opened by the waybar click.
+        / (nixos only) switch via an arrow-key menu, runs the chosen action with
+        streaming output, and loops -- reprinting the status each time.  Not
+        real curses; just raw-mode key reading so it works in any terminal
+        opened by the waybar click.  Falls back to a typed prompt when stdin is
+        not a tty.
         """
         if scope not in ("hm", "nixos"):
             raise NixUpdateError("--curses requires a single target: nixos or hm")
 
-        # (key, label, action) -- action takes no args and returns an rc.
-        actions: list[tuple[str, str, "callable"]] = [
-            ("b", "build", lambda: self._guarded(lambda: self.cmd_build(scope))),
-            ("a", "apply", lambda: self._guarded(lambda: self.cmd_apply(scope, do_rebuild=False, do_switch=False))),
+        # (label, action) -- action takes no args and returns an rc.
+        actions: list[tuple[str, "callable"]] = [
+            ("build", lambda: self._guarded(lambda: self.cmd_build(scope))),
+            ("apply", lambda: self._guarded(lambda: self.cmd_apply(scope, do_rebuild=False, do_switch=False))),
         ]
         if scope == "nixos":
             actions.append(
-                ("s", "switch", lambda: self._guarded(lambda: self.cmd_switch(scope, do_rebuild=False)))
+                ("switch", lambda: self._guarded(lambda: self.cmd_switch(scope, do_rebuild=False)))
             )
-        keymap = {key: (label, fn) for key, label, fn in actions}
+
+        # Default to the most effectful action: switch (nixos) / apply (hm).
+        default_label = "switch" if scope == "nixos" else "apply"
+        selected = next(i for i, (label, _) in enumerate(actions) if label == default_label)
 
         title = {"hm": "home-manager", "nixos": "NixOS"}[scope]
         while True:
             self.cmd_status(scope, show_commands=False)
-            menu = "  ".join(f"[{key}] {label}" for key, label, _ in actions)
-            print(f"=== {title} === {menu}  [q] quit")
-            try:
-                choice = input("> ").strip().lower()
-            except (EOFError, KeyboardInterrupt):
+            selected = self._select_action(title, [label for label, _ in actions], selected)
+            if selected is None:
                 print()
                 return 0
 
-            if choice in ("q", "quit", "exit"):
-                return 0
-            entry = keymap.get(choice)
-            if entry is None:
-                print(f"Unknown choice: {choice!r}\n")
-                continue
-
-            label, fn = entry
+            label, fn = actions[selected]
             print(f"\n=== running {label} ===")
             try:
                 fn()
             except NixUpdateError as exc:
                 print(str(exc), file=sys.stderr)
             print()
+
+    def _select_action(self, title: str, labels: list[str], default: int) -> "int | None":
+        """Render an arrow-key menu and return the chosen index, or None to quit.
+
+        Up/Down (or k/j) move the highlight, Enter runs the selection, a label's
+        initial letter jumps to it, and q / Esc / Ctrl-C quit.  When stdin is
+        not interactive, fall back to a plain typed prompt.
+        """
+        if not (sys.stdin.isatty() and sys.stdout.isatty()):
+            return self._select_action_plain(title, labels, default)
+
+        sel = default
+        n = len(labels)
+        print(f"=== {title} ===  (\u2191/\u2193 choose, Enter run, q quit)")
+        rendered = False
+        while True:
+            if rendered:
+                sys.stdout.write(f"\x1b[{n}A")  # move cursor back up over the menu
+            rendered = True
+            for i, label in enumerate(labels):
+                marker = "\u2192" if i == sel else " "
+                line = f" {marker} {label}"
+                if i == sel:
+                    line = f"\x1b[7m{line}\x1b[0m"
+                sys.stdout.write(f"\x1b[2K{line}\n")
+            sys.stdout.flush()
+
+            key = self._read_key()
+            if key in ("\x1b[A", "k"):
+                sel = (sel - 1) % n
+            elif key in ("\x1b[B", "j"):
+                sel = (sel + 1) % n
+            elif key in ("\r", "\n"):
+                return sel
+            elif key in ("q", "\x1b", "\x03", "\x04"):
+                return None
+            elif len(key) == 1:
+                for i, label in enumerate(labels):
+                    if label[:1].lower() == key.lower():
+                        sel = i
+                        break
+
+    @staticmethod
+    def _select_action_plain(title: str, labels: list[str], default: int) -> "int | None":
+        keymap = {label[:1].lower(): i for i, label in enumerate(labels)}
+        menu = "  ".join(f"[{label[:1]}] {label}" for label in labels)
+        default_key = labels[default][:1]
+        while True:
+            print(f"=== {title} === {menu}  [q] quit")
+            try:
+                choice = input(f"> (default {default_key}) ").strip().lower()
+            except (EOFError, KeyboardInterrupt):
+                print()
+                return None
+            if not choice:
+                return default
+            if choice in ("q", "quit", "exit"):
+                return None
+            if choice in keymap:
+                return keymap[choice]
+            print(f"Unknown choice: {choice!r}\n")
+
+    @staticmethod
+    def _read_key() -> str:
+        """Read one keypress in raw mode, decoding arrow-key escape sequences."""
+        fd = sys.stdin.fileno()
+        old = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            ch = os.read(fd, 1).decode(errors="ignore")
+            if ch == "\x1b":
+                # Pull any immediately-available continuation bytes (e.g. "[A").
+                ready, _, _ = select.select([fd], [], [], 0.01)
+                if ready:
+                    ch += os.read(fd, 2).decode(errors="ignore")
+            return ch
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
     def _guarded(self, fn) -> int:
         """Run an action behind the same up-to-date check as the CLI does."""
