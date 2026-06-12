@@ -155,7 +155,7 @@ cmd_apply() {
     fi
 
     if [ ! -f "$state_file" ]; then
-      echo "No state file for $t — run 'nix-update build $t' first."
+      echo "No state file for $t — run 'nix-update $t build' first."
       return 1
     fi
 
@@ -165,7 +165,8 @@ cmd_apply() {
       echo "$t: build was from a dirty tree — refusing to activate. Commit and rebuild first."
       return 1
     fi
-    if [ "$status" != "ready" ]; then
+    # Allow switching a pending (booted but not yet switched) nixos build.
+    if [ "$status" != "ready" ] && ! { [ "$t" = "nixos" ] && [ "$do_switch" = "1" ] && [ "$status" = "pending" ]; }; then
       echo "$t: status is '$status', not 'ready'. Nothing to apply."
       return 1
     fi
@@ -288,11 +289,11 @@ cmd_status() {
   show_target hm
 
   echo "━━━ Commands ━━━"
-  echo "  nix-update build <nixos|hm>                   Build an update"
-  echo "  nix-update apply [--rebuild] [--switch] <target>  Apply (boot for nixos, switch for hm)"
-  echo "  nix-update switch [--rebuild] <target>            Apply + switch (nixos-rebuild switch)"
-  echo "  nix-update status                                Show this status"
-  echo "  nix-update waybar                                Output JSON for waybar"
+  echo "  nix-update <nixos|hm> build                    Build an update"
+  echo "  nix-update <nixos|hm|both> apply [--rebuild]   Apply (boot for nixos, switch for hm)"
+  echo "  nix-update <nixos|hm|both> switch [--rebuild]  Apply + switch (nixos-rebuild switch)"
+  echo "  nix-update status                              Show this status"
+  echo "  nix-update waybar                              Output JSON for waybar"
   echo ""
 }
 
@@ -367,52 +368,64 @@ cmd_waybar() {
 # --- main ---
 
 usage() {
-  echo "Usage: nix-update <command> [options] [target]" >&2
+  echo "Usage: nix-update <nixos|hm|both|status|waybar> [build|apply|switch] [options]" >&2
   echo "" >&2
-  echo "Commands:" >&2
-  echo "  build <nixos|hm>                            Build an update" >&2
-  echo "  apply [--rebuild] [--switch] <nixos|hm|both>  Apply (boot for nixos, switch for hm)" >&2
-  echo "  switch [--rebuild] <nixos|hm|both>           Apply + switch (nixos-rebuild switch)" >&2
-  echo "  status                                      Show update status" >&2
-  echo "  waybar                                      Output JSON for waybar" >&2
+  echo "Targets:" >&2
+  echo "  nixos                      Operate on NixOS configuration" >&2
+  echo "  hm                         Operate on Home Manager configuration" >&2
+  echo "  both                       Operate on both (apply/switch only)" >&2
+  echo "  status                     Show update status" >&2
+  echo "  waybar                     Output JSON for waybar" >&2
+  echo "" >&2
+  echo "Commands (default: apply):" >&2
+  echo "  build                      Build an update" >&2
+  echo "  apply [--rebuild] [--switch]  Apply (boot for nixos, switch for hm)" >&2
+  echo "  switch [--rebuild]         Apply + switch (nixos-rebuild switch)" >&2
   exit 1
 }
 
-cmd="${1:-}"
+target_or_cmd="${1:-}"
 shift || true
 
-case "$cmd" in
-  build)
-    target="${1:?Usage: nix-update build <nixos|hm>}"
-    cmd_build "$target"
-    ;;
-  apply)
-    do_rebuild=0
-    do_switch=0
-    while [[ "${1:-}" == --* ]]; do
-      case "$1" in
-        --rebuild) do_rebuild=1; shift ;;
-        --switch)  do_switch=1; shift ;;
-        *) echo "Unknown flag: $1" >&2; exit 1 ;;
-      esac
-    done
-    target="${1:?Usage: nix-update apply [--rebuild] [--switch] <nixos|hm|both>}"
-    cmd_apply "$target" "$do_rebuild" "$do_switch"
-    ;;
-  switch)
-    do_rebuild=0
-    if [ "${1:-}" = "--rebuild" ]; then
-      do_rebuild=1
-      shift
-    fi
-    target="${1:?Usage: nix-update switch [--rebuild] <nixos|hm|both>}"
-    cmd_switch "$target" "$do_rebuild"
-    ;;
+case "$target_or_cmd" in
   status)
     cmd_status
     ;;
   waybar)
     cmd_waybar
+    ;;
+  nixos|hm|both)
+    target="$target_or_cmd"
+    subcmd="${1:-apply}"
+    shift || true
+    case "$subcmd" in
+      build)
+        cmd_build "$target"
+        ;;
+      apply)
+        do_rebuild=0
+        do_switch=0
+        while [[ "${1:-}" == --* ]]; do
+          case "$1" in
+            --rebuild) do_rebuild=1; shift ;;
+            --switch)  do_switch=1; shift ;;
+            *) echo "Unknown flag: $1" >&2; exit 1 ;;
+          esac
+        done
+        cmd_apply "$target" "$do_rebuild" "$do_switch"
+        ;;
+      switch)
+        do_rebuild=0
+        if [ "${1:-}" = "--rebuild" ]; then
+          do_rebuild=1
+          shift
+        fi
+        cmd_switch "$target" "$do_rebuild"
+        ;;
+      *)
+        usage
+        ;;
+    esac
     ;;
   *)
     usage
