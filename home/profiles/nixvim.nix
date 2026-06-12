@@ -99,11 +99,47 @@
           { __unkeyed-1 = "<leader>lr"; __unkeyed-2 = "<cmd>lua vim.lsp.buf.references()<CR>"; desc = "Find References"; }
           { __unkeyed-1 = "<leader>e"; __unkeyed-2 = "<cmd>NvimTreeFindFileToggle<cr>"; desc = "Tree"; }
           { __unkeyed-1 = "<leader>f"; group = "find"; }
+          # files / search
           { __unkeyed-1 = "<leader>fb"; __unkeyed-2 = "<cmd>Telescope buffers<cr>"; desc = "Buffers"; }
           { __unkeyed-1 = "<leader>ff"; __unkeyed-2 = "<cmd>Telescope find_files<cr>"; desc = "File"; }
           { __unkeyed-1 = "<leader>fg"; __unkeyed-2 = "<cmd>Telescope live_grep<cr>"; desc = "RipGrep"; }
           { __unkeyed-1 = "<leader>fh"; __unkeyed-2 = "<cmd>Telescope help_tags<cr>"; desc = "Help Tags"; }
           { __unkeyed-1 = "<leader>fr"; __unkeyed-2 = "<cmd>Telescope oldfiles<cr>"; desc = "Recent File"; }
+          { __unkeyed-1 = "<leader>fs"; __unkeyed-2 = "<cmd>Telescope grep_string<cr>"; desc = "Grep Word Under Cursor"; }
+          { __unkeyed-1 = "<leader>f/"; __unkeyed-2 = "<cmd>Telescope current_buffer_fuzzy_find<cr>"; desc = "Fuzzy In Buffer"; }
+          { __unkeyed-1 = "<leader>ft"; __unkeyed-2 = "<cmd>Telescope treesitter<cr>"; desc = "Treesitter Symbols"; }
+          { __unkeyed-1 = "<leader>f."; __unkeyed-2 = "<cmd>Telescope resume<cr>"; desc = "Resume Last Picker"; }
+          # lsp pickers
+          { __unkeyed-1 = "<leader>fl"; group = "lsp"; }
+          { __unkeyed-1 = "<leader>flr"; __unkeyed-2 = "<cmd>Telescope lsp_references<cr>"; desc = "References"; }
+          { __unkeyed-1 = "<leader>fld"; __unkeyed-2 = "<cmd>Telescope lsp_definitions<cr>"; desc = "Definitions"; }
+          { __unkeyed-1 = "<leader>fli"; __unkeyed-2 = "<cmd>Telescope lsp_implementations<cr>"; desc = "Implementations"; }
+          { __unkeyed-1 = "<leader>flt"; __unkeyed-2 = "<cmd>Telescope lsp_type_definitions<cr>"; desc = "Type Definitions"; }
+          { __unkeyed-1 = "<leader>fls"; __unkeyed-2 = "<cmd>Telescope lsp_document_symbols<cr>"; desc = "Document Symbols"; }
+          { __unkeyed-1 = "<leader>flS"; __unkeyed-2 = "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>"; desc = "Workspace Symbols"; }
+          { __unkeyed-1 = "<leader>flx"; __unkeyed-2 = "<cmd>Telescope diagnostics<cr>"; desc = "Diagnostics"; }
+          # git pickers
+          { __unkeyed-1 = "<leader>fG"; group = "git"; }
+          { __unkeyed-1 = "<leader>fGf"; __unkeyed-2 = "<cmd>Telescope git_files<cr>"; desc = "Git Files"; }
+          { __unkeyed-1 = "<leader>fGc"; __unkeyed-2 = "<cmd>Telescope git_commits<cr>"; desc = "Commits"; }
+          { __unkeyed-1 = "<leader>fGb"; __unkeyed-2 = "<cmd>Telescope git_bcommits<cr>"; desc = "Buffer Commits"; }
+          { __unkeyed-1 = "<leader>fGB"; __unkeyed-2 = "<cmd>Telescope git_branches<cr>"; desc = "Branches"; }
+          { __unkeyed-1 = "<leader>fGs"; __unkeyed-2 = "<cmd>Telescope git_status<cr>"; desc = "Status"; }
+          { __unkeyed-1 = "<leader>fGt"; __unkeyed-2 = "<cmd>Telescope git_stash<cr>"; desc = "Stash"; }
+          # vim / misc pickers
+          { __unkeyed-1 = "<leader>fv"; group = "vim/misc"; }
+          { __unkeyed-1 = "<leader>fvc"; __unkeyed-2 = "<cmd>Telescope commands<cr>"; desc = "Commands"; }
+          { __unkeyed-1 = "<leader>fvk"; __unkeyed-2 = "<cmd>Telescope keymaps<cr>"; desc = "Keymaps"; }
+          { __unkeyed-1 = "<leader>fvh"; __unkeyed-2 = "<cmd>Telescope command_history<cr>"; desc = "Command History"; }
+          { __unkeyed-1 = "<leader>fv/"; __unkeyed-2 = "<cmd>Telescope search_history<cr>"; desc = "Search History"; }
+          { __unkeyed-1 = "<leader>fvm"; __unkeyed-2 = "<cmd>Telescope marks<cr>"; desc = "Marks"; }
+          { __unkeyed-1 = "<leader>fvj"; __unkeyed-2 = "<cmd>Telescope jumplist<cr>"; desc = "Jumplist"; }
+          { __unkeyed-1 = "<leader>fvr"; __unkeyed-2 = "<cmd>Telescope registers<cr>"; desc = "Registers"; }
+          { __unkeyed-1 = "<leader>fvq"; __unkeyed-2 = "<cmd>Telescope quickfix<cr>"; desc = "Quickfix"; }
+          { __unkeyed-1 = "<leader>fvl"; __unkeyed-2 = "<cmd>Telescope loclist<cr>"; desc = "Location List"; }
+          { __unkeyed-1 = "<leader>fvC"; __unkeyed-2 = "<cmd>Telescope colorscheme<cr>"; desc = "Colorscheme"; }
+          { __unkeyed-1 = "<leader>fvM"; __unkeyed-2 = "<cmd>Telescope man_pages<cr>"; desc = "Man Pages"; }
+          { __unkeyed-1 = "<leader>fvo"; __unkeyed-2 = "<cmd>Telescope vim_options<cr>"; desc = "Vim Options"; }
           { __unkeyed-1 = "<leader>g"; group = "git"; }
           { __unkeyed-1 = "<leader>gl"; __unkeyed-2 = "<cmd>call gh_line('blob', g:gh_always_interactive)<cr>"; desc = "Link"; }
           { __unkeyed-1 = "<leader>gg"; __unkeyed-2 = "<cmd>LazyGit<cr>"; desc = "LazyGit"; }
