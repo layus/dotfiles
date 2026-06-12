@@ -82,6 +82,19 @@ in {
           '')
       ;
 
+      # On machines where the login shell cannot be changed (e.g. it is
+      # stuck on bash in /etc/passwd), transparently switch to zsh on
+      # interactive logins. The guards keep scp/rsync/`ssh host cmd` and
+      # scripts working, and prevent infinite loops if zsh falls back to
+      # bash.
+      #programs.bash.enable = true;
+      #programs.bash.initExtra = ''
+      #  if [[ $- == *i* ]] && [[ -z "$ZSH_LAUNCHED" ]] && command -v zsh >/dev/null; then
+      #    export ZSH_LAUNCHED=1
+      #    exec zsh -l
+      #  fi
+      #'';
+
       programs.helix.enable = true;
       programs.helix.languages = {
         haskell = {
