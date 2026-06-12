@@ -7,8 +7,18 @@
       EDITOR = "nvim";
     };
 
+    # Fallback LSP servers. The environment (e.g. a nix devshell) always takes
+    # precedence on PATH; these are only used when no server is found there.
+    # Note: no Haskell tooling is shipped here on purpose (HLS is env-only).
     home.packages = with pkgs; [
-      haskell-language-server
+      nil                            # nix
+      bash-language-server           # bash / zsh
+      rust-analyzer                  # rust
+      clang-tools                    # C/C++ (clangd)
+      starpls                        # bazel / starlark
+      buildifier                     # bazel formatter
+      marksman                       # markdown
+      vscode-langservers-extracted   # json / json5 (vscode-json-language-server)
     ];
 
     programs.nixvim = {
@@ -67,13 +77,6 @@
     extraPackages = with pkgs; [
       fzf
       ripgrep
-      nil
-      rust-analyzer
-      deno
-      lldb
-      ormolu
-      tree-sitter
-      clang
     ];
 
     colorscheme = "NeoSolarized";
@@ -95,7 +98,6 @@
           { __unkeyed-1 = "<leader>ll"; __unkeyed-2 = "<cmd>e ~/.cache/nvim/lsp.log<CR>"; desc = "Open Log"; }
           { __unkeyed-1 = "<leader>lr"; __unkeyed-2 = "<cmd>lua vim.lsp.buf.references()<CR>"; desc = "Find References"; }
           { __unkeyed-1 = "<leader>e"; __unkeyed-2 = "<cmd>NvimTreeFindFileToggle<cr>"; desc = "Tree"; }
-          { __unkeyed-1 = "<leader>t"; group = "tree-sitter"; }
           { __unkeyed-1 = "<leader>f"; group = "find"; }
           { __unkeyed-1 = "<leader>fb"; __unkeyed-2 = "<cmd>Telescope buffers<cr>"; desc = "Buffers"; }
           { __unkeyed-1 = "<leader>ff"; __unkeyed-2 = "<cmd>Telescope find_files<cr>"; desc = "File"; }
@@ -112,10 +114,6 @@
           { __unkeyed-1 = "<leader>ghu"; __unkeyed-2 = "<cmd>Gitsigns undo_stage_hunk<cr>"; desc = "Undo"; }
           { __unkeyed-1 = "<leader>b"; group = "buffers"; }
           { __unkeyed-1 = "<leader>bd"; __unkeyed-2 = "<cmd>lua require('bufdelete').bufdelete(0)<cr>"; desc = "Delete"; }
-          { __unkeyed-1 = "<leader>d"; group = "debug"; }
-          { __unkeyed-1 = "<leader>db"; __unkeyed-2 = "<cmd>lua require('dap').toggle_breakpoint()<cr>"; desc = "Breakpoint"; }
-          { __unkeyed-1 = "<leader>dc"; __unkeyed-2 = "<cmd>lua require('dap').continue()<cr>"; desc = "Continue"; }
-          { __unkeyed-1 = "<leader>do"; __unkeyed-2 = "<cmd>lua require('dapui').toggle()<cr>"; desc = "Toggle UI"; }
           { __unkeyed-1 = "<s-tab>"; __unkeyed-2 = "<cmd>TablineBufferPrevious<cr>"; desc = "Previous Buffer"; }
           { __unkeyed-1 = "<tab>"; __unkeyed-2 = "<cmd>TablineBufferNext<cr>"; desc = "Next Buffer"; }
         ];
@@ -178,38 +176,62 @@
 
       nvim-tree.enable = true;
 
-      treesitter = {
-        enable = true;
-        settings = {
-          highlight = {
-            enable = true;
-            additional_vim_regex_highlighting = false;
-          };
-          indent.enable = true;
-        };
-        grammarPackages = with pkgs.vimPlugins.nvim-treesitter.builtGrammars; [
-          c bash nix haskell python
-        ];
-      };
+      # treesitter = {
+      #   enable = true;
+      #   settings = {
+      #     highlight = {
+      #       enable = true;
+      #       additional_vim_regex_highlighting = false;
+      #     };
+      #     indent.enable = true;
+      #   };
+      #   grammarPackages = with pkgs.vimPlugins.nvim-treesitter.builtGrammars; [
+      #     c bash nix haskell python
+      #   ];
+      # };
 
       lsp = {
         enable = true;
+        # Servers are picked up from the environment (e.g. a nix devshell) first;
+        # `package = null` keeps nixvim from prepending its own copy on PATH. A
+        # fallback for each server is shipped via `home.packages` above, so a
+        # server is always available even outside a devshell. Haskell is the
+        # exception: HLS is used from the environment only, with no fallback.
         servers = {
           hls = {
             enable = true;
+            package = null;
             installGhc = false;
           };
           rust_analyzer = {
             enable = true;
+            package = null;
             installCargo = false;
             installRustc = false;
           };
           nil_ls = {
             enable = true;
+            package = null;
             settings.formatting.command = [ "nixpkgs-fmt" ];
           };
-          clangd.enable = true;
-          denols.enable = true;
+          clangd = {
+            enable = true;
+            package = null;
+          };
+          bashls = {
+            enable = true;
+            package = null;
+            filetypes = [ "sh" "bash" "zsh" ];
+          };
+          jsonls = {
+            enable = true;
+            package = null;
+            filetypes = [ "json" "jsonc" "json5" ];
+          };
+          marksman = {
+            enable = true;
+            package = null;
+          };
         };
       };
 
@@ -233,57 +255,6 @@
 
       notify.enable = true;
 
-      dap = {
-        enable = true;
-        adapters.executables = {
-          lldb.command = "${pkgs.lldb}/bin/lldb-vscode";
-          haskell.command = "haskell-debug-adapter";
-        };
-        configurations = {
-          rust = [
-            {
-              name = "Launch";
-              type = "lldb";
-              request = "launch";
-              program.__raw = ''
-                function()
-                  return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
-                end
-              '';
-              cwd = "\$\{workspaceFolder}";
-              stopOnEntry = false;
-              args = [];
-              runInTerminal = false;
-            }
-            {
-              name = "Attach to process";
-              type = "rust";
-              request = "attach";
-              pid.__raw = "require('dap.utils').pick_process";
-              args = [];
-            }
-          ];
-          haskell = [
-            {
-              type = "haskell";
-              request = "launch";
-              name = "cabal";
-              workspace = "\$\{workspaceFolder}";
-              startup = "\$\{file}";
-              stopOnEntry = true;
-              logFile.__raw = "vim.fn.stdpath('cache') .. '/haskell-dap.log'";
-              logLevel = "WARNING";
-              ghciEnv = { HOI = "hoi"; };
-              ghciPrompt = "Prelude>";
-              ghciInitialPrompt = "Prelude>";
-              ghciCmd = "cabal exec -- ghci-dap --interactive -i -i\$\{workspaceFolder}";
-            }
-          ];
-        };
-      };
-
-      dap-ui.enable = true;
-
       markdown-preview.enable = true;
       web-devicons.enable = true;
       lazygit.enable = true;
@@ -304,12 +275,10 @@
       vim-markdown
       mini-nvim
       tabline-nvim
-      telescope-dap-nvim
     ];
 
     extraConfigLuaPost = ''
       require('tabline').setup {}
-      require('telescope').load_extension('dap')
       vim.g.gh_line_map_default = 0
     '';
     };

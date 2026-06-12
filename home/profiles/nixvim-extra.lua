@@ -1,8 +1,23 @@
--- Starlark: reuse the python tree-sitter parser for .star / .bzl files
-vim.treesitter.language.register('python', 'starlark')
-
--- LSP: starlark_rust (not natively supported by nixvim)
-vim.lsp.enable('starlark_rust')
-vim.lsp.config('starlark_rust', {
-  capabilities = vim.lsp.protocol.make_client_capabilities(),
+-- Bazel / Starlark: starpls LSP (not natively supported by nixvim).
+-- The binary is picked from the environment first, with a fallback shipped
+-- via home.packages.
+vim.filetype.add({
+  extension = {
+    bzl = 'bzl',
+    star = 'bzl',
+  },
+  filename = {
+    ['BUILD'] = 'bzl',
+    ['BUILD.bazel'] = 'bzl',
+    ['WORKSPACE'] = 'bzl',
+    ['WORKSPACE.bazel'] = 'bzl',
+    ['MODULE.bazel'] = 'bzl',
+  },
 })
+
+vim.lsp.config('starpls', {
+  cmd = { 'starpls' },
+  filetypes = { 'bzl' },
+  root_markers = { 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', '.git' },
+})
+vim.lsp.enable('starpls')
