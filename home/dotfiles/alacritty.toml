@@ -1,9 +1,6 @@
 # Alacritty configuration
 # Ported from previous terminal config
 
-[window]
-confirm_before_quit = false
-
 [font]
 size = 13.0
 
