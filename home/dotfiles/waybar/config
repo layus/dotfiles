@@ -197,13 +197,13 @@
         "format": "{}",
         "return-type": "json",
         "exec": "nix-update nixos waybar --watch",
-        "on-click": "alacritty --class nix-update -e nix-update nixos waybar --curses"
+        "on-click": "alacritty --class nix-update -e zsh -lc 'nix-update nixos waybar --curses'"
     },
     "custom/nix-updates-hm": {
         "format": "{}",
         "return-type": "json",
         "exec": "nix-update hm waybar --watch",
-        "on-click": "alacritty --class nix-update -e nix-update hm waybar --curses"
+        "on-click": "alacritty --class nix-update -e zsh -lc 'nix-update hm waybar --curses'"
     }
     //"custom/media": {
     //    "format": "{icon} {}",
