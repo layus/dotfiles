@@ -56,6 +56,7 @@ resolve_target() {
   log_file="$log_dir/$t.log"
   result_link="$log_dir/result-$t"
   lock_file="$log_dir/flake-lock-$t.json"
+  gc_root="${XDG_STATE_HOME:-$HOME/.local/state}/nix/gcroots/nix-update-$t"
 }
 
 write_state() {
@@ -110,6 +111,11 @@ cmd_build() {
       2>&1 | if [ "$interactive" = 1 ]; then tee -a "$log_file"; else cat >> "$log_file"; fi; then
 
     result="$(readlink -f "$result_link")"
+
+    # Register a persistent GC root so the build is not collected between
+    # build and apply.  The per-target path is overwritten on each rebuild.
+    mkdir -p "${gc_root%/*}"
+    nix-store --add-root "$gc_root" --realise "$result" > /dev/null
 
     diff_summary=""
     if [ -e "$current" ]; then
@@ -166,6 +172,17 @@ cmd_apply() {
 
     echo "=== Applying $t update ==="
 
+    local result
+    result="$(jq -r .result "$state_file")"
+    if [ -z "$result" ] || [ "$result" = "null" ]; then
+      echo "$t: state has no result path; rebuild first."
+      return 1
+    fi
+    if [ ! -e "$result" ]; then
+      echo "$t: result path does not exist: $result"
+      return 1
+    fi
+
     require_clean_tree
     stamp_verified_rev
 
@@ -174,22 +191,20 @@ cmd_apply() {
     case "$t" in
       nixos)
         if [ "$do_switch" = "1" ]; then
-          echo "Running: nixos-rebuild switch for $host"
-          run_activate "$t" switch
+          echo "Running: prebuilt switch from $result"
+          sudo "$result/bin/switch-to-configuration" switch
         else
-          echo "Running: nixos-rebuild boot for $host"
-          run_activate "$t" boot
+          echo "Running: prebuilt boot from $result"
+          sudo "$result/bin/switch-to-configuration" boot
           new_status="pending"
         fi
         ;;
       hm)
-        echo "Running: home-manager switch for $hm_config"
-        run_activate "$t" switch
+        echo "Running: prebuilt home activation from $result"
+        "$result/activate"
         ;;
     esac
 
-    local result
-    result="$(jq -r .result "$state_file")"
     jq --arg timestamp "$(date -Iseconds)" --arg new_status "$new_status" \
        '.status = $new_status | .timestamp = $timestamp' \
        "$state_file" > "$state_file.tmp" \
