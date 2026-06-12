@@ -289,34 +289,36 @@
 
       treesitter-textobjects = {
         enable = true;
-        select = {
-          enable = true;
-          lookahead = true;
-          keymaps = {
-            "af" = "@function.outer";
-            "if" = "@function.inner";
-            "ac" = "@class.outer";
-            "ic" = "@class.inner";
-            "aa" = "@parameter.outer";
-            "ia" = "@parameter.inner";
+        settings = {
+          select = {
+            enable = true;
+            lookahead = true;
+            keymaps = {
+              "af" = "@function.outer";
+              "if" = "@function.inner";
+              "ac" = "@class.outer";
+              "ic" = "@class.inner";
+              "aa" = "@parameter.outer";
+              "ia" = "@parameter.inner";
+            };
           };
-        };
-        move = {
-          enable = true;
-          setJumps = true;
-          gotoNextStart = {
-            "]f" = "@function.outer";
-            "]c" = "@class.outer";
+          move = {
+            enable = true;
+            set_jumps = true;
+            goto_next_start = {
+              "]f" = "@function.outer";
+              "]c" = "@class.outer";
+            };
+            goto_previous_start = {
+              "[f" = "@function.outer";
+              "[c" = "@class.outer";
+            };
           };
-          gotoPreviousStart = {
-            "[f" = "@function.outer";
-            "[c" = "@class.outer";
+          swap = {
+            enable = true;
+            swap_next = { "<leader>a" = "@parameter.inner"; };
+            swap_previous = { "<leader>A" = "@parameter.inner"; };
           };
-        };
-        swap = {
-          enable = true;
-          swapNext = { "<leader>a" = "@parameter.inner"; };
-          swapPrevious = { "<leader>A" = "@parameter.inner"; };
         };
       };
 
