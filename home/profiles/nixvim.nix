@@ -243,19 +243,82 @@
 
       nvim-tree.enable = true;
 
-      # treesitter = {
-      #   enable = true;
-      #   settings = {
-      #     highlight = {
-      #       enable = true;
-      #       additional_vim_regex_highlighting = false;
-      #     };
-      #     indent.enable = true;
-      #   };
-      #   grammarPackages = with pkgs.vimPlugins.nvim-treesitter.builtGrammars; [
-      #     c bash nix haskell python
-      #   ];
-      # };
+      treesitter = {
+        enable = true;
+        settings = {
+          highlight = {
+            enable = true;
+            additional_vim_regex_highlighting = false;
+          };
+          indent.enable = true;
+          incremental_selection = {
+            enable = true;
+            keymaps = {
+              init_selection = "<C-space>";
+              node_incremental = "<C-space>";
+              node_decremental = "<bs>";
+              scope_incremental = "<C-s>";
+            };
+          };
+        };
+        grammarPackages = with pkgs.vimPlugins.nvim-treesitter.builtGrammars; [
+          # languages I actively support
+          nix
+          bash          # also used for zsh files
+          rust
+          c
+          cpp
+          starlark      # bazel (BUILD/.bzl/WORKSPACE/MODULE)
+          haskell
+          json
+          json5
+          markdown
+          markdown-inline
+          # config / glue languages
+          lua
+          python
+          toml
+          yaml
+          regex
+          vimdoc
+          query
+        ];
+      };
+
+      treesitter-context.enable = true;
+
+      treesitter-textobjects = {
+        enable = true;
+        select = {
+          enable = true;
+          lookahead = true;
+          keymaps = {
+            "af" = "@function.outer";
+            "if" = "@function.inner";
+            "ac" = "@class.outer";
+            "ic" = "@class.inner";
+            "aa" = "@parameter.outer";
+            "ia" = "@parameter.inner";
+          };
+        };
+        move = {
+          enable = true;
+          setJumps = true;
+          gotoNextStart = {
+            "]f" = "@function.outer";
+            "]c" = "@class.outer";
+          };
+          gotoPreviousStart = {
+            "[f" = "@function.outer";
+            "[c" = "@class.outer";
+          };
+        };
+        swap = {
+          enable = true;
+          swapNext = { "<leader>a" = "@parameter.inner"; };
+          swapPrevious = { "<leader>A" = "@parameter.inner"; };
+        };
+      };
 
       lsp = {
         enable = true;

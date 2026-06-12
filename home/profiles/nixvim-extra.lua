@@ -21,3 +21,7 @@ vim.lsp.config('starpls', {
   root_markers = { 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', '.git' },
 })
 vim.lsp.enable('starpls')
+
+-- Treesitter highlights Bazel files with the `starlark` grammar; map our `bzl`
+-- filetype onto it so highlighting/indent/textobjects work there too.
+vim.treesitter.language.register('starlark', 'bzl')
