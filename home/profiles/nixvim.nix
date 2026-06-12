@@ -322,6 +322,8 @@
 
       notify.enable = true;
 
+      nvim-surround.enable = true;
+
       markdown-preview.enable = true;
       web-devicons.enable = true;
       lazygit.enable = true;
@@ -342,11 +344,36 @@
       vim-markdown
       mini-nvim
       tabline-nvim
+      dial-nvim
     ];
 
     extraConfigLuaPost = ''
       require('tabline').setup {}
       vim.g.gh_line_map_default = 0
+
+      -- dial.nvim: extend <C-a>/<C-x> to cycle booleans (and the usual numbers,
+      -- dates, hex). Works in normal and visual mode.
+      do
+        local augend = require("dial.augend")
+        require("dial.config").augends:register_group {
+          default = {
+            augend.integer.alias.decimal_int,
+            augend.integer.alias.hex,
+            augend.date.alias["%Y-%m-%d"],
+            augend.constant.new { elements = { "true", "false" }, word = true, cyclic = true },
+            augend.constant.new { elements = { "True", "False" }, word = true, cyclic = true },
+            #augend.constant.new { elements = { "and", "or" }, word = true, cyclic = true },
+            #augend.constant.new { elements = { "yes", "no" }, word = true, cyclic = true },
+          },
+        }
+        local map = require("dial.map")
+        vim.keymap.set("n", "<C-a>", function() return map.inc_normal() end, { expr = true })
+        vim.keymap.set("n", "<C-x>", function() return map.dec_normal() end, { expr = true })
+        vim.keymap.set("v", "<C-a>", function() return map.inc_visual() end, { expr = true })
+        vim.keymap.set("v", "<C-x>", function() return map.dec_visual() end, { expr = true })
+        vim.keymap.set("v", "g<C-a>", function() return map.inc_gvisual() end, { expr = true })
+        vim.keymap.set("v", "g<C-x>", function() return map.dec_gvisual() end, { expr = true })
+      end
 
       -- Ensure en/fr/nl spell files are present. Neovim only bundles English,
       -- so the missing dictionaries are downloaded on first start into a
