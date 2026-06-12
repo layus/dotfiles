@@ -208,7 +208,6 @@
         slurp
         grim
 
-        kitty
         alacritty
         ghostty
         # BROKEN: enlightenment.terminology

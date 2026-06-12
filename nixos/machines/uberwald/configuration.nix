@@ -159,7 +159,7 @@ in
   environment.systemPackages = with pkgs; [
     neovim
     rxvt-unicode-unwrapped.terminfo
-    kitty.terminfo
+    alacritty.terminfo
     android-tools
 
     #pkgs.linuxPackages.nvidia_x11.bin

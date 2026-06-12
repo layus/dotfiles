@@ -197,7 +197,7 @@
         "return-type": "json",
         "interval": 30,
         "exec": "nix-update waybar",
-        "on-click": "kitty --class nix-update -e bash -c 'nix-update status; exec bash'"
+        "on-click": "alacritty --class nix-update -e bash -c 'nix-update status; exec bash'"
     }
     //"custom/media": {
     //    "format": "{icon} {}",

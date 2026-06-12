@@ -178,8 +178,8 @@ in {
         recursive = true;
       };
 
-      programs.kitty.enable = true;
-      xdg.configFile."kitty/kitty.conf".source = ../dotfiles/kitty.conf;
+      programs.alacritty.enable = true;
+      xdg.configFile."alacritty/alacritty.toml".source = ../dotfiles/alacritty.toml;
 
       programs.firefox = {
         enable = true;
