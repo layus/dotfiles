@@ -27,6 +27,7 @@ stdenv.mkDerivation rec {
     runHook preInstall
 
     install -Dm755 "$src/nix-update.py" "$out/libexec/nix-update.py"
+    install -Dm644 "$src/nix_update_lib.py" "$out/libexec/nix_update_lib.py"
     makeWrapper ${python3}/bin/python3 "$out/bin/nix-update" \
       --add-flags "$out/libexec/nix-update.py" \
       --prefix PATH : ${lib.makeBinPath [ coreutils git jq nix hostname inotify-tools ]} \

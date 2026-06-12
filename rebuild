@@ -2,8 +2,12 @@
 """Bootstrap rebuild script.
 
 Use when nix-update is not yet installed or broken.  This reuses the actual
-nix-update implementation (imported directly from its source file) so the
-build/activation logic is never duplicated.  The only difference from
+nix-update build/activation engine (imported directly from its library file,
+`nix_update_lib.py`) so the logic is never duplicated.  The library is kept to
+the Python standard library plus `nix`/`git`, which is exactly what a bootstrap
+can rely on -- the full `nix-update` CLI assumes fancier dependencies
+(inotify-tools for its waybar watcher, network access for its upstream check)
+that may be unavailable here.  The only behavioural difference from
 `nix-update` is that the bootstrap builds from the committed, known-good
 flake.lock under version control: tracked inputs are NOT updated, only the
 machine-local overlay is relocked.
@@ -24,7 +28,7 @@ import sys
 from pathlib import Path
 
 FLAKE_DIR = Path(__file__).resolve().parent
-NIX_UPDATE_SRC = FLAKE_DIR / "home/pkgs/by-name/ni/nix-update/nix-update.py"
+NIX_UPDATE_LIB = FLAKE_DIR / "home/pkgs/by-name/ni/nix-update/nix_update_lib.py"
 
 
 def check_nix_version() -> bool:
@@ -66,9 +70,9 @@ def ensure_nix_version() -> None:
 
 
 def load_nix_update():
-  spec = importlib.util.spec_from_file_location("nix_update", NIX_UPDATE_SRC)
+  spec = importlib.util.spec_from_file_location("nix_update_lib", NIX_UPDATE_LIB)
   if spec is None or spec.loader is None:
-    raise SystemExit(f"ERROR: cannot load nix-update from {NIX_UPDATE_SRC}")
+    raise SystemExit(f"ERROR: cannot load nix-update library from {NIX_UPDATE_LIB}")
   module = importlib.util.module_from_spec(spec)
   # Register before exec so dataclasses can resolve module-level annotations
   # (the source uses `from __future__ import annotations`).
