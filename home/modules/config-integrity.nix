@@ -10,6 +10,11 @@ let
     else if verifiedRev != "" then verifiedRev     # wrapper-verified
     else null;
 in {
+  home.file.".config/hm-source" = {
+    source = self.outPath;
+    recursive = true;
+  };
+
   home.file.".config/hm-config-rev" = lib.mkIf (rev != null) {
     text = rev;
   };
@@ -19,7 +24,7 @@ in {
   home.activation.requireCleanConfig = lib.hm.dag.entryBefore [ "writeBoundary" ] ''
     if [ ! -f "$newGenPath/home-files/.config/hm-config-rev" ]; then
       echo "ERROR: Refusing to activate — HM config was built from a dirty tree."
-      echo "       Use nix-update or rebuild.sh to build from a clean tree."
+      echo "       Use nix-update or ./rebuild to build from a clean tree."
       exit 1
     fi
   '';

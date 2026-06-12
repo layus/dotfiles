@@ -44,7 +44,7 @@ nixpkgs.lib.nixosSystem {
           :
         elif [ ! -f "$systemConfig/etc/nixos-config-rev" ]; then
           echo "ERROR: Refusing to activate — NixOS config was built from a dirty tree."
-          echo "       Use nix-update or rebuild.sh to build from a clean tree."
+          echo "       Use nix-update or ./rebuild to build from a clean tree."
           exit 1
         fi
       '';
