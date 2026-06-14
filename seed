@@ -4,6 +4,10 @@ set -euo pipefail
 # Seed script to set up hm environment on a remote machine
 # Usage: ./seed [username@]hostname
 
+_ssh() {
+  ssh -q -o WarnWeakCrypto=no -o BatchMode=yes "$@"
+}
+
 if [[ $# -eq 0 ]]; then
   echo "Usage: $0 [username@]hostname" >&2
   exit 1
@@ -14,29 +18,33 @@ HOST="${TARGET#*@}"
 USER="${TARGET%%@*}"
 [[ "$USER" == "$HOST" ]] && USER="$(whoami)"
 
-echo "==> Seeding $TARGET (user: $USER)"
+TITLE="==> Seeding $TARGET (user: $USER)"
+SEPARATOR="${TITLE//?/=}"
+echo "$SEPARATOR"
+echo "$TITLE"
+echo "$SEPARATOR"
 
-# Step 1: SSH with StrictHostKeyChecking=no to accept host key if not known
-echo "==> Step 1: Checking SSH connectivity"
-if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$TARGET" true 2>/dev/null; then
-  echo "    SSH connection successful"
+# Step 1: Add host key to known_hosts using ssh-keyscan
+echo "==> Step 1: Adding host key to known_hosts"
+if ssh-keygen -F "$HOST" -f ~/.ssh/known_hosts >/dev/null 2>&1; then
+  echo "    Host key already known"
 else
-  echo "    SSH connection failed (host key may have been added, retrying)"
-  ssh -o ConnectTimeout=5 "$TARGET" true
+  ssh-keyscan -H "$HOST" 2>/dev/null >> ~/.ssh/known_hosts 2>/dev/null || true
+  echo "    Host key added"
 fi
 
 # Step 2: ssh-copy-id to set up key-based authentication (idempotent)
 echo "==> Step 2: Setting up SSH key authentication"
-if ssh -o BatchMode=yes "$TARGET" true 2>/dev/null; then
+if _ssh "$TARGET" true 2>/dev/null; then
   echo "    SSH key authentication already configured"
 else
   echo "    Running ssh-copy-id (will prompt for password)"
-  ssh-copy-id -o StrictHostKeyChecking=no "$TARGET"
+  ssh-copy-id -q "$TARGET"
 fi
 
 # Step 3: Clone dotfiles to ~/.config/nixpkgs (idempotent)
 echo "==> Step 3: Cloning dotfiles"
-ssh "$TARGET" bash -euo pipefail <<'REMOTE_SCRIPT'
+_ssh "$TARGET" bash -euo pipefail <<'REMOTE_SCRIPT'
   if [[ -d ~/.config/nixpkgs/.git ]]; then
     echo "    Dotfiles already cloned, updating instead"
     cd ~/.config/nixpkgs
@@ -48,20 +56,17 @@ ssh "$TARGET" bash -euo pipefail <<'REMOTE_SCRIPT'
   fi
 REMOTE_SCRIPT
 
-# Step 4: Run the dotfiles rebuild script
-echo "==> Step 4: Running ./rebuild hm"
-ssh "$TARGET" bash -euo pipefail <<'REMOTE_SCRIPT'
-  if nix-update hm status &>/dev/null; then
-    echo "    nix-update hm status OK, skipping ./rebuild"
-  else
-    cd ~/.config/nixpkgs
-    ./rebuild hm
-  fi
+# Step 4: Run the dotfiles rebuild script to bootstrap Nix
+echo "==> Step 4: Running ./rebuild hm to bootstrap Nix"
+_ssh "$TARGET" bash -euo pipefail <<'REMOTE_SCRIPT'
+  set -x
+  cd ~/.config/nixpkgs
+  ./rebuild hm
 REMOTE_SCRIPT
 
 # Step 5: Run nix-update hm apply --rebuild
 echo "==> Step 5: Running nix-update hm apply --rebuild"
-ssh "$TARGET" bash -euo pipefail <<'REMOTE_SCRIPT'
+_ssh "$TARGET" bash -euo pipefail <<'REMOTE_SCRIPT'
   cd ~/.config/nixpkgs
   nix-update hm apply --rebuild
 REMOTE_SCRIPT
