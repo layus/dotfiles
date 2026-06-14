@@ -51,7 +51,7 @@ REMOTE_SCRIPT
 # Step 4: Run the dotfiles rebuild script
 echo "==> Step 4: Running ./rebuild hm"
 ssh "$TARGET" bash -euo pipefail <<'REMOTE_SCRIPT'
-  if nix-update hm status; then
+  if nix-update hm status &>/dev/null; then
     echo "    nix-update hm status OK, skipping ./rebuild"
   else
     cd ~/.config/nixpkgs
