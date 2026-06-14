@@ -198,12 +198,13 @@
         arandr
         autorandr # display management
         xev
-        #xclock
+        xclock
         meld
         gnuplot
         zenity
         qtikz
         gnome-settings-daemon
+        vscode
 
         slurp
         grim
@@ -216,6 +217,11 @@
         tpm-fido
         pinentry-gnome3
         windsurf-wrapper
+        # }}}
+
+        # {{{ Admin (graphical)
+        wev
+        ydotool
         # }}}
 
         # {{{ Nix internals fixup
@@ -323,10 +329,8 @@
 
       # }}}
       # {{{ Admin
-      wev
       htop
       (lib.lowPrio openssl)
-      ydotool
       xdg-utils
 
       # }}}
@@ -346,13 +350,10 @@
       #    ];
       #  }
       #)
-      vscode
       bazel_8
       #(if true then (lib.hiPrio gcc6) else gcc)
       #jre
       jdk
-
-      xclock
 
       # }}}
     ]
