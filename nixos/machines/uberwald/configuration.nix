@@ -120,6 +120,8 @@ in
   programs.zsh.enable = true;
   users.defaultUserShell = "/var/run/current-system/sw/bin/zsh";
 
+  programs.nix-ld.enable = true;
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.layus = {
     isNormalUser = true;
@@ -247,4 +249,3 @@ in
     };
   };
 }
-
