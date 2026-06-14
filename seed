@@ -59,9 +59,12 @@ REMOTE_SCRIPT
 # Step 4: Run the dotfiles rebuild script to bootstrap Nix
 echo "==> Step 4: Running ./rebuild hm to bootstrap Nix"
 _ssh "$TARGET" bash -euo pipefail <<'REMOTE_SCRIPT'
-  set -x
-  cd ~/.config/nixpkgs
-  ./rebuild hm
+  if hash -r nix-update &>/dev/null; then
+    echo "    nix-update already installed, skipping ./rebuild"
+  else
+    cd ~/.config/nixpkgs
+    ./rebuild hm
+  fi
 REMOTE_SCRIPT
 
 # Step 5: Run nix-update hm apply --rebuild
