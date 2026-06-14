@@ -2,6 +2,7 @@
   ./config-integrity.nix
   ./custom.nix
   ./defaults.nix
+  ./latex.nix
   ./mimeapps.nix
   ./nix-update.nix
   ./packages.nix

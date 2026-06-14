@@ -309,13 +309,6 @@
       #(lib.lowPrio remake)
       (lib.lowPrio moreutils)
       pandoc
-      (lib.lowPrio (# conflicts wit ghostscript
-        texlive.combine {
-          inherit (texlive) scheme-full;
-          #inherit (default) auctex;
-          pkgFilter = pkg: pkg.tlType == "run" || pkg.tlType == "bin" || pkg.pname == "pgf";
-        }
-      ))
       patchelf
       binutils
       gdb
