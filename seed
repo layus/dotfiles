@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Seed script to set up hm environment on a remote machine
+# Usage: ./seed [username@]hostname
+
+if [[ $# -eq 0 ]]; then
+  echo "Usage: $0 [username@]hostname" >&2
+  exit 1
+fi
+
+TARGET="$1"
+HOST="${TARGET#*@}"
+USER="${TARGET%%@*}"
+[[ "$USER" == "$HOST" ]] && USER="$(whoami)"
+
+echo "==> Seeding $TARGET (user: $USER)"
+
+# Step 1: SSH with StrictHostKeyChecking=no to accept host key if not known
+echo "==> Step 1: Checking SSH connectivity"
+if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$TARGET" true 2>/dev/null; then
+  echo "    SSH connection successful"
+else
+  echo "    SSH connection failed (host key may have been added, retrying)"
+  ssh -o ConnectTimeout=5 "$TARGET" true
+fi
+
+# Step 2: ssh-copy-id to set up key-based authentication (idempotent)
+echo "==> Step 2: Setting up SSH key authentication"
+if ssh -o BatchMode=yes "$TARGET" true 2>/dev/null; then
+  echo "    SSH key authentication already configured"
+else
+  echo "    Running ssh-copy-id (will prompt for password)"
+  ssh-copy-id -o StrictHostKeyChecking=no "$TARGET"
+fi
+
+# Step 3: Clone dotfiles to ~/.config/nixpkgs (idempotent)
+echo "==> Step 3: Cloning dotfiles"
+ssh "$TARGET" bash -euo pipefail <<'REMOTE_SCRIPT'
+  if [[ -d ~/.config/nixpkgs/.git ]]; then
+    echo "    Dotfiles already cloned, updating instead"
+    cd ~/.config/nixpkgs
+    git pull
+  else
+    echo "    Cloning dotfiles to ~/.config/nixpkgs"
+    mkdir -p ~/.config
+    git clone https://github.com/layus/dotfiles ~/.config/nixpkgs
+  fi
+REMOTE_SCRIPT
+
+# Step 4: Run the dotfiles rebuild script
+echo "==> Step 4: Running ./rebuild hm"
+ssh "$TARGET" bash -euo pipefail <<'REMOTE_SCRIPT'
+  if nix-update hm status; then
+    echo "    nix-update hm status OK, skipping ./rebuild"
+  else
+    cd ~/.config/nixpkgs
+    ./rebuild hm
+  fi
+REMOTE_SCRIPT
+
+# Step 5: Run nix-update hm apply --rebuild
+echo "==> Step 5: Running nix-update hm apply --rebuild"
+ssh "$TARGET" bash -euo pipefail <<'REMOTE_SCRIPT'
+  cd ~/.config/nixpkgs
+  nix-update hm apply --rebuild
+REMOTE_SCRIPT
+
+echo "==> Seed complete!"

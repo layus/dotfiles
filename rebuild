@@ -53,7 +53,50 @@ def ensure_nix_version() -> None:
   if check_nix_version():
     return
 
-  print("==> Nix version < 2.32 detected. Building Nix from flake...")
+  # Check if Nix is too old to even evaluate the flake (< 2.18)
+  try:
+    out = subprocess.run(
+      ["nix", "--version"], check=False, text=True, stdout=subprocess.PIPE
+    ).stdout
+  except FileNotFoundError:
+    print("ERROR: Nix not found", file=sys.stderr)
+    raise SystemExit(1)
+  m = re.search(r"(\d+)\.(\d+)", out or "")
+  if not m:
+    print("ERROR: Could not parse Nix version", file=sys.stderr)
+    raise SystemExit(1)
+  major, minor = int(m.group(1)), int(m.group(2))
+
+  if (major, minor) < (2, 18):
+    print(f"==> Nix version {major}.{minor} detected (< 2.18). Building intermediate Nix 2.18 first...")
+    # Build Nix 2.18 from a known Nixpkgs revision
+    nixpkgs_rev = "nixpkgs/nixos-23.11"
+    proc = subprocess.run(
+      ["nix-build", "--no-link", "-E",
+       f"import (fetchTarball https://github.com/NixOS/nixpkgs/archive/{nixpkgs_rev}.tar.gz) {{}}",
+       "-A", "nix"],
+      check=False,
+      text=True,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE,
+    )
+    if proc.returncode != 0 or not proc.stdout.strip():
+      # Try with nix build if nix-build failed
+      proc = subprocess.run(
+        ["nix", "build", "--no-link", "--print-out-paths", f"{nixpkgs_rev}#nix"],
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+      )
+    if proc.returncode != 0 or not proc.stdout.strip():
+      print(f"ERROR: Could not build intermediate Nix 2.18\n{proc.stderr.strip()}", file=sys.stderr)
+      raise SystemExit(1)
+    intermediate_nix = proc.stdout.strip().splitlines()[-1]
+    os.environ["PATH"] = f"{intermediate_nix}/bin:{os.environ.get('PATH', '')}"
+    print(f"==> Using intermediate Nix 2.18 from: {intermediate_nix}/bin")
+
+  print("==> Building Nix from flake...")
   proc = subprocess.run(
     ["nix", "build", f"{FLAKE_DIR}#nix^out", "--no-link", "--print-out-paths"],
     check=False,
