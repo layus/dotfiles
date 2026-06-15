@@ -295,6 +295,25 @@ class App(CoreApp):
         print()
         return 0
 
+    # --- motd --------------------------------------------------------------
+
+    def cmd_motd(self, scope: str) -> int:
+        """Print a one-line MOTD with icons and status words."""
+        targets = self._expand(scope) if scope == "both" else (scope,)
+        parts = []
+        for target in targets:
+            ctx = self.resolve_target(target)
+            state = self.read_state(ctx)
+            if state is None:
+                continue
+            status = state.get("status", "unknown")
+            icon = self._status_icon(status)
+            label = "❄" if target == "nixos" else "🏠"
+            parts.append(f"{label}{icon} {status}")
+        if parts:
+            print(" - ".join(parts))
+        return 0
+
     # --- interactive REPL (waybar click target) ---------------------------
 
     def cmd_curses(self, scope: str) -> int:
@@ -479,6 +498,10 @@ def main(argv: list[str]) -> int:
         if rest:
             raise NixUpdateError(f"Unknown argument(s): {' '.join(rest)}")
         return app.cmd_status(target)
+    if subcmd == "motd":
+        if rest:
+            raise NixUpdateError(f"Unknown argument(s): {' '.join(rest)}")
+        return app.cmd_motd(target)
     if subcmd == "waybar":
         watch = False
         curses = False

@@ -7,11 +7,22 @@ let
     flakeDir = cfg.flakeDir;
   };
 
+  hasNixos = builtins.elem "nixos" cfg.targets;
+  hasHm = builtins.elem "hm" cfg.targets;
+  motdScope =
+    if hasNixos && hasHm then "both"
+    else if hasNixos then "nixos"
+    else "hm";
+
 in
 {
 
   options.services.nix-update = {
-    enable = lib.mkEnableOption "background NixOS/home-manager update builder (nix-update)";
+    targets = lib.mkOption {
+      type = lib.types.listOf (lib.types.enum [ "nixos" "hm" ]);
+      default = [ "hm" ];
+      description = "Which targets to build/monitor. Set to [ \"nixos\" \"hm\" ] on NixOS machines.";
+    };
 
     flakeDir = lib.mkOption {
       type = lib.types.str;
@@ -30,16 +41,24 @@ in
     {
       # Always make the nix-update command available
       home.packages = [ nixUpdatePkg ];
+
     }
 
-    (lib.mkIf cfg.enable {
+    (lib.mkIf (cfg.targets != [ ]) {
+      programs.zsh.loginExtra = ''
+        # nix-update MOTD
+        uptime 2>/dev/null
+        ${nixUpdatePkg}/bin/nix-update ${motdScope} motd 2>/dev/null
+      '';
+    })
+
+    (lib.mkIf hasNixos {
       # NixOS updater service + timer
       systemd.user.services.nix-update-nixos = {
         Unit.Description = "Build NixOS config update in background";
         Service = {
           Type = "oneshot";
           ExecStart = "${nixUpdatePkg}/bin/nix-update nixos build";
-          # Don't let a long build starve the system
           Nice = 19;
           IOSchedulingClass = "idle";
         };
@@ -54,7 +73,9 @@ in
         };
         Install.WantedBy = [ "timers.target" ];
       };
+    })
 
+    (lib.mkIf hasHm {
       # Home-manager updater service + timer
       systemd.user.services.nix-update-hm = {
         Unit.Description = "Build home-manager config update in background";
