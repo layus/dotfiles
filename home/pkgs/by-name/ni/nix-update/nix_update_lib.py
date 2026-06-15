@@ -26,8 +26,8 @@ from pathlib import Path
 
 UPDATE_INPUTS = ["nixpkgs", "homeManager", "nixvim"]
 
-# Canonical order for the "both" meta-target: home-manager first, then nixos.
-TARGETS = ("hm", "nixos")
+# Canonical order for the "both" meta-target: home-manager first, then os.
+TARGETS = ("hm", "os")
 
 
 class NixUpdateError(RuntimeError):
@@ -152,7 +152,7 @@ class App:
         return self.user
 
     def resolve_target(self, target: str) -> TargetContext:
-        if target == "nixos":
+        if target == "os":
             attr = f"nixosConfigurations.{self.host}.config.system.build.toplevel"
             current = Path("/run/current-system")
         elif target == "hm":
@@ -340,7 +340,7 @@ class App:
     def _expand(self, target: str) -> list[str]:
         """Expand a target into the concrete targets to act on, in order.
 
-        "both" always means home-manager first, then nixos (see TARGETS).
+        "both" always means home-manager first, then os (see TARGETS).
         """
         if target == "both":
             return list(TARGETS)
@@ -496,7 +496,7 @@ class App:
         if status == "dirty":
             print(f"{target}: build was from a dirty tree - refusing to activate. Commit and rebuild first.")
             return 1
-        if status != "ready" and not (target == "nixos" and do_switch and status == "pending"):
+        if status != "ready" and not (target == "os" and do_switch and status == "pending"):
             print(f"{target}: status is '{status}', not 'ready'. Nothing to apply.")
             return 1
 
@@ -535,7 +535,7 @@ class App:
         self.require_clean_tree()
 
         new_status = "current"
-        if target == "nixos":
+        if target == "os":
             if do_switch:
                 print(f"Running: prebuilt switch from {result}")
                 rc = subprocess.run(["sudo", f"{result}/bin/switch-to-configuration", "switch"], check=False).returncode
@@ -560,7 +560,7 @@ class App:
 
     def cmd_apply(self, target: str, do_rebuild: bool, do_switch: bool) -> int:
         # Builds are independent and may run in parallel, but activation must
-        # stay sequential and in canonical order (home-manager before nixos).
+        # stay sequential and in canonical order (home-manager before os).
         # So when rebuilding multiple targets, build them all in parallel first,
         # then activate each one in order without rebuilding again.
         if do_rebuild and len(self._expand(target)) > 1:

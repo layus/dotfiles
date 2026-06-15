@@ -140,13 +140,13 @@ class App(CoreApp):
             except Exception:
                 return f"{name}: invalid state"
 
-        nixos_status = read_status("nixos")
+        nixos_status = read_status("os")
         hm_status = read_status("hm")
 
-        if scope == "nixos":
+        if scope == "os":
             return {
                 "text": f"❄{self._status_icon(nixos_status)}",
-                "tooltip": read_tooltip("nixos"),
+                "tooltip": read_tooltip("os"),
                 "class": self._status_class((nixos_status,)),
             }
         if scope == "hm":
@@ -157,7 +157,7 @@ class App(CoreApp):
             }
         return {
             "text": f"❄{self._status_icon(nixos_status)} 🏠{self._status_icon(hm_status)}",
-            "tooltip": read_tooltip("nixos") + "\n" + read_tooltip("hm"),
+            "tooltip": read_tooltip("os") + "\n" + read_tooltip("hm"),
             "class": self._status_class((nixos_status, hm_status)),
         }
 
@@ -172,7 +172,7 @@ class App(CoreApp):
 
     def refresh_waybar(self) -> None:
         """Update every waybar message file. Best-effort: never fails a build."""
-        for scope in ("nixos", "hm", "both"):
+        for scope in ("os", "hm", "both"):
             try:
                 self._write_waybar(scope)
             except Exception:
@@ -286,12 +286,12 @@ class App(CoreApp):
             return 0
 
         print("--- Commands ---")
-        print("  nix-update <nixos|hm|both> build")
-        print("  nix-update <nixos|hm|both> apply [--rebuild]")
-        print("  nix-update <nixos|hm|both> switch [--rebuild]")
-        print("  nix-update <nixos|hm|both> status")
-        print("  nix-update <nixos|hm|both> waybar [--watch]")
-        print("  nix-update <nixos|hm> waybar --curses")
+        print("  nix-update <os|hm|both> build")
+        print("  nix-update <os|hm|both> apply [--rebuild]")
+        print("  nix-update <os|hm|both> switch [--rebuild]")
+        print("  nix-update <os|hm|both> status")
+        print("  nix-update <os|hm|both> waybar [--watch]")
+        print("  nix-update <os|hm> waybar --curses")
         print()
         return 0
 
@@ -308,7 +308,7 @@ class App(CoreApp):
                 continue
             status = state.get("status", "unknown")
             icon = self._status_icon(status)
-            label = "❄" if target == "nixos" else "🏠"
+            label = "❄" if target == "os" else "🏠"
             parts.append(f"{label}{icon} {status}")
         if parts:
             print(" - ".join(parts))
@@ -317,33 +317,33 @@ class App(CoreApp):
     # --- interactive REPL (waybar click target) ---------------------------
 
     def cmd_curses(self, scope: str) -> int:
-        """Minimal interactive loop for a single target (hm or nixos).
+        """Minimal interactive loop for a single target (hm or os).
 
         A "glorified REPL": shows the current status, then offers build / apply
-        / (nixos only) switch via an arrow-key menu, runs the chosen action with
+        / (os only) switch via an arrow-key menu, runs the chosen action with
         streaming output, and loops -- reprinting the status each time.  Not
         real curses; just raw-mode key reading so it works in any terminal
         opened by the waybar click.  Falls back to a typed prompt when stdin is
         not a tty.
         """
-        if scope not in ("hm", "nixos"):
-            raise NixUpdateError("--curses requires a single target: nixos or hm")
+        if scope not in ("hm", "os"):
+            raise NixUpdateError("--curses requires a single target: os or hm")
 
         # (label, action) -- action takes no args and returns an rc.
         actions: list[tuple[str, "callable"]] = [
             ("build", lambda: self._guarded(lambda: self.cmd_build(scope))),
             ("apply", lambda: self._guarded(lambda: self.cmd_apply(scope, do_rebuild=False, do_switch=False))),
         ]
-        if scope == "nixos":
+        if scope == "os":
             actions.append(
                 ("switch", lambda: self._guarded(lambda: self.cmd_switch(scope, do_rebuild=False)))
             )
 
-        # Default to the most effectful action: switch (nixos) / apply (hm).
-        default_label = "switch" if scope == "nixos" else "apply"
+        # Default to the most effectful action: switch (os) / apply (hm).
+        default_label = "switch" if scope == "os" else "apply"
         selected = next(i for i, (label, _) in enumerate(actions) if label == default_label)
 
-        title = {"hm": "home-manager", "nixos": "NixOS"}[scope]
+        title = {"hm": "home-manager", "os": "NixOS"}[scope]
         while True:
             self.cmd_status(scope, show_commands=False)
             selected = self._select_action(title, [label for label, _ in actions], selected)
@@ -448,10 +448,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="nix-update",
         add_help=True,
-        usage="%(prog)s [--flake-dir PATH] <nixos|hm|both> [build|apply|switch|status|waybar] [options]",
+        usage="%(prog)s [--flake-dir PATH] <os|hm|both> [build|apply|switch|status|waybar] [options]",
     )
     parser.add_argument("--flake-dir", default=str(Path.home() / ".config/nixpkgs"), help="Path to the flake directory")
-    parser.add_argument("target", help="nixos|hm|both")
+    parser.add_argument("target", help="os|hm|both")
     parser.add_argument("subcmd", nargs="?", default="apply")
     parser.add_argument("rest", nargs=argparse.REMAINDER)
     return parser.parse_args(argv)
@@ -478,7 +478,7 @@ def main(argv: list[str]) -> int:
     subcmd = ns.subcmd
     rest = ns.rest
 
-    if target not in {"nixos", "hm", "both"}:
+    if target not in {"os", "hm", "both"}:
         raise NixUpdateError(f"Unknown target: {target}")
 
     if subcmd == "build":

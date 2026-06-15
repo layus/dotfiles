@@ -3,7 +3,7 @@
 local -a targets commands common_opts
 
 targets=(
-  'nixos:operate on NixOS configuration'
+  'os:operate on NixOS configuration'
   'hm:operate on Home Manager configuration'
   'both:operate on both configurations'
 )
@@ -38,7 +38,7 @@ case ${words[3]} in
     _arguments \
       ${common_opts[@]} \
       '--rebuild[Rebuild before apply]' \
-      '--switch[Switch immediately for nixos target]'
+      '--switch[Switch immediately for os target]'
     ;;
   switch)
     _arguments \

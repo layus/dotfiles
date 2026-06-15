@@ -86,8 +86,8 @@ def load_nix_update():
 
 
 def main(argv: list[str]) -> int:
-  if len(argv) != 1 or argv[0] not in {"hm", "nixos", "both"}:
-    print(f"Usage: {Path(sys.argv[0]).name} <hm|nixos|both>", file=sys.stderr)
+  if len(argv) != 1 or argv[0] not in {"hm", "os", "both"}:
+    print(f"Usage: {Path(sys.argv[0]).name} <hm|os|both>", file=sys.stderr)
     return 1
   target = argv[0]
 

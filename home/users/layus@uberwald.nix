@@ -6,7 +6,7 @@
 
   custom.graphical = true;
 
-  services.nix-update.targets = [ "nixos" "hm" ];
+  services.nix-update.targets = [ "os" "hm" ];
 
   programs.helix.enable = true;
 

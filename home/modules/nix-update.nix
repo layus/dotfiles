@@ -7,11 +7,11 @@ let
     flakeDir = cfg.flakeDir;
   };
 
-  hasNixos = builtins.elem "nixos" cfg.targets;
+  hasNixos = builtins.elem "os" cfg.targets;
   hasHm = builtins.elem "hm" cfg.targets;
   motdScope =
     if hasNixos && hasHm then "both"
-    else if hasNixos then "nixos"
+    else if hasNixos then "os"
     else "hm";
 
 in
@@ -19,9 +19,9 @@ in
 
   options.services.nix-update = {
     targets = lib.mkOption {
-      type = lib.types.listOf (lib.types.enum [ "nixos" "hm" ]);
+      type = lib.types.listOf (lib.types.enum [ "os" "hm" ]);
       default = [ "hm" ];
-      description = "Which targets to build/monitor. Set to [ \"nixos\" \"hm\" ] on NixOS machines.";
+      description = "Which targets to build/monitor. Set to [ \"os\" \"hm\" ] on NixOS machines.";
     };
 
     flakeDir = lib.mkOption {
@@ -54,17 +54,17 @@ in
 
     (lib.mkIf hasNixos {
       # NixOS updater service + timer
-      systemd.user.services.nix-update-nixos = {
+      systemd.user.services.nix-update-os = {
         Unit.Description = "Build NixOS config update in background";
         Service = {
           Type = "oneshot";
-          ExecStart = "${nixUpdatePkg}/bin/nix-update nixos build";
+          ExecStart = "${nixUpdatePkg}/bin/nix-update os build";
           Nice = 19;
           IOSchedulingClass = "idle";
         };
       };
 
-      systemd.user.timers.nix-update-nixos = {
+      systemd.user.timers.nix-update-os = {
         Unit.Description = "Timer for background NixOS config builds";
         Timer = {
           OnCalendar = cfg.calendar;
