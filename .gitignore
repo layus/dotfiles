@@ -1,4 +1,7 @@
 config.nix
 result
+result-*
 local/
 !local-default/
+.direnv
+.pre-commit-config.yaml

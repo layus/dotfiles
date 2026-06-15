@@ -9,11 +9,14 @@
 
   inputs.localConfig.url = "path:./local-default";
 
+  inputs.git-hooks.url = "github:cachix/git-hooks.nix";
+  inputs.git-hooks.inputs.nixpkgs.follows = "nixpkgs";
+
   #inputs.dwarffs.url = "github:edolstra/dwarffs";
   #inputs.dwarffs.inputs.nixpkgs.follows = "nixpkgs";
   #inputs.dwarffs.inputs.nix.inputs.nixpkgs.follows = "nixpkgs";
 
-  outputs = { self, homeManager, nixpkgs, localConfig, ... }@args:
+  outputs = { self, homeManager, nixpkgs, localConfig, git-hooks, ... }@args:
     let
       lib = nixpkgs.lib;
 
@@ -47,6 +50,18 @@
       ;
 
       homeConfigurations = homeEntries;
+
+      checks.x86_64-linux.pre-commit-check = git-hooks.lib.x86_64-linux.run {
+        src = self;
+        hooks = {
+          nixpkgs-fmt.enable = true;
+        };
+      };
+
+      devShells.x86_64-linux.default = nixpkgs.legacyPackages.x86_64-linux.mkShell {
+        inherit (self.checks.x86_64-linux.pre-commit-check) shellHook;
+        buildInputs = self.checks.x86_64-linux.pre-commit-check.enabledPackages;
+      };
     };
 
 }
