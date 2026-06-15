@@ -50,6 +50,11 @@ in
         uptime 2>/dev/null
         ${nixUpdatePkg}/bin/nix-update ${motdScope} motd 2>/dev/null
       '';
+      programs.bash.profileExtra = ''
+        # nix-update MOTD
+        uptime 2>/dev/null
+        ${nixUpdatePkg}/bin/nix-update ${motdScope} motd 2>/dev/null
+      '';
     })
 
     (lib.mkIf hasNixos {

@@ -96,6 +96,12 @@ in
       #  fi
       #'';
 
+      programs.bash.enable = true;
+      programs.bash.initExtra = ''
+        [ -f ~/.bash_aliases ] && source ~/.bash_aliases
+        [ -f ~/.bash_aliases.git ] && source ~/.bash_aliases.git
+      '';
+
       programs.helix.enable = true;
       programs.helix.languages = {
         haskell = {
