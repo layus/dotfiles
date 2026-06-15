@@ -476,6 +476,29 @@ class App:
             with ctx.log_file.open("a", encoding="utf-8") as log:
                 log.write(f"Build ready: {result}\n")
 
+            # Verify reproducibility: rebuild from embedded sources.
+            embedded_path = Path(embedded_source)
+            if not embedded_path.exists():
+                self.write_state(ctx, "failed", error="Embedded source path does not exist after build.")
+                return 1
+
+            print(f"Verifying: rebuilding {target} from its embedded sources")
+            rc_check, rebuilt_result = self._build_flake(ctx, embedded_path)
+            if rc_check != 0 or not rebuilt_result:
+                self.write_state(ctx, "failed", error="Rebuild from embedded sources failed.")
+                with ctx.log_file.open("a", encoding="utf-8") as log:
+                    log.write("Verification failed: rebuild from embedded sources failed.\n")
+                return 1
+            if rebuilt_result != result:
+                err = f"Verification failed: mismatch.\n  expected: {result}\n  got:      {rebuilt_result}"
+                self.write_state(ctx, "failed", error=err)
+                with ctx.log_file.open("a", encoding="utf-8") as log:
+                    log.write(err + "\n")
+                return 1
+
+            with ctx.log_file.open("a", encoding="utf-8") as log:
+                log.write("Verification passed: rebuild matches.\n")
+
         return 0
 
     def _apply_one(self, target: str, do_rebuild: bool, do_switch: bool) -> int:
@@ -510,26 +533,6 @@ class App:
         result_path = Path(result)
         if not result_path.exists():
             print(f"{target}: result path does not exist: {result}")
-            return 1
-
-        embedded_source = state.get("embedded_source", "")
-        if not embedded_source:
-            print(f"{target}: embedded source path is missing in state; rebuild first.")
-            return 1
-        embedded_path = Path(embedded_source)
-        if not embedded_path.exists():
-            print(f"{target}: embedded source path does not exist: {embedded_source}")
-            return 1
-
-        print(f"Verifying: rebuilding {target} from its embedded sources before deploy")
-        rc_check, rebuilt_result = self._build_flake(ctx, embedded_path)
-        if rc_check != 0 or not rebuilt_result:
-            print(f"{target}: rebuild from embedded sources failed; refusing to deploy.")
-            return 1
-        if rebuilt_result != result:
-            print(f"{target}: embedded rebuild mismatch; refusing to deploy.")
-            print(f"  expected: {result}")
-            print(f"  got:      {rebuilt_result}")
             return 1
 
         self.require_clean_tree()
