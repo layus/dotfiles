@@ -1,5 +1,4 @@
-{
-  pkgs ? import <nixpkgs> {}
+{ pkgs ? import <nixpkgs> { }
 , python3Packages ? pkgs.python3Packages
 , fetchFromGitHub ? pkgs.fetchFromGitHub
 }:

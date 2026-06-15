@@ -3,7 +3,7 @@
 python3Packages.buildPythonApplication rec {
   name = "monitormonitors";
 
-  script = ./monitormonitors ;
+  script = ./monitormonitors;
   phases = [ "buildPhase" "fixupPhase" ];
 
   propagatedBuildInputs = with python3Packages; [ pyudev ];

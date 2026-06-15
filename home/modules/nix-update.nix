@@ -7,7 +7,8 @@ let
     flakeDir = cfg.flakeDir;
   };
 
-in {
+in
+{
 
   options.services.nix-update = {
     enable = lib.mkEnableOption "background NixOS/home-manager update builder (nix-update)";

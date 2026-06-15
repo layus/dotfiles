@@ -1,9 +1,9 @@
-{ python3Packages}:
+{ python3Packages }:
 
 python3Packages.buildPythonApplication rec {
   name = "readlinks";
 
-  script = ./readlinks ;
+  script = ./readlinks;
   phases = [ "buildPhase" "fixupPhase" ];
 
   buildPhase = ''

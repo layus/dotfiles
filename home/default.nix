@@ -8,6 +8,7 @@ homeManager.lib.homeManagerConfiguration {
     (./users + "/${name}@${machine}.nix")
     (localConfig.home-overlay or { })
     { custom.hostname = machine; }
+    { programs.nixvim.nixpkgs.source = nixpkgs; }
   ] ++ import ./modules/modules-list.nix;
   pkgs = nixpkgs.legacyPackages.x86_64-linux;
 }

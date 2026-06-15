@@ -1,9 +1,9 @@
-{
-  lib,
-  python3Packages,
-  wrapGAppsHook4,
-  gobject-introspection,
-  gtk4-layer-shell,
+{ lib
+, python3Packages
+, wrapGAppsHook4
+, gobject-introspection
+, gtk4-layer-shell
+,
 }:
 
 python3Packages.buildPythonPackage rec {
@@ -36,7 +36,7 @@ python3Packages.buildPythonPackage rec {
       --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ gtk4-layer-shell ]}
     )
   '';
-  
+
   meta = {
     description = "Invasive timesheets prompt";
     maintainers = with lib.maintainers; [ layus ];

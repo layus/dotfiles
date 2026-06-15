@@ -20,6 +20,7 @@ let
 
     EMV-CAP = callPackage ./applications/EMV-CAP { };
   };
-in {
+in
+{
   inherit mypkgs;
 }

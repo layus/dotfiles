@@ -9,7 +9,8 @@ let
     if self ? rev then self.rev                    # nix-verified clean tree
     else if verifiedRev != "" then verifiedRev     # wrapper-verified
     else null;
-in {
+in
+{
   home.file.".config/hm-source" = {
     source = self.outPath;
     recursive = true;

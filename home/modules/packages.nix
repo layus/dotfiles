@@ -83,7 +83,7 @@
         });
 
       slack = super.slack.overrideAttrs (oldAttrs: {
-        installPhase = lib.replaceStrings ["--suffix PATH"] ["--suffix XDG_CURRENT_DESKTOP : GNOME \\\n  --suffix PATH"] oldAttrs.installPhase;
+        installPhase = lib.replaceStrings [ "--suffix PATH" ] [ "--suffix XDG_CURRENT_DESKTOP : GNOME \\\n  --suffix PATH" ] oldAttrs.installPhase;
       });
     })
   ];

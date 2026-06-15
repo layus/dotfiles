@@ -1,4 +1,3 @@
-
 import ./config {
   inherit (pkgs)
     volumeicom
@@ -11,7 +10,7 @@ import ./config {
   inherit (pkgs.xorg)
     xbacklight
     ;
-    
+
   blackout = "";
 }
 

@@ -37,7 +37,7 @@ in {
     extraOutputsToInstall = [ "man" "info" "docdev" ];
     ignoreCollisions = true;
     paths = with self; [
-      
+
 
       # {{{ special
       #converted to plugins: obs-wlrobs obs-studio
@@ -49,7 +49,9 @@ in {
       # }}}
 
       # {{{ Graphical applications
-      firefox/*-bin*/ thunderbird-78 chromium
+      firefox /*-bin*/
+      thunderbird-78
+      chromium
       libreoffice # Not yet cached...
       gnumeric
       gimp #gimp-with-plugins
@@ -80,11 +82,14 @@ in {
 
       # }}}
       # {{{ Desktop environment
-      gnome3.gnome_themes_standard        # For firefox and thunderbird theming.
-      conky dmenu scrot                  # for i3.
-      volumeicon pavucontrol              # for i3.
+      gnome3.gnome_themes_standard # For firefox and thunderbird theming.
+      conky
+      dmenu
+      scrot # for i3.
+      volumeicon
+      pavucontrol # for i3.
       networkmanagerapplet
-      termite                             # for i3
+      termite # for i3
       keychain
       xclip
       imagemagickBig
@@ -119,35 +124,44 @@ in {
       editorconfig-core-c # Was is das ?
       neovim
       emacs
-      gitFull 
+      gitFull
       git-lfs
       #(mercurialFull.overrideAttrs (oldAttrs: {
       #  propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or []) ++ [ pythonPackages.simplejson ]; # for mozilla pushtree
       #}))
-      subversion            # VCS
+      subversion # VCS
       gitAndTools.hub
       gitAndTools.gh
-      ack tree ripgrep fd
+      ack
+      tree
+      ripgrep
+      fd
       ctags
       file
-      zip unzip
+      zip
+      unzip
       jshon
       lynx
-      screen tmux
-      ghostscript     # Why is this needed ? conflicts with texlive.
-                      # => Maybe for converting pdf to text.
-      diffutils colordiff wdiff
+      screen
+      tmux
+      ghostscript # Why is this needed ? conflicts with texlive.
+      # => Maybe for converting pdf to text.
+      diffutils
+      colordiff
+      wdiff
       graphviz
       #nixUnstable
       niv
       ffmpeg
       # fails - diffoscope
       pdfgrep
-      rsync borgbackup
+      rsync
+      borgbackup
       direnv
       bat
       hyperfine
-      jq yq
+      jq
+      yq
       tmux
 
 
@@ -158,9 +172,9 @@ in {
       #eid-viewer # does not exist anymore ?
       parallel
       pv
-      psmisc                              # contains `killall`
-      dnsutils                            # contains `dig`
-      vcsh                                # To manage dotfiles
+      psmisc # contains `killall`
+      dnsutils # contains `dig`
+      vcsh # To manage dotfiles
       #tup
       gnuplot
       gawk
@@ -173,8 +187,8 @@ in {
       #(lib.lowPrio remake)
       (lib.lowPrio moreutils)
       pandoc
-      (lib.lowPrio (                      # conflicts wit ghostscript
-        texlive.combine { 
+      (lib.lowPrio (# conflicts wit ghostscript
+        texlive.combine {
           inherit (texlive) scheme-full;
           #inherit (default) auctex;
           pkgFilter = pkg: pkg.tlType == "run" || pkg.tlType == "bin" || pkg.pname == "pgf";
@@ -182,7 +196,8 @@ in {
       ))
       qtikz
       biber
-      patchelf binutils
+      patchelf
+      binutils
       gdb
       mypkgs.EMV-CAP
       readlinks
@@ -190,10 +205,12 @@ in {
       meld
       sqlite-interactive
       inotify-tools
-      
+
       # }}}
       # {{{ Admin
-      xorg.xrandr arandr autorandr        # display management
+      xorg.xrandr
+      arandr
+      autorandr # display management
       xorg.xev
       htop
       xorg.xkill

@@ -1,16 +1,16 @@
-{
-  lib,
-  stdenv,
-  python3,
-  makeWrapper,
-  installShellFiles,
-  coreutils,
-  git,
-  jq,
-  nix,
-  hostname,
-  inotify-tools,
-  flakeDir ? null,
+{ lib
+, stdenv
+, python3
+, makeWrapper
+, installShellFiles
+, coreutils
+, git
+, jq
+, nix
+, hostname
+, inotify-tools
+, flakeDir ? null
+,
 }:
 
 stdenv.mkDerivation rec {

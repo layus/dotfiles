@@ -5,6 +5,7 @@
   inputs.homeManager.inputs.nixpkgs.follows = "nixpkgs";
 
   inputs.nixvim.url = "github:nix-community/nixvim";
+  inputs.nixvim.inputs.nixpkgs.follows = "nixpkgs";
 
   inputs.localConfig.url = "path:./local-default";
 
@@ -21,17 +22,20 @@
       # Additionally, "user@headless.nix" also produces a bare "user" entry
       # (used as fallback when home-manager can't match user@hostname).
       userFiles = builtins.readDir ./home/users;
-      homeEntries = lib.concatMapAttrs (filename: _:
-        let
-          stem = lib.removeSuffix ".nix" filename;
-          parts = lib.splitString "@" stem;
-          user = builtins.elemAt parts 0;
-          machine = builtins.elemAt parts 1;
-        in
+      homeEntries = lib.concatMapAttrs
+        (filename: _:
+          let
+            stem = lib.removeSuffix ".nix" filename;
+            parts = lib.splitString "@" stem;
+            user = builtins.elemAt parts 0;
+            machine = builtins.elemAt parts 1;
+          in
           { "${stem}" = import ./home args user machine; }
           // lib.optionalAttrs (machine == "headless") { "${user}" = import ./home args user machine; }
-      ) userFiles;
-    in {
+        )
+        userFiles;
+    in
+    {
       packages.x86_64-linux = {
         nix = nixpkgs.legacyPackages.x86_64-linux.nix;
       };
@@ -40,7 +44,7 @@
         lib.attrsets.mapAttrs
           (machine: _: import ./nixos args machine)
           (builtins.readDir ./nixos/machines)
-          ;
+      ;
 
       homeConfigurations = homeEntries;
     };

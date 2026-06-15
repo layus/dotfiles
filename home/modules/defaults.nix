@@ -6,7 +6,8 @@
 let
   pubkeyFile = ../dotfiles/ssh/pubkeys + "/${config.custom.hostname}_ecdsa.pub";
   hasPubkey = builtins.pathExists pubkeyFile;
-in {
+in
+{
   config = lib.mkMerge [
     {
       # Let Home Manager install and manage itself.
