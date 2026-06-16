@@ -12,8 +12,8 @@ in
     systemd.services.mptcpify = {
       description = "Load mptcpify BPF program to upgrade TCP sockets to MPTCP";
       wantedBy = [ "multi-user.target" ];
-      after = [ "sys-fs-bpf.mount" ];
-      requires = [ "sys-fs-bpf.mount" ];
+      after = [ "network-pre.target" ];
+      before = [ "network.target" ];
 
       serviceConfig = {
         Type = "oneshot";
