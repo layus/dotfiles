@@ -196,8 +196,8 @@
     "custom/nix-updates-nixos": {
         "format": "{}",
         "return-type": "json",
-        "exec": "nix-update nixos waybar --watch",
-        "on-click": "alacritty --class nix-update -e zsh -lic 'nix-update nixos waybar --curses'"
+        "exec": "nix-update os waybar --watch",
+        "on-click": "alacritty --class nix-update -e zsh -lic 'nix-update os waybar --curses'"
     },
     "custom/nix-updates-hm": {
         "format": "{}",
