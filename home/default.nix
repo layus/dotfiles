@@ -9,6 +9,7 @@ homeManager.lib.homeManagerConfiguration {
     (localConfig.home-overlay or { })
     { custom.hostname = machine; }
     { programs.nixvim.nixpkgs.source = nixpkgs; }
+    { nixpkgs.overlays = [ self.overlays.default ]; }
   ] ++ import ./modules/modules-list.nix;
   pkgs = nixpkgs.legacyPackages.x86_64-linux;
 }

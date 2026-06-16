@@ -2,7 +2,6 @@
 
 let
   cfg = config.services.mptcpify;
-  mptcpify = pkgs.callPackage ../../pkgs/by-name/mp/mptcpify { };
 in
 {
   options.services.mptcpify = {
@@ -19,8 +18,8 @@ in
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
-        ExecStart = "${mptcpify}/bin/mptcpify start";
-        ExecStop = "${mptcpify}/bin/mptcpify stop";
+        ExecStart = "${pkgs.mptcpify}/bin/mptcpify start";
+        ExecStop = "${pkgs.mptcpify}/bin/mptcpify stop";
       };
     };
   };

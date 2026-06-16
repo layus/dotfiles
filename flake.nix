@@ -39,6 +39,13 @@
         userFiles;
     in
     {
+      overlays.default = final: prev: {
+        mptcpify = final.callPackage ./pkgs/by-name/mp/mptcpify { };
+        readlinks = final.callPackage ./pkgs/by-name/re/readlinks { };
+        timesheets-prompt = final.callPackage ./pkgs/by-name/ti/timesheets-prompt { };
+        windsurf-wrapper = final.callPackage ./pkgs/by-name/wi/windsurf { };
+      };
+
       packages.x86_64-linux = {
         nix = nixpkgs.legacyPackages.x86_64-linux.nix;
       };

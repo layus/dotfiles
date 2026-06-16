@@ -7,6 +7,7 @@ nixpkgs.lib.nixosSystem {
   modules = [
     (./machines + "/${name}/configuration.nix")
     (localConfig.nixos-overlay or { })
+    { nixpkgs.overlays = [ self.overlays.default ]; }
     #(./machines + "/${name}/hardware-configuration.nix")
     #dwarffs.nixosModules.dwarffs
 

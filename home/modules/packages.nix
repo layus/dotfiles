@@ -57,11 +57,7 @@
       #  patches = oldAttrs.patches or [] ++ [ ./wlroots-reversed.patch ];
       #});
 
-      readlinks = super.callPackage ../../pkgs/by-name/re/readlinks { };
 
-      timesheets-prompt = super.callPackage ../../pkgs/by-name/ti/timesheets-prompt { };
-
-      windsurf-wrapper = super.callPackage ../../pkgs/by-name/wi/windsurf { };
 
       slurp = assert builtins.compareVersions "1.3.2" super.slurp.version <= 0;
         super.slurp.overrideAttrs (oldAttrs: {
