@@ -59,6 +59,8 @@
 
       readlinks = super.callPackage ../pkgs/by-name/re/readlinks { };
 
+      mptcpify = super.callPackage ../pkgs/by-name/mp/mptcpify { };
+
       timesheets-prompt = super.callPackage ../pkgs/by-name/ti/timesheets-prompt { };
 
       windsurf-wrapper = super.callPackage ../pkgs/by-name/wi/windsurf { };

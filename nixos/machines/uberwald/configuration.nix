@@ -21,6 +21,7 @@ in
     ../../common/epson.nix
     ../../common/brother.nix
     ../../common/tpm.nix
+    ../../common/mptcpify.nix
     #./fail.nix
   ];
 
@@ -138,7 +139,7 @@ in
       "qemu-libvirtd"
       "tss" # access tpm (secure enclave)
       "uhid" # access fake usb device
-      "ydotool"  # access fake input device
+      "ydotool" # access fake input device
     ];
     openssh.authorizedKeys.keys = builtins.attrValues {
       inherit (cfg.ssh.pubkeys)
@@ -189,7 +190,7 @@ in
 
   services.earlyoom.enable = true;
   services.earlyoom.enableNotifications = true;
-  services.earlyoom.extraArgs = ["--ignore-root-user" "--sort-by-rss" "--avoid=[Ssway]"];
+  services.earlyoom.extraArgs = [ "--ignore-root-user" "--sort-by-rss" "--avoid=[Ssway]" ];
   services.earlyoom.freeMemThreshold = 10;
   services.earlyoom.freeSwapThreshold = 90;
   # debugging
@@ -248,4 +249,6 @@ in
       config = "config /etc/nixos/vpn.ovpn";
     };
   };
+
+  services.mptcpify.enable = true;
 }
