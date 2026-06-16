@@ -6,5 +6,6 @@
   ./mimeapps.nix
   ./nix-update.nix
   ./packages.nix
+  ./shells.nix
   ../profiles/nixvim.nix
 ]

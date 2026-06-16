@@ -51,57 +51,6 @@ in
         };
       xdg.configFile."nixpkgs/config.nix".source = ../dotfiles/nixpkgs-config.nix;
 
-      programs.direnv.enable = true;
-      programs.direnv.nix-direnv.enable = true;
-      programs.dircolors.enable = true;
-      #programs.keychain.enable = true;  # Nope, deal with it ourselves.
-
-      # Disable fish. Generating completions takes ages.
-      #programs.fish.enable = true;
-
-      programs.zsh.enable = true;
-      programs.zsh.autocd = true;
-      programs.zsh.history.path = "${config.home.homeDirectory}/.histfile";
-      programs.zsh.history.size = 100000;
-      programs.zsh.history.ignoreAllDups = true;
-      programs.zsh.history.ignoreSpace = true;
-      programs.zsh.history.ignorePatterns = [ "rm *" "pkill *" ];
-      programs.zsh.history.append = true;
-      programs.zsh.history.share = false;
-      programs.zsh.initContent =
-        (builtins.readFile ../dotfiles/zshrc +
-          ''
-            direnv_completions_hook () {
-              export FPATH=$ZSH_COMPLETION_USER_DIR''${ZSH_COMPLETION_USER_DIR:+:}$FPATH
-              if [ "$FPATH" != "$OLD_FPATH" ]; then
-                functions -u _ox # mark _ox as undefined, will get reloaded if needed
-                compinit -D
-              fi
-              export OLD_FPATH=$FPATH
-            }
-            precmd_functions+=(direnv_completions_hook)
-          '')
-      ;
-
-      # On machines where the login shell cannot be changed (e.g. it is
-      # stuck on bash in /etc/passwd), transparently switch to zsh on
-      # interactive logins. The guards keep scp/rsync/`ssh host cmd` and
-      # scripts working, and prevent infinite loops if zsh falls back to
-      # bash.
-      #programs.bash.enable = true;
-      #programs.bash.initExtra = ''
-      #  if [[ $- == *i* ]] && [[ -z "$ZSH_LAUNCHED" ]] && command -v zsh >/dev/null; then
-      #    export ZSH_LAUNCHED=1
-      #    exec zsh -l
-      #  fi
-      #'';
-
-      programs.bash.enable = true;
-      programs.bash.initExtra = ''
-        [ -f ~/.bash_aliases ] && source ~/.bash_aliases
-        [ -f ~/.bash_aliases.git ] && source ~/.bash_aliases.git
-      '';
-
       programs.helix.enable = true;
       programs.helix.languages = {
         haskell = {
@@ -111,9 +60,6 @@ in
           };
         };
       };
-
-      home.file.".bash_aliases".source = ../dotfiles/bash_aliases;
-      home.file.".bash_aliases.git".source = ../dotfiles/bash_aliases.git;
 
       programs.ssh.enable = true;
       programs.ssh.enableDefaultConfig = false;
