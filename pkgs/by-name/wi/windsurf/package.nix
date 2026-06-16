@@ -9,13 +9,15 @@ let
 
   completion = ./. + "/_windsurf";
 
-in symlinkJoin {
+in
+symlinkJoin {
   name = "windsurf-wrapper";
   nativeBuildInputs = [ installShellFiles ];
   paths = [ script ];
-  passthru.tests.completion = runCommand "windsurf-completion-tests" {
-    nativeBuildInputs = [ bats zsh ];
-  } ''
+  passthru.tests.completion = runCommand "windsurf-completion-tests"
+    {
+      nativeBuildInputs = [ bats zsh ];
+    } ''
     COMPLETION_FILE=${completion} bats ${./test-completion.zsh}
     touch $out
   '';

@@ -42,11 +42,11 @@
       overlays.default = final: prev:
         let
           byNameDir = ./pkgs/by-name;
-          # Scan pkgs/by-name/<shard>/<name>/default.nix
+          # Scan pkgs/by-name/<shard>/<name>/package.nix (nixpkgs convention)
           shards = builtins.readDir byNameDir;
           packagesFromShard = shard: _:
             lib.mapAttrs'
-              (name: _: lib.nameValuePair name (final.callPackage (byNameDir + "/${shard}/${name}") { }))
+              (name: _: lib.nameValuePair name (final.callPackage (byNameDir + "/${shard}/${name}/package.nix") { }))
               (builtins.readDir (byNameDir + "/${shard}"));
         in
         lib.concatMapAttrs packagesFromShard shards;
