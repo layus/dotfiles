@@ -1,5 +1,13 @@
 { config, pkgs, lib, ... }:
 
+let
+  keychainInit = ''
+    # Keychain (only when no forwarded agent)
+    if [ -z "$SSH_AUTH_SOCK" ]; then
+        eval $( keychain --eval --systemd --quiet ~/.ssh/*_{rsa,ecdsa,ed25519} )
+    fi
+  '';
+in
 {
   config = {
     # Bash
@@ -7,6 +15,8 @@
     programs.bash.initExtra = ''
       [ -f ~/.bash_aliases ] && source ~/.bash_aliases
       [ -f ~/.bash_aliases.git ] && source ~/.bash_aliases.git
+
+      ${keychainInit}
     '';
 
     # Direnv
@@ -155,10 +165,8 @@
             echo "''${envs:+"($envs)"}"
         }
 
-        # Keychain (only when no forwarded agent)
-        if [ -z "$SSH_AUTH_SOCK" ]; then
-            eval $( keychain --eval --systemd --quiet ~/.ssh/*_{rsa,ecdsa,ed25519}(N) )
-        fi
+        # Keychain
+        ${keychainInit}
       '')
     ];
   };
