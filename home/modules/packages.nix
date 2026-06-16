@@ -35,24 +35,6 @@
         patches = oldAttrs.patches or [ ] ++ [ ./systembus-notify.patch ];
       });
 
-      emv-cap = self.python3Packages.buildPythonApplication rec {
-        name = "EMV-CAP-${version}";
-        version = "1.6";
-
-        src = super.fetchFromGitHub {
-          owner = "doegox";
-          repo = "EMV-CAP";
-          # rev = master @ v1.6 (untagged)
-          # title = Fix setup.py: license, requirements & bump version
-          rev = "d28dbdd77b57fe2489d0f3d452a5b716a0852949";
-          hash = "sha256-K6uLrkkoWZVByB8toclHRYnVf79dyvMQPQOvDgFvcHo=";
-        };
-
-        propagatedBuildInputs = with self.python3Packages; [ pyscard pycrypto ];
-        pyproject = true;
-        build-system = with self.python3Packages; [ setuptools ];
-      };
-
       #wlroots = super.wlroots_0_16.overrideAttrs (oldAttrs: {
       #  patches = oldAttrs.patches or [] ++ [ ./wlroots-reversed.patch ];
       #});
@@ -212,7 +194,7 @@
 
         tpm-fido
         pinentry-gnome3
-        windsurf-wrapper
+        windsurf
         # }}}
 
         # {{{ Admin (graphical)

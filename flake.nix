@@ -39,12 +39,17 @@
         userFiles;
     in
     {
-      overlays.default = final: prev: {
-        mptcpify = final.callPackage ./pkgs/by-name/mp/mptcpify { };
-        readlinks = final.callPackage ./pkgs/by-name/re/readlinks { };
-        timesheets-prompt = final.callPackage ./pkgs/by-name/ti/timesheets-prompt { };
-        windsurf-wrapper = final.callPackage ./pkgs/by-name/wi/windsurf { };
-      };
+      overlays.default = final: prev:
+        let
+          byNameDir = ./pkgs/by-name;
+          # Scan pkgs/by-name/<shard>/<name>/default.nix
+          shards = builtins.readDir byNameDir;
+          packagesFromShard = shard: _:
+            lib.mapAttrs'
+              (name: _: lib.nameValuePair name (final.callPackage (byNameDir + "/${shard}/${name}") { }))
+              (builtins.readDir (byNameDir + "/${shard}"));
+        in
+        lib.concatMapAttrs packagesFromShard shards;
 
       packages.x86_64-linux = {
         nix = nixpkgs.legacyPackages.x86_64-linux.nix;
