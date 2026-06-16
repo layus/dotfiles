@@ -1,4 +1,4 @@
-{config, pkgs, lib, ...}:
+{ config, pkgs, lib, ... }:
 
 let
   myPhp = pkgs.php.buildEnv {
@@ -12,7 +12,8 @@ let
       cgi.fix_pathinfo = 1
     '';
   };
-in {
+in
+{
   systemd.services.phpfpm-lighttpd.serviceConfig.ProtectHome = lib.mkForce false;
   services.phpfpm.pools."lighttpd" = {
     phpPackage = myPhp;
@@ -39,11 +40,11 @@ in {
 
   services.lighttpd = {
     enable = true;
-    document-root = "/nonexistent" ; # Serve the current directory
+    document-root = "/nonexistent"; # Serve the current directory
 
     mod_status = true;
     enableModules = [
-      "mod_auth"  # Simple auth scheme
+      "mod_auth" # Simple auth scheme
       "mod_authn_file"
       "mod_fastcgi"
       "mod_openssl"

@@ -5,7 +5,8 @@
 
 {
   imports =
-    [ (nixpkgs + "/nixos/modules/installer/scan/not-detected.nix")
+    [
+      (nixpkgs + "/nixos/modules/installer/scan/not-detected.nix")
     ];
 
   boot.initrd.availableKernelModules = [ "ahci" ];
@@ -14,14 +15,16 @@
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
-    { device = "/dev/disk/by-uuid/d053db35-a248-4faf-bc7d-06c7865d882f";
+    {
+      device = "/dev/disk/by-uuid/d053db35-a248-4faf-bc7d-06c7865d882f";
       fsType = "ext4";
     };
 
   boot.initrd.luks.devices."cryptrot".device = "/dev/disk/by-uuid/6514eb1d-dbb4-4273-8ad3-962a05b12c61";
 
   fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/cdf27ccf-6145-4a18-82e5-636a6d300521";
+    {
+      device = "/dev/disk/by-uuid/cdf27ccf-6145-4a18-82e5-636a6d300521";
       fsType = "ext4";
     };
 

@@ -7,7 +7,8 @@
 {
 
   imports =
-    [ # Include the results of the hardware scan.
+    [
+      # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ./webdav.nix
       #./dwarffs.nix
@@ -34,7 +35,7 @@
       #ControllerMode = "bredr";
     };
   };
- 
+
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -100,7 +101,7 @@
   # Enable the OpenSSH daemon.
   services.openssh = {
     enable = true;
-    ports = [22 3248];
+    ports = [ 22 3248 ];
     permitRootLogin = "no";
     passwordAuthentication = false;
     forwardX11 = true;
@@ -160,15 +161,16 @@
   users.extraUsers.gmaudoux = {
     isNormalUser = true;
     uid = 1000;
-    extraGroups = [ 
-      "wheel"           # sudo super-user
-      "networkmanager"  # set system-wide networks
-      "docker"          # start and use docker
-      "wireshark"       # root-less network captures
-      "vboxusers"       # ? vbox-related
-      "sway"            # Start Sway
-      "adbusers"        # ???
-      "input" "video"   # brightness and leds control (brightnessctl)
+    extraGroups = [
+      "wheel" # sudo super-user
+      "networkmanager" # set system-wide networks
+      "docker" # start and use docker
+      "wireshark" # root-less network captures
+      "vboxusers" # ? vbox-related
+      "sway" # Start Sway
+      "adbusers" # ???
+      "input"
+      "video" # brightness and leds control (brightnessctl)
     ];
     description = "Guillaume Maudoux";
     home = "/home/gmaudoux";
@@ -225,7 +227,7 @@
 
   #services.jenkins.enable = true;
   /*
-  services.hydra = {
+    services.hydra = {
     enable = true;
     hydraURL = "http://localhost";
     notificationSender = "layus.on@gmail.com";
@@ -243,10 +245,10 @@
     enable = true;
     #[Unit]
     description = "Reverse SSH to sto-lat";
-    after = ["network.target"];
-    requires = ["network.target"];
+    after = [ "network.target" ];
+    requires = [ "network.target" ];
     #[Install]
-    wantedBy = ["multi-user.target"];
+    wantedBy = [ "multi-user.target" ];
     #[Service]
     serviceConfig = {
       ExecStart = "${pkgs.openssh}/bin/ssh -NTC -o ServerAliveInterval=60 -o ExitOnForwardFailure=yes -i /home/gmaudoux/.ssh/misc/passwordless_ecdsa -R 3250:localhost:3248 maudoux.be testconnect";

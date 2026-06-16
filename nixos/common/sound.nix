@@ -1,4 +1,4 @@
-{config, pkgs, lib, ...}:
+{ config, pkgs, lib, ... }:
 {
   # needed because bluetooth chipset is not broadcom, and we need at least 5.12
   # latest is 5.13 as of now (aout 2021)

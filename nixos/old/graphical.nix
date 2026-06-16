@@ -14,24 +14,24 @@
     # TODO: How much of this needs to be installed as root ?
     extraPackages = with pkgs; [
       xwayland
-      swaybg   # required by sway for controlling desktop wallpaper
+      swaybg # required by sway for controlling desktop wallpaper
       swayidle # used for controlling idle timeouts and triggers (screen locking, etc)
       swaylock # used for locking Wayland sessions
 
-      waybar        # polybar-alike
+      waybar # polybar-alike
       #i3status-rust # simpler bar written in Rust
 
-      gebaar-libinput  # libinput gestures utility
+      gebaar-libinput # libinput gestures utility
       #glpaper          # GL shaders as wallpaper
-      grim             # screen image capture
-      kanshi           # dynamic display configuration helper
-      mako             # notification daemon
+      grim # screen image capture
+      kanshi # dynamic display configuration helper
+      mako # notification daemon
       #oguri            # animated background utility
       #redshift-wayland # patched to work with wayland gamma protocol
-      slurp            # screen area selection tool
-      waypipe          # network transparency for Wayland
+      slurp # screen area selection tool
+      waypipe # network transparency for Wayland
       #wf-recorder      # wayland screenrecorder
-      wl-clipboard     # clipboard CLI utilities
+      wl-clipboard # clipboard CLI utilities
       #wtype            # xdotool, but for wayland
       wdisplays
 
@@ -51,7 +51,7 @@
     enable = true;
     autorun = false;
     exportConfiguration = true;
-  
+
     videoDrivers = [ "intel" ];
     #deviceSection = ''
     #  Option "DRI" "2"
@@ -63,7 +63,7 @@
     # Touchpad
     #multitouch.invertScroll = false;
     libinput.touchpad.naturalScrolling = false;
-  
+
     # Graphical environemnts
     desktopManager = {
       gnome.enable = true;

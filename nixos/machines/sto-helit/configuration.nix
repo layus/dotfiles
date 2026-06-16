@@ -69,7 +69,7 @@
     webroot = "/var/lib/acme/maudoux";
     group = config.users.users.lighttpd.group;
     extraDomainNames = [ "marie-guillaume.maudoux.be" ];
-    reloadServices = ["lighttpd" "radicale"];
+    reloadServices = [ "lighttpd" "radicale" ];
     postRun = ''
       # set permission on dir
       ${pkgs.acl}/bin/setfacl -m \

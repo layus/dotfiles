@@ -2,7 +2,8 @@
 let
   port = 51820;
 
-in {
+in
+{
   # enable NAT
   networking.nat = {
     enable = true;
@@ -30,11 +31,13 @@ in {
       generatePrivateKeyFile = true;
 
       peers = [
-        { # Guillaume @ Ankh-Morpork
+        {
+          # Guillaume @ Ankh-Morpork
           publicKey = "TLe4LS3gmSufuelXSErkO/iTj8zrMv/SgZGFXmCALwU=";
           allowedIPs = [ "10.100.0.10/32" ];
         }
-        { # Guillaume @ Fairphone3
+        {
+          # Guillaume @ Fairphone3
           publicKey = "LDAMmPt3aYAA2C61sZwQIIYMyCy62yZbaJkEle8mkhg=";
           allowedIPs = [ "10.100.0.11/32" ];
         }

@@ -2,8 +2,8 @@
 {
 
   # enable davfs2
-  users.groups .davfs2.gid   = config.ids.gids.davfs2;
-  users.users  .davfs2.uid   = config.ids.uids.davfs2;
+  users.groups .davfs2.gid = config.ids.gids.davfs2;
+  users.users  .davfs2.uid = config.ids.uids.davfs2;
   users.users  .davfs2.group = "davfs2";
 
   environment.systemPackages = [ pkgs.davfs2 ];

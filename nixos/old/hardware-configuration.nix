@@ -5,10 +5,11 @@
 
 {
   imports =
-    [ <nixpkgs/nixos/modules/installer/scan/not-detected.nix>
+    [
+      <nixpkgs/nixos/modules/installer/scan/not-detected.nix>
     ];
 
-  boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "ahci" "usb_storage" "sd_mod" "sdhci_pci"];
+  boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "ahci" "usb_storage" "sd_mod" "sdhci_pci" ];
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
 
@@ -17,12 +18,14 @@
   boot.kernel.sysctl = { "vm.swappiness" = 1; };
 
   fileSystems."/" =
-    { device = "/dev/disk/by-uuid/a857356c-5021-476a-8394-6fc4ee0763cb";
+    {
+      device = "/dev/disk/by-uuid/a857356c-5021-476a-8394-6fc4ee0763cb";
       fsType = "ext4";
     };
 
   fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/00D8-FE33";
+    {
+      device = "/dev/disk/by-uuid/00D8-FE33";
       fsType = "vfat";
     };
 
