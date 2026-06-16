@@ -2,26 +2,7 @@
 
 let
   cfg = config.services.mptcpify;
-
-  bpfObject = pkgs.stdenvNoCC.mkDerivation {
-    pname = "mptcpify-bpf";
-    version = "0.1.0";
-
-    src = ../../home/pkgs/by-name/mp/mptcpify/mptcpify.c;
-    dontUnpack = true;
-
-    nativeBuildInputs = [ pkgs.llvmPackages.clang-unwrapped ];
-
-    buildPhase = ''
-      clang -target bpf -O2 -g \
-        -I${pkgs.libbpf}/include \
-        -c $src -o mptcpify.bpf.o
-    '';
-
-    installPhase = ''
-      install -Dm644 mptcpify.bpf.o $out/lib/bpf/mptcpify.bpf.o
-    '';
-  };
+  mptcpify = pkgs.callPackage ../../pkgs/by-name/mp/mptcpify { };
 in
 {
   options.services.mptcpify = {
@@ -38,8 +19,8 @@ in
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
-        ExecStart = "${pkgs.bpftools}/bin/bpftool prog load ${bpfObject}/lib/bpf/mptcpify.bpf.o /sys/fs/bpf/mptcpify autoattach";
-        ExecStop = "${pkgs.coreutils}/bin/rm -f /sys/fs/bpf/mptcpify";
+        ExecStart = "${mptcpify}/bin/mptcpify start";
+        ExecStop = "${mptcpify}/bin/mptcpify stop";
       };
     };
   };

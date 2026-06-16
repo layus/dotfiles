@@ -3,7 +3,7 @@
 let
   cfg = config.services.nix-update;
 
-  nixUpdatePkg = pkgs.callPackage ../pkgs/by-name/ni/nix-update {
+  nixUpdatePkg = pkgs.callPackage ../../pkgs/by-name/ni/nix-update {
     flakeDir = cfg.flakeDir;
   };
 

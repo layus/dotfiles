@@ -28,7 +28,7 @@ import sys
 from pathlib import Path
 
 FLAKE_DIR = Path(__file__).resolve().parent
-NIX_UPDATE_LIB = FLAKE_DIR / "home/pkgs/by-name/ni/nix-update/nix_update_lib.py"
+NIX_UPDATE_LIB = FLAKE_DIR / "pkgs/by-name/ni/nix-update/nix_update_lib.py"
 
 
 def check_nix_version() -> bool:
