@@ -4,7 +4,7 @@ let
   keychainInit = ''
     # Keychain (only when no forwarded agent)
     if [ -z "$SSH_AUTH_SOCK" ]; then
-        eval $( keychain --eval --systemd --quiet ~/.ssh/*_{rsa,ecdsa,ed25519} )
+        eval $(keychain --eval --systemd --quiet $(grep -rl "PRIVATE KEY" ~/.ssh/ 2>/dev/null))
     fi
   '';
 in
