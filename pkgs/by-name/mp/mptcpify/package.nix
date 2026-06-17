@@ -31,27 +31,23 @@ writeShellApplication {
     fi
 
     BPF_OBJ="${bpfObject}/lib/bpf/mptcpify.bpf.o"
-    PIN_DIR="/sys/fs/bpf/mptcpify"
+    PIN_PATH="/sys/fs/bpf/mptcpify"
 
     case "''${1:-}" in
       start)
         echo "Loading mptcpify BPF program..."
-        mkdir -p "$PIN_DIR"
-        bpftool prog loadall "$BPF_OBJ" "$PIN_DIR" autoattach
+        bpftool prog load "$BPF_OBJ" "$PIN_PATH" autoattach
         echo "mptcpify active: TCP sockets will be upgraded to MPTCP"
         ;;
       stop)
         echo "Removing mptcpify BPF program..."
-        rm -rf "$PIN_DIR"
+        rm -f "$PIN_PATH"
         echo "mptcpify removed"
         ;;
       status)
-        if [ -d "$PIN_DIR" ]; then
+        if [ -e "$PIN_PATH" ]; then
           echo "mptcpify is active"
-          bpftool prog show pinned "$PIN_DIR/mptcpify" 2>/dev/null || true
-          for f in "$PIN_DIR"/*link*; do
-            [ -e "$f" ] && bpftool link show pinned "$f" 2>/dev/null
-          done
+          bpftool link show pinned "$PIN_PATH"
         else
           echo "mptcpify is not active"
         fi
