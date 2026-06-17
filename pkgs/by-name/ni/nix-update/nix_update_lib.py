@@ -80,9 +80,9 @@ class App:
         self.user = os.environ.get("USER", "")
         self.uid = os.getuid()
 
-        runtime_dir = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{self.uid}"))
-        self.state_dir = runtime_dir
-        self.log_dir = Path(os.environ.get("XDG_STATE_HOME", str(Path.home() / ".local/state"))) / "nix-update"
+        self.state_dir = Path(os.environ.get("XDG_STATE_HOME", str(Path.home() / ".local/state"))) / "nix-update"
+        self.state_dir.mkdir(parents=True, exist_ok=True)
+        self.log_dir = self.state_dir
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
         self.override_inputs = []
@@ -539,11 +539,20 @@ class App:
 
         new_status = "current"
         if target == "os":
+            # Set the system profile so the bootloader picks up the new generation.
+            print(f"Setting system profile to {result}")
+            rc = subprocess.run(
+                ["sudo", "nix-env", "--profile", "/nix/var/nix/profiles/system", "--set", result],
+                check=False,
+            ).returncode
+            if rc != 0:
+                print(f"{target}: failed to set system profile.")
+                return rc
             if do_switch:
-                print(f"Running: prebuilt switch from {result}")
+                print(f"Running: switch-to-configuration switch")
                 rc = subprocess.run(["sudo", f"{result}/bin/switch-to-configuration", "switch"], check=False).returncode
             else:
-                print(f"Running: prebuilt boot from {result}")
+                print(f"Running: switch-to-configuration boot")
                 rc = subprocess.run(["sudo", f"{result}/bin/switch-to-configuration", "boot"], check=False).returncode
                 new_status = "pending"
         else:

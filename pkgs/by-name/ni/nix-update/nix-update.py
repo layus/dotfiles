@@ -305,8 +305,9 @@ class App(CoreApp):
             ctx = self.resolve_target(target)
             state = self.read_state(ctx)
             if state is None:
-                continue
-            status = state.get("status", "unknown")
+                status = "unknown"
+            else:
+                status = state.get("status", "unknown")
             icon = self._status_icon(status)
             label = "❄" if target == "os" else "🏠"
             parts.append(f"{label}{icon} {status}")
