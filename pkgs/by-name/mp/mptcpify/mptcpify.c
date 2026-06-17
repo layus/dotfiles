@@ -22,11 +22,12 @@ enum bpf_attach_type { __MAX_BPF_ATTACH_TYPE };
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 
-#define AF_INET       2
-#define AF_INET6      10
-#define SOCK_STREAM   1
-#define IPPROTO_TCP   6
-#define IPPROTO_MPTCP 262
+#define AF_INET        2
+#define AF_INET6       10
+#define SOCK_STREAM    1
+#define SOCK_TYPE_MASK 0xf
+#define IPPROTO_TCP    6
+#define IPPROTO_MPTCP  262
 
 char _license[] SEC("license") = "GPL";
 
@@ -34,7 +35,7 @@ SEC("fmod_ret/update_socket_protocol")
 int BPF_PROG(mptcpify, int family, int type, int protocol)
 {
 	if ((family == AF_INET || family == AF_INET6) &&
-	    type == SOCK_STREAM &&
+	    (type & SOCK_TYPE_MASK) == SOCK_STREAM &&
 	    (!protocol || protocol == IPPROTO_TCP)) {
 		return IPPROTO_MPTCP;
 	}
