@@ -45,16 +45,21 @@ in
     }
 
     (lib.mkIf (cfg.targets != [ ]) {
-      programs.zsh.loginExtra = ''
-        # nix-update MOTD
+      home.file.".ssh/rc".text = ''
+        #!/bin/sh
+        # X11 forwarding (sshd skips default xauth when ~/.ssh/rc exists)
+        if read proto cookie && [ -n "$DISPLAY" ]; then
+          if [ "$(echo "$DISPLAY" | cut -c1-10)" = "localhost:" ]; then
+            echo "add unix:$(echo "$DISPLAY" | cut -c11-) $proto $cookie"
+          else
+            echo "add $DISPLAY $proto $cookie"
+          fi | xauth -q -
+        fi
+
         uptime 2>/dev/null
         ${nixUpdatePkg}/bin/nix-update ${motdScope} motd 2>/dev/null
       '';
-      programs.bash.profileExtra = ''
-        # nix-update MOTD
-        uptime 2>/dev/null
-        ${nixUpdatePkg}/bin/nix-update ${motdScope} motd 2>/dev/null
-      '';
+      home.file.".ssh/rc".executable = true;
     })
 
     (lib.mkIf hasNixos {
