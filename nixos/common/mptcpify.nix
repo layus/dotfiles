@@ -89,11 +89,11 @@ in
     };
 
     # Conntrack does not understand MPTCP subflows (MP_JOIN) and marks them
-    # INVALID, which the NixOS firewall then drops.  Simply accept INVALID
-    # TCP packets so that MP_JOIN handshakes are not killed.  The TCP stack
-    # will RST truly invalid connections on its own.
+    # INVALID, which the NixOS firewall then drops.  Accept both INVALID and
+    # UNTRACKED TCP packets so that MP_JOIN handshakes complete.  The TCP
+    # stack will RST truly invalid connections on its own.
     networking.firewall.extraCommands = lib.mkIf cfg.multihoming ''
-      iptables -I nixos-fw 3 -p tcp -m conntrack --ctstate INVALID -j nixos-fw-accept
+      iptables -I nixos-fw 3 -p tcp -m conntrack --ctstate INVALID,UNTRACKED -j nixos-fw-accept
     '';
   };
 }
