@@ -460,7 +460,7 @@ let
 
     bindsym $mod+r mode "resize"
 
-    output * bg #6699cc solid_color
+    output * bg ~/.config/sway/background.png fill #6699cc
 
     input * {
         tap enabled
