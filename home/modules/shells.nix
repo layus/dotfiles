@@ -1,8 +1,18 @@
 { config, pkgs, lib, ... }:
 
 let
-  keychainInit = ''
-    # Keychain (only when no forwarded agent)
+  # For login shells, we want the ssh-agent to be created.
+  # It will be seeded later.
+  startKeychain = ''
+    # Start the agent, deferring loading keys
+    if [ -z "$SSH_AUTH_SOCK" ]; then
+        eval $(keychain --eval --systemd --quiet --noask)
+    fi
+  '';
+  # For interactive shells, we want the ssh-agent to be seeded with keys.
+  # Presumably, an interactive shell is the right place to ask the user for credentials.
+  seedKeychain = ''
+    # Load keys into the ssh agent, starting it if need be
     if [ -z "$SSH_AUTH_SOCK" ]; then
         eval $(keychain --eval --systemd --quiet $(grep -rl "PRIVATE KEY" ~/.ssh/ 2>/dev/null))
     fi
@@ -12,11 +22,14 @@ in
   config = {
     # Bash
     programs.bash.enable = true;
+    programs.bash.profileExtra = ''
+      ${startKeychain}
+    '';
     programs.bash.initExtra = ''
       [ -f ~/.bash_aliases ] && source ~/.bash_aliases
       [ -f ~/.bash_aliases.git ] && source ~/.bash_aliases.git
 
-      ${keychainInit}
+      ${seedKeychain}
     '';
 
     # Direnv
@@ -32,6 +45,9 @@ in
     programs.zsh.enable = true;
     programs.zsh.autocd = true;
     programs.zsh.defaultKeymap = "viins";
+    programs.zsh.profileExtra = ''
+      ${startKeychain}
+    '';
 
     programs.zsh.history.path = "${config.home.homeDirectory}/.histfile";
     programs.zsh.history.size = 100000;
@@ -165,8 +181,7 @@ in
             echo "''${envs:+"($envs)"}"
         }
 
-        # Keychain
-        ${keychainInit}
+        ${seedKeychain}
       '')
     ];
   };
