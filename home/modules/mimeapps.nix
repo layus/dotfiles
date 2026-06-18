@@ -30,6 +30,11 @@
       "x-scheme-handler/https" = "firefox.desktop";
       "x-scheme-handler/irc" = "hexchat.desktop";
       "x-scheme-handler/mailto" = "thunderbird.desktop";
+      "x-scheme-handler/mid" = "thunderbird.desktop";
+      "x-scheme-handler/news" = "thunderbird.desktop";
+      "x-scheme-handler/snews" = "thunderbird.desktop";
+      "x-scheme-handler/webcal" = "thunderbird.desktop";
+      "x-scheme-handler/webcals" = "thunderbird.desktop";
       "x-scheme-handler/unknown" = "firefox.desktop";
     };
     associations.added = {
