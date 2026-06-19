@@ -24,34 +24,24 @@ in
   ];
 
   # For each users.users that are isNormalUser, enable
-  systemd.services = (
-    lib.listToAttrs
-      (lib.map
-        (username: lib.nameValuePair
-          "user-sleep@${username}"
-          { wantedBy = [ "machines.target" ]; }
-        )
-        normalUsers
-      )
-  ) // {
-    "user-sleep@" = {
-      description = "Stop user-level unit for user %i";
+  systemd.services."user-sleep@" = {
+    description = "Stop user-level unit for user %i";
 
-      # Ensures the service runs only when a string parameter is provided
-      unitConfig = {
-        ConditionNull = false;
-        Before = [ "sleep.target" ];
-        StopWhenUnneeded = true;
-      };
+    # Ensures the service runs only when a string parameter is provided
+    unitConfig = {
+      ConditionNull = false;
+      Before = [ "sleep.target" ];
+      StopWhenUnneeded = true;
+    };
 
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = false;
-        # Uses systemctl --machine to target the specific user's systemd manager (%i)
-        ExecStart = "${pkgs.systemd}/bin/systemctl --machine=%i@ --user start --wait sleep.target";
-        ExecStop = "${pkgs.systemd}/bin/systemctl --machine=%i@ --user stop --wait sleep.target";
-        RequiredBy = [ "sleep.target" ];
-      };
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = false;
+      # Uses systemctl --machine to target the specific user's systemd manager (%i)
+      ExecStart = "${pkgs.systemd}/bin/systemctl --machine=%i@ --user start --wait sleep.target";
+      ExecStop = "${pkgs.systemd}/bin/systemctl --machine=%i@ --user stop --wait sleep.target";
+      RequiredBy = [ "sleep.target" ];
+      WantedBy = [ "machines.target" ];
     };
   };
 
