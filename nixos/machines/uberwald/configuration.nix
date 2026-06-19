@@ -22,6 +22,7 @@ in
     ../../common/brother.nix
     ../../common/tpm.nix
     ../../common/mptcpify.nix
+    ../../common/sleep.nix
     #./fail.nix
   ];
 
