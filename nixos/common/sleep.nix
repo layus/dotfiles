@@ -17,7 +17,7 @@ in
       mkdir -p $out/etc/systemd/system/
       ${
         lib.concatMapStrings (name: ''
-          ln -s /etc/systemd/system/systemd-nspawn@.service $out/etc/systemd/system/systemd-nspawn@${name}.service
+          ln -s /etc/systemd/system/user-sleep@.service $out/etc/systemd/system/user-sleep@${name}.service
         '') normalUsers
       }
     '')
