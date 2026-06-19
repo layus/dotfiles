@@ -1,15 +1,38 @@
 { config, pkgs, lib, ... }:
-let normalUsers = lib.filterAttrs (name: user: user.isNormalUser) config.users.users;
+let
+  normalUsers = lib.attrNames
+    (lib.filterAttrs
+      (name: user: user.isNormalUser)
+      config.users.users
+    );
 in
 {
+
+  systemd.packages = [
+    (pkgs.runCommandNoCC "machines"
+      {
+        preferLocalBuild = true;
+        allowSubstitutes = false;
+      } ''
+      mkdir -p $out/etc/systemd/system/
+      ${
+        lib.concatMapStrings (name: ''
+          ln -s /etc/systemd/system/systemd-nspawn@.service $out/etc/systemd/system/systemd-nspawn@${name}.service
+        '') normalUsers
+      }
+    '')
+  ];
+
   # For each users.users that are isNormalUser, enable
   systemd.services = (
-    lib.mapAttrs'
-      (username: _: lib.nameValuePair
-        "user-sleep@${username}"
-        { enable = true; }
+    lib.listToAttrs
+      (lib.map
+        (username: lib.nameValuePair
+          "user-sleep@${username}"
+          { wantedBy = [ "machines.target" ]; }
+        )
+        normalUsers
       )
-      normalUsers
   ) // {
     "user-sleep@" = {
       description = "Stop user-level unit for user %i";
