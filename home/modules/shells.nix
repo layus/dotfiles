@@ -16,10 +16,18 @@ let
     if [ -z "$SSH_AUTH_SOCK" ]; then
         eval $(keychain --eval --systemd --quiet $(grep -rl "PRIVATE KEY" ~/.ssh/ 2>/dev/null))
     fi
+    # Signal systemd that keys are loaded so dependent services can start
+    systemctl --user start ssh-keys-loaded.target 2>/dev/null || true
   '';
 in
 {
   config = {
+    systemd.user.targets.ssh-keys-loaded = {
+      Unit = {
+        Description = "SSH keys loaded into agent";
+      };
+    };
+
     # Bash
     programs.bash.enable = true;
     programs.bash.profileExtra = ''
