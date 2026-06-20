@@ -8,40 +8,33 @@ let
 in
 {
 
+  # Use symlinks to instantiate user-sleep@.service for each normal user,
+  # mimicking what systemd does when resolving template instances.
+  # sleep.target.requires/user-sleep@<name>.service -> ../user-sleep@.service
   systemd.packages = [
-    (pkgs.runCommandNoCC "machines"
+    (pkgs.runCommand "user-sleep-instances"
       {
         preferLocalBuild = true;
         allowSubstitutes = false;
       } ''
-      mkdir -p $out/etc/systemd/system/
-      ${
-        lib.concatMapStrings (name: ''
-          ln -s /etc/systemd/system/user-sleep@.service $out/etc/systemd/system/user-sleep@${name}.service
-        '') normalUsers
-      }
+      mkdir -p $out/etc/systemd/system/sleep.target.requires
+      ${lib.concatMapStrings (name: ''
+        ln -s ../user-sleep@.service $out/etc/systemd/system/sleep.target.requires/user-sleep@${name}.service
+      '') normalUsers}
     '')
   ];
 
-  # For each users.users that are isNormalUser, enable
   systemd.services."user-sleep@" = {
     description = "Stop user-level unit for user %i";
-
-    # Ensures the service runs only when a string parameter is provided
     unitConfig = {
-      ConditionNull = false;
       Before = [ "sleep.target" ];
       StopWhenUnneeded = true;
     };
-
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = false;
-      # Uses systemctl --machine to target the specific user's systemd manager (%i)
-      ExecStart = "${pkgs.systemd}/bin/systemctl --machine=%i@ --user start --wait sleep.target";
-      ExecStop = "${pkgs.systemd}/bin/systemctl --machine=%i@ --user stop --wait sleep.target";
-      RequiredBy = [ "sleep.target" ];
-      WantedBy = [ "machines.target" ];
+      ExecStart = "${pkgs.systemd}/bin/systemctl --machine=%i@.host --user start sleep.target";
+      ExecStop = "${pkgs.systemd}/bin/systemctl --machine=%i@.host --user stop sleep.target";
     };
   };
 
@@ -58,8 +51,8 @@ in
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${pkgs.coreutils}/bin/echo 'Warning: System is going to sleep soon!'";
-      WantedBy = [ "sleep.target" ];
     };
+    wantedBy = [ "sleep.target" ];
   };
 
   systemd.user.services.wakeup = {
@@ -70,8 +63,8 @@ in
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${pkgs.coreutils}/bin/echo 'System is waking up from sleep!'";
-      WantedBy = [ "sleep.target" ];
     };
+    wantedBy = [ "sleep.target" ];
   };
 
 }
