@@ -17,7 +17,10 @@ let
         eval $(keychain --eval --systemd --quiet $(grep -rl "PRIVATE KEY" ~/.ssh/ 2>/dev/null))
     fi
     # Signal systemd that keys are loaded so dependent services can start
-    systemctl --user start ssh-keys-loaded.target 2>/dev/null || true
+    # Only start the target if at least one key is actually loaded
+    if ssh-add -l >/dev/null 2>&1; then
+        systemctl --user start ssh-keys-loaded.target 2>/dev/null || true
+    fi
   '';
 in
 {
