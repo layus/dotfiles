@@ -1,77 +1,9 @@
 { config, lib, pkgs, ... }:
 
 {
-  nixpkgs.overlays = [
-    (self: super: {
-
-      # now on by default
-      #firefox = super.wrapFirefox super.firefox-unwrapped { forceWayland = true; };
-
-      #thunderbird = super.thunderbird-78;
-
-      #jotta-cli = super.jotta-cli.overrideAttrs (oldAttrs: rec {
-      #  arch = "amd64";
-      #  version = "0.12.51202";
-      #  pname = "jotta-cli";
-      #  name = "${pname}-${version}";
-      #  src = super.fetchzip {
-      #    url = "https://repo.jotta.us/archives/linux/amd64/jotta-cli-${version}_linux_amd64.tar.gz";
-      #    hash = "sha256-B7Rn/0hFVUsEK2Wo8KbqAnzOwQmMKkAssfmaN3dPAUY=";
-      #    stripRoot = false;
-      #  };
-      #});
-
-      factorio = super.factorio.overrideAttrs (oldAttrs: rec {
-        version = "2.0.32";
-        pname = "factorio";
-        name = "${pname}-${version}";
-        src = super.requireFile {
-          url = "https://dl.factorio.com/releases/factorio_alpha_x64_${version}.tar.xz";
-          hash = "sha256:0xrx5snnsln4az47h7vxamh0zgsf8lcrdxm01qh5w0b5svcwmcai";
-        };
-      });
-
-      systembus-notify = super.systembus-notify.overrideAttrs (oldAttrs: {
-        patches = oldAttrs.patches or [ ] ++ [ ./systembus-notify.patch ];
-      });
-
-      # Inline, clickable action buttons drawn beneath notifications.
-      mako = super.mako.overrideAttrs (oldAttrs: {
-        patches = oldAttrs.patches or [ ] ++ [ ./inline-action-buttons.patch ];
-      });
-
-      #wlroots = super.wlroots_0_16.overrideAttrs (oldAttrs: {
-      #  patches = oldAttrs.patches or [] ++ [ ./wlroots-reversed.patch ];
-      #});
-
-
-
-      slurp = assert builtins.compareVersions "1.3.2" super.slurp.version <= 0;
-        super.slurp.overrideAttrs (oldAttrs: {
-          #patches = oldAttrs.patches or [] ++ [(
-          #  super.fetchpatch {
-          #    url = "https://patch-diff.githubusercontent.com/raw/emersion/slurp/pull/77.patch";
-          #    sha256 = "sha256-tXB9SbYucXFxVpwlh2G+GC/f7Ihebhe00Oqfd0F89H4=";
-          #  }
-          #)];
-          src = super.fetchFromGitHub {
-            #owner = "emersion";
-            owner = "wisp3rwind";
-            repo = "slurp";
-            rev = "fixed_aspect_ratio";
-            #hash = "sha256-4/J9YHDf7V9YzT2CrvHy8WlLZpuGixFEcUo9mW4h7Nc=";
-            #hash = "sha256-3OVHZl0NhzOlbiGR6k5NnBhWBDDTj94ccZg99ZsGIV0=";
-            hash = "sha256-9x+6nb+QnBsbndX9GpJYvi1czRkZ9qArLgs4a3gzHhQ=";
-          };
-        });
-
-      slack = super.slack.overrideAttrs (oldAttrs: {
-        installPhase = lib.replaceStrings [ "--suffix PATH" ] [ "--suffix XDG_CURRENT_DESKTOP : GNOME \\\n  --suffix PATH" ] oldAttrs.installPhase;
-      });
-    })
-  ];
-
-
+  # Package overrides now live in pkgs/overlays/default.nix, composed into the
+  # flake's overlays.default so they're visible to NixOS, home-manager, and
+  # anything built with super.callPackage later in the chain (e.g. sway-config).
 
   #all = super.buildEnv {
   #  # This creates an indirection.

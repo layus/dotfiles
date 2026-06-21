@@ -39,17 +39,23 @@
         userFiles;
     in
     {
-      overlays.default = final: prev:
-        let
-          byNameDir = ./pkgs/by-name;
-          # Scan pkgs/by-name/<shard>/<name>/package.nix (nixpkgs convention)
-          shards = builtins.readDir byNameDir;
-          packagesFromShard = shard: _:
-            lib.mapAttrs'
-              (name: _: lib.nameValuePair name (final.callPackage (byNameDir + "/${shard}/${name}/package.nix") { }))
-              (builtins.readDir (byNameDir + "/${shard}"));
-        in
-        lib.concatMapAttrs packagesFromShard shards;
+      overlays.default = lib.composeManyExtensions [
+        # New packages from pkgs/by-name/<shard>/<name>/package.nix (nixpkgs
+        # convention).
+        (final: prev:
+          let
+            byNameDir = ./pkgs/by-name;
+            shards = builtins.readDir byNameDir;
+            packagesFromShard = shard: _:
+              lib.mapAttrs'
+                (name: _: lib.nameValuePair name (final.callPackage (byNameDir + "/${shard}/${name}/package.nix") { }))
+                (builtins.readDir (byNameDir + "/${shard}"));
+          in
+          lib.concatMapAttrs packagesFromShard shards)
+
+        # Overrides of existing nixpkgs packages.
+        (import ./pkgs/overlays/default.nix)
+      ];
 
       packages.x86_64-linux = {
         nix = nixpkgs.legacyPackages.x86_64-linux.nix;
