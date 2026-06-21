@@ -35,6 +35,11 @@
         patches = oldAttrs.patches or [ ] ++ [ ./systembus-notify.patch ];
       });
 
+      # Inline, clickable action buttons drawn beneath notifications.
+      mako = super.mako.overrideAttrs (oldAttrs: {
+        patches = oldAttrs.patches or [ ] ++ [ ./inline-action-buttons.patch ];
+      });
+
       #wlroots = super.wlroots_0_16.overrideAttrs (oldAttrs: {
       #  patches = oldAttrs.patches or [] ++ [ ./wlroots-reversed.patch ];
       #});

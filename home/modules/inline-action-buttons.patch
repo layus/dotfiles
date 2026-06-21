@@ -1,0 +1,347 @@
+diff --git a/config.c b/config.c
+index 817f7e9..3141b3c 100644
+--- a/config.c
++++ b/config.c
+@@ -129,8 +129,10 @@ void init_default_style(struct mako_style *style) {
+ 	style->anchor =
+ 		ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+ 
+-	style->button_bindings.left.action = MAKO_BINDING_INVOKE_ACTION;
+-	style->button_bindings.left.action_name = strdup(DEFAULT_ACTION_KEY);
++	// Left click does nothing by default: action buttons are drawn instead and
++	// handle their own clicks. Binding the left button to invoke-default-action
++	// restores the old click-to-invoke behaviour and suppresses the buttons.
++	style->button_bindings.left.action = MAKO_BINDING_NONE;
+ 	style->button_bindings.right.action = MAKO_BINDING_DISMISS;
+ 	style->button_bindings.middle.action = MAKO_BINDING_NONE;
+ 	style->touch_binding.action = MAKO_BINDING_DISMISS;
+diff --git a/doc/mako.5.scd b/doc/mako.5.scd
+index 18eb3fb..ae608cc 100644
+--- a/doc/mako.5.scd
++++ b/doc/mako.5.scd
+@@ -42,9 +42,15 @@ Bindings allow one to perform an action when an event is triggered.
+ Supported options:
+ 
+ *on-button-left*=_action_
+-	Performs the action when the left pointer button is pressed.
++	Performs the action when the left pointer button is pressed, unless the
++	press lands on one of the inline action buttons (see *actions*), in which
++	case that action is invoked instead.
+ 
+-	Default: invoke-default-action
++	Binding this to *invoke-default-action* suppresses the inline action
++	buttons, restoring the older behaviour where the whole notification body
++	activates the default action.
++
++	Default: none
+ 
+ *on-button-middle*=_action_
+ 	Performs the action when the middle pointer button is pressed.
+@@ -240,6 +246,13 @@ Supported actions:
+ 	Applications may request an action to be associated with activating a
+ 	notification. Disabling this will cause mako to ignore these requests.
+ 
++	When enabled, each requested action is drawn as a clickable button beneath
++	the notification body. A left click on a button invokes that action; a
++	right click anywhere on the notification dismisses it (per the default
++	*on-button-right* binding). The buttons are not drawn when *on-button-left*
++	is bound to *invoke-default-action*, since the body itself then activates
++	the default action.
++
+ 	Default: 1
+ 
+ *history*=0|1
+diff --git a/include/notification.h b/include/notification.h
+index 48c96f7..f5a93e1 100644
+--- a/include/notification.h
++++ b/include/notification.h
+@@ -55,6 +55,10 @@ struct mako_action {
+ 	struct wl_list link; // mako_notification::actions
+ 	char *key;
+ 	char *title;
++
++	// Clickable region of this action's button, in surface-local
++	// coordinates. Set during rendering; zeroed when no button is drawn.
++	struct mako_hotspot hotspot;
+ };
+ 
+ enum mako_notification_close_reason {
+@@ -98,6 +102,8 @@ struct mako_notification *get_notification(struct mako_state *state, uint32_t id
+ struct mako_notification *get_tagged_notification(struct mako_state *state, const char *tag, const char *app_name);
+ size_t format_notification(struct mako_notification *notif, const char *format,
+ 	char *buf);
++bool notification_handle_action_at(struct mako_notification *notif,
++	int32_t x, int32_t y, const struct mako_binding_context *ctx);
+ void notification_handle_button(struct mako_notification *notif, uint32_t button,
+ 	enum wl_pointer_button_state state, const struct mako_binding_context *ctx);
+ void notification_handle_touch(struct mako_notification *notif,
+diff --git a/notification.c b/notification.c
+index b556c1d..3232519 100644
+--- a/notification.c
++++ b/notification.c
+@@ -378,6 +378,24 @@ static void try_invoke_action(struct mako_notification *notif,
+ 	close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, true);
+ }
+ 
++bool notification_handle_action_at(struct mako_notification *notif,
++		int32_t x, int32_t y, const struct mako_binding_context *ctx) {
++	if (!notif->style.actions) {
++		return false;
++	}
++	struct mako_action *action;
++	wl_list_for_each(action, &notif->actions, link) {
++		// A zero-sized hotspot means no button is currently drawn for this
++		// action, so it can't be clicked.
++		if (action->hotspot.width > 0 && action->hotspot.height > 0 &&
++				hotspot_at(&action->hotspot, x, y)) {
++			try_invoke_action(notif, action->key, ctx);
++			return true;
++		}
++	}
++	return false;
++}
++
+ void notification_execute_binding(struct mako_notification *notif,
+ 		const struct mako_binding *binding,
+ 		const struct mako_binding_context *ctx) {
+diff --git a/render.c b/render.c
+index 8fed6d8..fc21886 100644
+--- a/render.c
++++ b/render.c
+@@ -1,4 +1,5 @@
+ #include <stdlib.h>
++#include <string.h>
+ #include <cairo/cairo.h>
+ #include <pango/pangocairo.h>
+ 
+@@ -96,9 +97,44 @@ static void set_font_options(cairo_t *cairo, struct mako_surface *surface) {
+ 	cairo_font_options_destroy(fo);
+ }
+ 
++// Spacing (in surface-local pixels) for the inline action buttons.
++#define MAKO_BUTTON_PAD_X 8
++#define MAKO_BUTTON_PAD_Y 3
++#define MAKO_BUTTON_GAP 4
++#define MAKO_BUTTON_RADIUS 4
++
++// Create a Pango layout for a single action button label and report its size
++// in surface-local pixels. Action titles are always plain text, never markup.
++static PangoLayout *create_button_layout(cairo_t *cairo,
++		struct mako_style *style, int scale, const char *label,
++		int *width, int *height) {
++	PangoLayout *layout = pango_cairo_create_layout(cairo);
++	PangoFontDescription *desc =
++		pango_font_description_from_string(style->font);
++	pango_layout_set_font_description(layout, desc);
++	pango_font_description_free(desc);
++
++	PangoAttrList *attrs = pango_attr_list_new();
++	pango_attr_list_insert(attrs, pango_attr_scale_new(scale));
++	pango_layout_set_attributes(layout, attrs);
++	pango_attr_list_unref(attrs);
++
++	pango_layout_set_text(layout, label, -1);
++
++	int w = 0, h = 0;
++	pango_layout_get_pixel_size(layout, &w, &h);
++	if (width != NULL) {
++		*width = w / scale;
++	}
++	if (height != NULL) {
++		*height = h / scale;
++	}
++	return layout;
++}
++
+ static int render_notification(cairo_t *cairo, struct mako_state *state, struct mako_surface *surface,
+ 		struct mako_style *style, const char *text, struct mako_icon *icon, int offset_y, int scale,
+-		struct mako_hotspot *hotspot, int progress) {
++		struct mako_hotspot *hotspot, int progress, struct wl_list *actions) {
+ 	int border_size = 2 * style->border_size;
+ 	int padding_height = style->padding.top + style->padding.bottom;
+ 	int padding_width = style->padding.left + style->padding.right;
+@@ -205,6 +241,71 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct
+ 	if (icon != NULL && ! icon_vertical && icon->height > text_height) {
+ 		notif_height = icon->height + border_size + padding_height;
+ 	}
++
++	// Lay out the clickable action buttons in a horizontal, wrapping row
++	// beneath the body. We compute their geometry (and per-action hotspots)
++	// here so the notification can grow to fit them before the background is
++	// drawn; the buttons themselves are drawn after the text below.
++	// When the left button is bound to invoke-default-action the notification
++	// is meant to be activated by clicking its body, so the inline buttons are
++	// suppressed to avoid two competing ways to trigger an action.
++	bool default_action_bound =
++		style->button_bindings.left.action == MAKO_BINDING_INVOKE_ACTION &&
++		style->button_bindings.left.action_name != NULL &&
++		strcmp(style->button_bindings.left.action_name, DEFAULT_ACTION_KEY) == 0;
++	bool show_actions = actions != NULL && style->actions &&
++		!default_action_bound && !wl_list_empty(actions);
++
++	// Clear stale hotspots so actions without a drawn button can't be clicked.
++	if (actions != NULL) {
++		struct mako_action *action;
++		wl_list_for_each(action, actions, link) {
++			action->hotspot.x = action->hotspot.y = 0;
++			action->hotspot.width = action->hotspot.height = 0;
++		}
++	}
++
++	if (show_actions) {
++		int body_content_height = notif_height - border_size - padding_height;
++		int button_gap_top = style->padding.top;
++
++		int content_left = offset_x + style->border_size + style->padding.left;
++		int avail_width = notif_width - border_size - padding_width;
++		int buttons_top = offset_y + style->border_size + style->padding.top +
++			body_content_height + button_gap_top;
++
++		int cur_x = 0, cur_y = 0, row_height = 0;
++		struct mako_action *action;
++		wl_list_for_each_reverse(action, actions, link) {
++			int label_w = 0, label_h = 0;
++			PangoLayout *blayout = create_button_layout(
++				cairo, style, scale, action->title, &label_w, &label_h);
++			g_object_unref(blayout);
++
++			int bw = label_w + 2 * MAKO_BUTTON_PAD_X + 2 * style->border_size;
++			int bh = label_h + 2 * MAKO_BUTTON_PAD_Y + 2 * style->border_size;
++
++			if (cur_x > 0 && cur_x + bw > avail_width) {
++				// Wrap to a new row.
++				cur_x = 0;
++				cur_y += row_height + MAKO_BUTTON_GAP;
++				row_height = 0;
++			}
++
++			action->hotspot.x = content_left + cur_x;
++			action->hotspot.y = buttons_top + cur_y;
++			action->hotspot.width = bw;
++			action->hotspot.height = bh;
++
++			cur_x += bw + MAKO_BUTTON_GAP;
++			if (bh > row_height) {
++				row_height = bh;
++			}
++		}
++
++		notif_height += button_gap_top + cur_y + row_height;
++	}
++
+ 	if (notif_height < radius_top_left + radius_bottom_left) {
+ 		notif_height = radius_top_left + radius_bottom_left + border_size;
+ 	}
+@@ -311,7 +412,9 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct
+ 
+ 	if (icon_vertical) {
+ 		text_x = (notif_width - text_width - border_size) / 2;
+-	} else {
++	} else if (!show_actions) {
++		// With buttons present the body stays top-aligned so the buttons can
++		// sit directly beneath it.
+ 		text_y = (notif_height - text_height - border_size) / 2;
+ 	}
+ 
+@@ -324,6 +427,42 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct
+ 	pango_cairo_update_layout(cairo, layout);
+ 	pango_cairo_show_layout(cairo, layout);
+ 
++	// Render the action buttons using the geometry computed earlier.
++	if (show_actions) {
++		struct mako_action *action;
++		wl_list_for_each_reverse(action, actions, link) {
++			struct mako_hotspot *hs = &action->hotspot;
++
++			// Button outline. The stroke is centered on the path edge, so
++			// inset by half the border like the notification border.
++			cairo_save(cairo);
++			set_rounded_rectangle(cairo,
++				hs->x + style->border_size / 2.0,
++				hs->y + style->border_size / 2.0,
++				hs->width - style->border_size,
++				hs->height - style->border_size,
++				scale, MAKO_BUTTON_RADIUS, MAKO_BUTTON_RADIUS,
++				MAKO_BUTTON_RADIUS, MAKO_BUTTON_RADIUS);
++			set_source_u32(cairo, style->colors.border);
++			cairo_set_line_width(cairo, style->border_size * scale);
++			cairo_stroke(cairo);
++			cairo_restore(cairo);
++
++			// Button label, centered within the button.
++			int label_w = 0, label_h = 0;
++			PangoLayout *blayout = create_button_layout(
++				cairo, style, scale, action->title, &label_w, &label_h);
++			set_source_u32(cairo, style->colors.text);
++			move_to(cairo,
++				hs->x + (hs->width - label_w) / 2.0,
++				hs->y + (hs->height - label_h) / 2.0,
++				scale);
++			pango_cairo_update_layout(cairo, blayout);
++			pango_cairo_show_layout(cairo, blayout);
++			g_object_unref(blayout);
++		}
++	}
++
+ 	// Update hotspot with calculated location
+ 	if (hotspot != NULL) {
+ 		hotspot->x = offset_x;
+@@ -418,7 +557,7 @@ void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale,
+ 		struct mako_icon *icon = (style->icons) ? notif->icon : NULL;
+ 		int notif_height = render_notification(
+ 			cairo, state, surface, style, text, icon, total_height, scale,
+-			&notif->hotspot, notif->progress);
++			&notif->hotspot, notif->progress, &notif->actions);
+ 		free(text);
+ 
+ 		int notif_width =
+@@ -470,7 +609,7 @@ void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale,
+ 			format_text(style->format, text, format_hidden_text, &data);
+ 
+ 			int hidden_height = render_notification(
+-				cairo, state, surface, style, text, NULL, total_height, scale, NULL, 0);
++				cairo, state, surface, style, text, NULL, total_height, scale, NULL, 0, NULL);
+ 			free(text);
+ 
+ 			total_height += hidden_height;
+diff --git a/wayland.c b/wayland.c
+index 6dd9185..4b7199d 100644
+--- a/wayland.c
++++ b/wayland.c
+@@ -1,5 +1,6 @@
+ #include <assert.h>
+ #include <errno.h>
++#include <linux/input-event-codes.h>
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
+@@ -144,7 +145,12 @@ static void touch_handle_up(void *data, struct wl_touch *wl_touch,
+ 	wl_list_for_each(notif, &state->notifications, link) {
+ 		if (hotspot_at(&notif->hotspot, seat->touch.pts[id].x, seat->touch.pts[id].y)) {
+ 			struct mako_surface *surface = notif->surface;
+-			notification_handle_touch(notif, &ctx);
++			// A tap on an action button invokes that action; otherwise fall
++			// back to the configured touch binding.
++			if (!notification_handle_action_at(notif, seat->touch.pts[id].x,
++					seat->touch.pts[id].y, &ctx)) {
++				notification_handle_touch(notif, &ctx);
++			}
+ 			set_dirty(surface);
+ 			break;
+ 		}
+@@ -260,7 +266,14 @@ static void pointer_handle_button(void *data, struct wl_pointer *wl_pointer,
+ 	wl_list_for_each(notif, &state->notifications, link) {
+ 		if (hotspot_at(&notif->hotspot, seat->pointer.x, seat->pointer.y)) {
+ 			struct mako_surface *surface = notif->surface;
+-			notification_handle_button(notif, button, button_state, &ctx);
++			// A left click on an action button invokes that action; anything
++			// else falls back to the configured button binding.
++			if (!(button == BTN_LEFT &&
++					button_state == WL_POINTER_BUTTON_STATE_PRESSED &&
++					notification_handle_action_at(notif, seat->pointer.x,
++						seat->pointer.y, &ctx))) {
++				notification_handle_button(notif, button, button_state, &ctx);
++			}
+ 			set_dirty(surface);
+ 			break;
+ 		}
