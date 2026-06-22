@@ -1,25 +1,25 @@
 { config, pkgs, lib, ... }:
 
 let
-  # For login shells, we want the ssh-agent to be created.
-  # It will be seeded later.
+  # Login shells: start an ssh-agent (--noask) without loading keys.
+  # Keys are deferred to interactive shells. --systemd exports SSH_AUTH_SOCK
+  # to the user environment so GUI apps inherit it.
   startKeychain = ''
-    # Start the agent, deferring loading keys
     if [ -z "$SSH_AUTH_SOCK" ]; then
         eval $(keychain --eval --systemd --quiet --noask)
     fi
   '';
-  # For interactive shells, we want the ssh-agent to be seeded with keys.
-  # Presumably, an interactive shell is the right place to ask the user for credentials.
+  # Interactive shells: load private keys into the agent.
+  # Guards on `ssh-add -l` (not SSH_AUTH_SOCK) so seeding fires even when
+  # startKeychain already set the socket.
   seedKeychain = ''
-    # Load keys into the ssh agent, starting it if need be
-    if [ -z "$SSH_AUTH_SOCK" ]; then
+    if ! ssh-add -l >/dev/null 2>&1; then
         eval $(keychain --eval --systemd --quiet $(grep -rl "PRIVATE KEY" ~/.ssh/ 2>/dev/null))
-    fi
-    # Signal systemd that keys are loaded so dependent services can start
-    # Only start the target if at least one key is actually loaded
-    if ssh-add -l >/dev/null 2>&1; then
-        systemctl --user start ssh-keys-loaded.target 2>/dev/null || true
+        # Signal systemd that keys are loaded so dependent services can start
+        # Only start the target if at least one key is actually loaded
+        if ssh-add -l >/dev/null 2>&1; then
+            systemctl --user start ssh-keys-loaded.target 2>/dev/null || true
+        fi
     fi
   '';
 in
