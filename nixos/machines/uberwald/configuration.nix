@@ -216,18 +216,24 @@ in
 
   programs.wireshark.enable = true;
 
-  services.greetd = {
-    enable = true;
-    settings = {
-      default_session = {
-        command = ''${config.services.greetd.package}/bin/agreety --cmd "${config.services.greetd.settings.initial_session.command}"'';
-      };
-      initial_session = {
-        command = "/var/run/current-system/sw/bin/zsh -lc 'sway --debug 2> ~/.cache/sway/sway.errlog > ~/.cache/sway/sway.log' ";
-        user = "layus";
+  services.greetd =
+    let
+      sway-session = pkgs.writeShellScript "sway-session" ''
+        sway --debug 2> ~/.cache/sway/sway.errlog > ~/.cache/sway/sway.log
+      '';
+    in
+    {
+      enable = true;
+      settings = {
+        default_session = {
+          command = "${config.services.greetd.package}/bin/agreety --cmd ${sway-session}";
+        };
+        initial_session = {
+          command = "${sway-session}";
+          user = "layus";
+        };
       };
     };
-  };
   systemd.services.greetd.restartIfChanged = false;
   systemd.services.greetd.stopIfChanged = false;
   systemd.services.greetd.reloadIfChanged = true;
