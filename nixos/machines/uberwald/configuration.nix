@@ -261,5 +261,6 @@ in
   services.cockroachdb = {
     enable = true;
     insecure = true;
+    isSingleNode = true;
   };
 }
