@@ -252,4 +252,14 @@ in
   };
 
   services.mptcpify.enable = true;
+
+  services.postgresql = {
+    enable = true;
+    package = pkgs.postgresql_16;
+  };
+
+  services.cockroachdb = {
+    enable = true;
+    insecure = true;
+  };
 }
