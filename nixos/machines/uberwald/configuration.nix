@@ -262,6 +262,9 @@ in
     enable = true;
     insecure = true;
   };
-  systemd.services.cockroachdb.serviceConfig.ExecStart = lib.mkForce
-    "${pkgs.cockroachdb}/bin/cockroach start-single-node --logtostderr --store=/var/lib/cockroachdb --http-addr=localhost:8080 --listen-addr=localhost:26257 --insecure";
+  systemd.services.cockroachdb.serviceConfig = {
+    ExecStart = lib.mkForce
+      "${pkgs.cockroachdb}/bin/cockroach start-single-node --logtostderr --store=/var/lib/cockroachdb --http-addr=localhost:8080 --listen-addr=localhost:26257 --insecure";
+    Type = lib.mkForce "simple";
+  };
 }
