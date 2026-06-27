@@ -172,6 +172,7 @@
       hub
       gh
       tree
+      exa
       ripgrep
       fd
       fzf
