@@ -51,32 +51,12 @@ magenta = "#6c71c4"
 cyan = "#93a1a1"
 white = "#fdf6e3"
 
-[[keyboard.bindings]]
-key = "C"
-mods = "Control|Shift"
-action = "Copy"
-
-[[keyboard.bindings]]
-key = "V"
-mods = "Control|Shift"
-action = "Paste"
-
-[[keyboard.bindings]]
-key = "Equals"
-mods = "Control|Shift"
-action = "IncreaseFontSize"
-
-[[keyboard.bindings]]
-key = "Minus"
-mods = "Control|Shift"
-action = "DecreaseFontSize"
-
-[[keyboard.bindings]]
-key = "Back"
-mods = "Control|Shift"
-action = "ResetFontSize"
-
-[[keyboard.bindings]]
-key = "Return"
-mods = "Shift"
-chars = "\n"
+[keyboard]
+bindings = [
+  { key = "C", mods = "Control|Shift", action = "Copy" },
+  { key = "V", mods = "Control|Shift", action = "Paste" },
+  { key = "Equals", mods = "Control|Shift", action = "IncreaseFontSize" },
+  { key = "Minus", mods = "Control|Shift", action = "DecreaseFontSize" },
+  { key = "Back", mods = "Control|Shift", action = "ResetFontSize" },
+  { key = "Return", mods = "Shift", chars = "\n" },
+]
