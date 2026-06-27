@@ -55,7 +55,7 @@ alias gv=gvim
 
 alias javar='java -jar'
 
-cd() {
+c() {
   builtin cd $@ && ls
 }
 
