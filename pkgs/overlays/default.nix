@@ -41,6 +41,13 @@ final: prev:
     patches = oldAttrs.patches or [ ] ++ [ ./inline-action-buttons.patch ];
   });
 
+  # Sticky monitor borders: a `seat * { edge_resistance <px> }` option that
+  # makes the pointer pause at an output edge until pushed through, so small
+  # targets along shared monitor edges are easier to hit.
+  sway-unwrapped = prev.sway-unwrapped.overrideAttrs (oldAttrs: {
+    patches = oldAttrs.patches or [ ] ++ [ ./sway-sticky-monitor-borders.patch ];
+  });
+
   slurp = assert builtins.compareVersions "1.3.2" prev.slurp.version <= 0;
     prev.slurp.overrideAttrs (oldAttrs: {
       src = prev.fetchFromGitHub {

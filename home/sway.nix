@@ -1,5 +1,4 @@
 # Nix template for sway config file
-# vim: ft=i3
 
 { lib
 , blueman
@@ -459,6 +458,10 @@ let
     }
 
     bindsym $mod+r mode "resize"
+
+    seat * {
+        edge_resistance 200
+    }
 
     output * bg ~/.config/sway/background.png fill #6699cc
 

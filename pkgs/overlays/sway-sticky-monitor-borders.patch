@@ -1,0 +1,171 @@
+diff --git a/include/sway/commands.h b/include/sway/commands.h
+index 389c382e..e1997f3c 100644
+--- a/include/sway/commands.h
++++ b/include/sway/commands.h
+@@ -306,6 +306,7 @@ sway_cmd output_cmd_unplug;
+ 
+ sway_cmd seat_cmd_attach;
+ sway_cmd seat_cmd_cursor;
++sway_cmd seat_cmd_edge_resistance;
+ sway_cmd seat_cmd_fallback;
+ sway_cmd seat_cmd_hide_cursor;
+ sway_cmd seat_cmd_idle_inhibit;
+diff --git a/include/sway/config.h b/include/sway/config.h
+index 16b822fe..2d9647ca 100644
+--- a/include/sway/config.h
++++ b/include/sway/config.h
+@@ -251,6 +251,7 @@ struct seat_config {
+ 		char *name;
+ 		int size;
+ 	} xcursor_theme;
++	int edge_resistance; // -1 = not set, 0 = disabled, >0 = threshold in pixels
+ };
+ 
+ enum scale_filter_mode {
+diff --git a/include/sway/input/cursor.h b/include/sway/input/cursor.h
+index 527d0350..606f38ba 100644
+--- a/include/sway/input/cursor.h
++++ b/include/sway/input/cursor.h
+@@ -72,6 +72,9 @@ struct sway_cursor {
+ 
+ 	struct wl_listener constraint_commit;
+ 
++	double edge_resistance_accumulated;
++	int cached_edge_resistance; // -1 = invalid cache
++
+ 	struct wl_event_source *hide_source;
+ 	bool hidden;
+ 	// This field is just a cache of the field in seat_config in order to avoid
+diff --git a/sway/commands/seat.c b/sway/commands/seat.c
+index 2d197b69..a74c7b9a 100644
+--- a/sway/commands/seat.c
++++ b/sway/commands/seat.c
+@@ -16,6 +16,7 @@ static const struct cmd_handler seat_action_handlers[] = {
+ // these handlers alter the seat config
+ static const struct cmd_handler seat_handlers[] = {
+ 	{ "attach", seat_cmd_attach },
++	{ "edge_resistance", seat_cmd_edge_resistance },
+ 	{ "fallback", seat_cmd_fallback },
+ 	{ "hide_cursor", seat_cmd_hide_cursor },
+ 	{ "idle_inhibit", seat_cmd_idle_inhibit },
+diff --git a/sway/commands/seat/edge_resistance.c b/sway/commands/seat/edge_resistance.c
+new file mode 100644
+index 00000000..fece3248
+--- /dev/null
++++ b/sway/commands/seat/edge_resistance.c
+@@ -0,0 +1,33 @@
++#include <stdlib.h>
++#include "sway/commands.h"
++#include "sway/config.h"
++#include "sway/input/cursor.h"
++#include "sway/input/seat.h"
++#include "sway/server.h"
++
++struct cmd_results *seat_cmd_edge_resistance(int argc, char **argv) {
++	struct cmd_results *error = NULL;
++	if ((error = checkarg(argc, "edge_resistance", EXPECTED_EQUAL_TO, 1))) {
++		return error;
++	}
++	struct seat_config *sc = config->handler_context.seat_config;
++	if (!sc) {
++		return cmd_results_new(CMD_FAILURE, "No seat defined");
++	}
++
++	char *end;
++	int val = strtol(argv[0], &end, 10);
++	if (*end || val < 0) {
++		return cmd_results_new(CMD_INVALID,
++			"edge_resistance: expected a non-negative integer");
++	}
++	sc->edge_resistance = val;
++
++	// Invalidate cursor cache for all seats
++	struct sway_seat *seat;
++	wl_list_for_each(seat, &server.input->seats, link) {
++		seat->cursor->cached_edge_resistance = -1;
++	}
++
++	return cmd_results_new(CMD_SUCCESS, NULL);
++}
+diff --git a/sway/config/seat.c b/sway/config/seat.c
+index f2326189..ea8fb6f6 100644
+--- a/sway/config/seat.c
++++ b/sway/config/seat.c
+@@ -34,6 +34,7 @@ struct seat_config *new_seat_config(const char* name) {
+ 	seat->keyboard_grouping = KEYBOARD_GROUP_DEFAULT;
+ 	seat->xcursor_theme.name = NULL;
+ 	seat->xcursor_theme.size = 24;
++	seat->edge_resistance = -1;
+ 
+ 	return seat;
+ }
+@@ -179,6 +180,10 @@ void merge_seat_config(struct seat_config *dest, struct seat_config *source) {
+ 	if (source->idle_wake_sources != UINT32_MAX) {
+ 		dest->idle_wake_sources = source->idle_wake_sources;
+ 	}
++
++	if (source->edge_resistance != -1) {
++		dest->edge_resistance = source->edge_resistance;
++	}
+ }
+ 
+ struct seat_config *copy_seat_config(struct seat_config *seat) {
+diff --git a/sway/input/cursor.c b/sway/input/cursor.c
+index fc0f11fd..687bbf4e 100644
+--- a/sway/input/cursor.c
++++ b/sway/input/cursor.c
+@@ -316,6 +316,33 @@ void pointer_motion(struct sway_cursor *cursor, uint32_t time_msec,
+ 		dy = sy_confined - sy;
+ 	}
+ 
++	// Sticky monitor borders: resist cursor crossing between outputs
++	if (cursor->cached_edge_resistance == -1) {
++		const struct seat_config *sc = seat_get_config(cursor->seat);
++		if (!sc) {
++			sc = seat_get_config_by_name("*");
++		}
++		int r = (sc && sc->edge_resistance >= 0) ? sc->edge_resistance : 0;
++		cursor->cached_edge_resistance = r;
++	}
++	if (cursor->cached_edge_resistance > 0 && cursor->pressed_button_count == 0) {
++		double new_x = cursor->cursor->x + dx;
++		double new_y = cursor->cursor->y + dy;
++		struct wlr_output *cur_out = wlr_output_layout_output_at(
++			root->output_layout, cursor->cursor->x, cursor->cursor->y);
++		struct wlr_output *new_out = wlr_output_layout_output_at(
++			root->output_layout, new_x, new_y);
++		if (cur_out && new_out && cur_out != new_out) {
++			cursor->edge_resistance_accumulated += sqrt(dx * dx + dy * dy);
++			if (cursor->edge_resistance_accumulated < cursor->cached_edge_resistance) {
++				return; // hold at edge
++			}
++			cursor->edge_resistance_accumulated = 0.0;
++		} else {
++			cursor->edge_resistance_accumulated = 0.0;
++		}
++	}
++
+ 	wlr_cursor_move(cursor->cursor, device, dx, dy);
+ 
+ 	seatop_pointer_motion(cursor->seat, time_msec);
+@@ -1072,6 +1099,8 @@ struct sway_cursor *sway_cursor_create(struct sway_seat *seat) {
+ 	cursor->previous.y = wlr_cursor->y;
+ 
+ 	cursor->seat = seat;
++	cursor->edge_resistance_accumulated = 0.0;
++	cursor->cached_edge_resistance = -1;
+ 	wlr_cursor_attach_output_layout(wlr_cursor, root->output_layout);
+ 
+ 	cursor->hide_source = wl_event_loop_add_timer(server.wl_event_loop,
+diff --git a/sway/meson.build b/sway/meson.build
+index cb03a4d2..ed4ece33 100644
+--- a/sway/meson.build
++++ b/sway/meson.build
+@@ -95,6 +95,7 @@ sway_sources = files(
+ 	'commands/seat.c',
+ 	'commands/seat/attach.c',
+ 	'commands/seat/cursor.c',
++	'commands/seat/edge_resistance.c',
+ 	'commands/seat/fallback.c',
+ 	'commands/seat/hide_cursor.c',
+ 	'commands/seat/idle.c',
