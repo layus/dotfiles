@@ -5,6 +5,23 @@
 final: prev:
 
 {
+  # afdko 5.0.1 (nixos-unstable, 2026-06) removed the `afdko._deprecated`
+  # module, which breaks both `otfautohint` and `cffsubr` — so cantarell-fonts
+  # fails to build its variable font. Until upstream nixpkgs fixes the
+  # toolchain, take the prebuilt font from a pinned known-good nixpkgs (the
+  # output is just a font, identical regardless of which tree built it, and is
+  # in the binary cache). Drop this override once cantarell builds on unstable.
+  cantarell-fonts =
+    let
+      goodPkgs = import
+        (builtins.fetchTarball {
+          url = "https://github.com/NixOS/nixpkgs/archive/9ae611a455b90cf061d8f332b977e387bda8e1ca.tar.gz";
+          sha256 = "sha256-md8WlXOlfnIeHeOScMTTHFyf2d6iaTwPl2apR5EQ3P4=";
+        })
+        { system = prev.stdenv.hostPlatform.system; };
+    in
+    goodPkgs.cantarell-fonts;
+
   factorio = prev.factorio.overrideAttrs (oldAttrs: rec {
     version = "2.0.32";
     pname = "factorio";
