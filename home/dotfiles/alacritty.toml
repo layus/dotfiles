@@ -75,3 +75,8 @@ action = "DecreaseFontSize"
 key = "Back"
 mods = "Control|Shift"
 action = "ResetFontSize"
+
+[[keyboard.bindings]]
+key = "Return"
+mods = "Shift"
+chars = "\n"
