@@ -35,6 +35,12 @@ in
     }
   ];
 
+  services.udev.extraRules = ''
+    # EPSON ET-2850 Series — allow raw USB access for reinkpy
+    SUBSYSTEM=="usb", ATTR{idVendor}=="04b8", ATTR{idProduct}=="118b", MODE="0660", GROUP="users", TAG+="uaccess"
+  '';
+
+
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
