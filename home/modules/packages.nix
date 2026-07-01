@@ -239,7 +239,7 @@
       #mypkgs.monitormonitors
       sqlite-interactive
       inotify-tools
-      #jotta-cli
+      # jotta-cli: installed by the services.jotta-cli module (uberwald only)
       #rnix-hashes # unmaintained, but was so useful
       nix-output-monitor
 

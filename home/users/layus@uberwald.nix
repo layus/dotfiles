@@ -83,21 +83,11 @@
     };
   };
 
-  #systemd.user.services = {
-  #  jottacloud-daemon = {
-  #    Unit = {
-  #      Description = "Jottacloud sync daemon";
-  #    };
-  #    Service = {
-  #      ExecStart = "${pkgs.jotta-cli}/bin/jottad stdoutlog datadir .config/jottad";
-  #      RestartSec = 300;
-  #      Restart = "always";
-  #    };
-  #    Install = {
-  #      WantedBy = [ "default.target" ];
-  #    };
-  #  };
-  #};
+  # Jottacloud backup daemon (see home/modules/jotta-cli.nix). Enabled only here,
+  # on uberwald. Datadir defaults to the XDG location ~/.local/share/jottad.
+  # Log in and manage backups by hand once the daemon is up:
+  #   jotta-cli login && jotta-cli add ~/Documents
+  services.jotta-cli.enable = true;
 }
 
 

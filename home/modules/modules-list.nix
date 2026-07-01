@@ -2,6 +2,7 @@
   ./config-integrity.nix
   ./custom.nix
   ./defaults.nix
+  ./jotta-cli.nix
   ./latex.nix
   ./mimeapps.nix
   ./nix-update.nix
