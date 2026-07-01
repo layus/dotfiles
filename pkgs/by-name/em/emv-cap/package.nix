@@ -13,6 +13,19 @@ python3Packages.buildPythonApplication rec {
     hash = "sha256-K6uLrkkoWZVByB8toclHRYnVf79dyvMQPQOvDgFvcHo=";
   };
 
+  # The T0_protocol/T1_protocol constants are class attributes of
+  # smartcard.CardConnection.CardConnection, but MyConnect() returns a
+  # CardConnectionDecorator which does not re-export them, so accessing them
+  # via the connection object raises AttributeError. Reference the class
+  # directly instead. (getProtocol() is an instance method and is forwarded
+  # by the decorator, so it stays as-is.)
+  postPatch = ''
+    substituteInPlace EMV-CAP \
+      --replace-fail 'import smartcard' 'import smartcard; from smartcard.CardConnection import CardConnection' \
+      --replace-fail 'connection.getProtocol() == connection.T0_protocol' 'connection.getProtocol() == CardConnection.T0_protocol' \
+      --replace-fail 'connection.getProtocol() == connection.T1_protocol' 'connection.getProtocol() == CardConnection.T1_protocol'
+  '';
+
   propagatedBuildInputs = with python3Packages; [ pyscard pycrypto ];
   pyproject = true;
   build-system = with python3Packages; [ setuptools ];
