@@ -120,7 +120,7 @@ let
     run gammastep ${gammastep}/bin/gammastep -l 50.6:4.32 -t 5700:4500
     run Slack     ${slack}/bin/slack
     execAndScratch zim      ${zim}/bin/zim
-    execAndScratch Element  ${element-desktop}/bin/element-desktop --password-store=gnome-libsecret
+    execAndScratch element  ${element-desktop}/bin/element-desktop --password-store=gnome-libsecret
     #execAndScratch "Microsoft Teams - Preview" $-{teams}/bin/teams
 
     #exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
