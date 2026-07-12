@@ -26,13 +26,9 @@ in
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  #boot.cleanTmpDir = true;
+  boot.cleanTmpDir = true;
   #boot.tmpOnTmpfd = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
-  # buggy panel self refresh...
-  boot.kernelParams = [ "i915.enable_psr=0" ];
-  boot.kernelModules = [ "kvm-amd" "kvm-intel" ];
-  boot.extraModprobeConfig = "options kvm_intel nested=1";
 
   nix.package = pkgs.nixVersions.latest;
   nix.extraOptions = ''
@@ -50,18 +46,7 @@ in
   # Set your time zone. `null` allows dynamic changes.
   time.timeZone = null;
 
-  # The global useDHCP flag is deprecated, therefore explicitly set to false here.
-  # Per-interface useDHCP will be mandatory in the future, so this generated config
-  # replicates the default behaviour.
-  networking.useDHCP = false;
-  networking.interfaces.wlp0s20f3.useDHCP = true;
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
   hardware.bluetooth.enable = true;
-  #hardware.video.hidpi.enable = true;
   hardware.graphics.enable = true;
   hardware.graphics.enable32Bit = true;
   hardware.graphics.extraPackages = with pkgs; [ intel-vaapi-driver libva-vdpau-driver intel-media-driver ];
@@ -80,12 +65,6 @@ in
   nixpkgs.config.allowUnfree = true;
 
   programs.sway.enable = true;
-
-  programs.kdeconnect.enable = true;
-
-  # Enable sound.
-  # sound.enable = true;
-  # hardware.pulseaudio.enable = true;
 
   programs.fish.enable = true;
   programs.zsh.enable = true;
@@ -205,40 +184,5 @@ in
   systemd.services.greetd.restartIfChanged = false;
   systemd.services.greetd.stopIfChanged = false;
   systemd.services.greetd.reloadIfChanged = true;
-
-  # services.thinkfan.enable = true; not really needed. Same as defaults.
-
-  virtualisation.docker = {
-    enable = true;
-    daemon.settings = {
-      "max-concurrent-downloads" = 20;
-      "max-concurrent-uploads" = 5;
-    };
-    # enableNvidia = true;
-  };
-  virtualisation.libvirtd.enable = true;
-
-  services.openvpn.servers = {
-    vpn = {
-      autoStart = false;
-      config = "config /etc/nixos/vpn.ovpn";
-    };
-  };
-
   services.mptcpify.enable = true;
-
-  services.postgresql = {
-    enable = true;
-    package = pkgs.postgresql_16;
-  };
-
-  services.cockroachdb = {
-    enable = true;
-    insecure = true;
-  };
-  systemd.services.cockroachdb.serviceConfig = {
-    ExecStart = lib.mkForce
-      "${pkgs.cockroachdb}/bin/cockroach start-single-node --logtostderr --store=/var/lib/cockroachdb --http-addr=localhost:8080 --listen-addr=localhost:26257 --insecure";
-    Type = lib.mkForce "simple";
-  };
 }
