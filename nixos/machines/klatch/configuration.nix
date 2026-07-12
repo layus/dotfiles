@@ -14,25 +14,13 @@ in
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ../../common/fonts.nix
-    ../../common/screencast.nix
     ../../common/sound.nix
     ../../common/bluetooth.nix
     ../../common/ssh.nix
     ../../common/epson.nix
     ../../common/brother.nix
-    ../../common/tpm.nix
     ../../common/mptcpify.nix
     ../../common/sleep.nix
-    #./fail.nix
-  ];
-
-  security.pam.loginLimits = [
-    {
-      domain = "*";
-      item = "nofile";
-      type = "soft";
-      value = "unlimited";
-    }
   ];
 
   # Use the systemd-boot EFI boot loader.
@@ -54,25 +42,6 @@ in
     extra-system-features = recursive-nix
   '';
   nix.settings.trusted-users = [ "@wheel" ]; # or just your username
-  nix.buildMachines = [
-    # tweag remote builders
-    {
-      hostName = "build01.tweag.io";
-      maxJobs = 24;
-      sshUser = "nix";
-      sshKey = "/root/.ssh/id-tweag-builder";
-      system = "x86_64-linux";
-      supportedFeatures = [ "big-parallel" "kvm" "nixos-test" ];
-    }
-    {
-      hostName = "build02.tweag.io";
-      maxJobs = 24;
-      sshUser = "nix";
-      sshKey = "/root/.ssh/id-tweag-builder";
-      systems = [ "aarch64-darwin" "x86_64-darwin" ];
-      supportedFeatures = [ "big-parallel" ];
-    }
-  ];
 
   networking.hostName = "klatch"; # Define your hostname.
   networking.networkmanager.enable = true;
@@ -213,9 +182,7 @@ in
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "21.11"; # Did you read the comment?
-
-  programs.wireshark.enable = true;
+  system.stateVersion = "26.05"; # Did you read the comment?
 
   services.greetd =
     let
