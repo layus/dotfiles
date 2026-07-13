@@ -1,0 +1,11 @@
+# way-displays: https://github.com/alex-courtis/way-displays
+#
+# eDP-1 on klatch is a 310x170mm panel at 1920x1080, i.e. ~157 DPI.  That is
+# just over way-displays' HiDPI threshold, so AUTO_SCALE computes 1.66 and
+# rounds it to 1.625 -- which is not what this panel wants.  Pin it to 1.
+#
+# AUTO_SCALE is deliberately left on: an external monitor may genuinely be
+# HiDPI, and an explicit SCALE entry overrides it for this display only.
+SCALE:
+  - NAME_DESC: 'eDP-1'
+    SCALE: 1

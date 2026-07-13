@@ -93,6 +93,10 @@ let
 
 
   execScript = writeShellScript "sway-exec-apps" ''
+    # Every log below -- and every `&> ~/.cache/sway/*.log` that sway runs on our
+    # behalf -- redirects into this directory.  A missing directory makes the
+    # redirect fail, which silently kills the app before it ever execs.
+    mkdir -p ~/.cache/sway
 
     exec &>~/.cache/sway/sway-exec-apps.log
     set -x
@@ -135,6 +139,10 @@ let
   '';
 
   execAlwaysScript = writeShellScript "sway-exec-always-apps" ''
+    # See execScript: without this, the redirects below leave every tray app dead
+    # while swaymsg still cheerfully reports success.
+    mkdir -p ~/.cache/sway
+
     exec &>~/.cache/sway/sway-exec-always-apps.log
     set -x
 

@@ -144,6 +144,8 @@ in
         recursive = true;
       };
 
+      xdg.configFile."way-displays/cfg.yaml".source = ../dotfiles/way-displays/cfg.yaml;
+
       programs.alacritty.enable = true;
       xdg.configFile."alacritty/alacritty.toml".source = ../dotfiles/alacritty.toml;
 
