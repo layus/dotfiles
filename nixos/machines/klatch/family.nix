@@ -22,6 +22,13 @@
     user = "family";
   };
 
+  # Steam. The module is what makes this work, rather than adding the package to
+  # systemPackages: it brings the FHS sandbox the runtime insists on living in,
+  # and the 32-bit userspace half of the graphics stack (the 32-bit driver side
+  # is hardware.graphics.enable32Bit, already on in configuration.nix). Steam is
+  # unfree, which allowUnfree there already covers.
+  programs.steam.enable = true;
+
   users.users.family = {
     isNormalUser = true;
     description = "Famille";
