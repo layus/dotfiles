@@ -1,5 +1,8 @@
 ## Config for sto-lat.
 { config, pkgs, lib, nixpkgs, ... }:
+let
+  cfg = config.custom;
+in
 {
 
   ## Hardware
@@ -8,6 +11,7 @@
     (nixpkgs + "/nixos/modules/profiles/headless.nix")
     (nixpkgs + "/nixos/modules/installer/scan/not-detected.nix")
     #/home/layus/projects/inginious.nix
+    ../../common/ssh.nix
     ./lighttpd.nix
     ./wireguard.nix
     ./ovh-configuration.nix
@@ -148,6 +152,14 @@
         "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEFMsq6kKxh2so5Jr+kzHmVNfg80aXIRYfFt3k6B2osiEJH7ibnZx51BTkFd42Ld6FifWb3WjjoyNYeAnGzruvg= gmaudoux@klatch"
         "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAjd/cnsdiyS0k3ckRO8e8bTPd2amazA8vLT2WpRfHTHyastB7JYO1yDabICq+fgpkSXUgGRjQWMhKRHEFy5Ffc= layus@ankh-morpork"
         "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBJe+dx4zrUGh1y8LmyI6jmKy1rdbvy8BmpglAsZ+PnwJ0E8VIzLAHFeBeP98stzdEoP7m6vvxBssyy42mKAdMsk= layus@uberwald"
+
+        # Passwordless key held by klatch's reverse-sto-helit tunnel. `restrict`
+        # drops everything (pty, agent/X11 forwarding, exec) and port-forwarding
+        # adds back the one thing the tunnel needs: binding 3250 on the loopback,
+        # which is where ~/.ssh/config's ProxyCommand for klatch dials.
+        # permitlisten only matches a bind address the client asked for by name,
+        # hence the `-R localhost:3250:...` (not `-R 3250:...`) on the klatch side.
+        ''restrict,port-forwarding,permitlisten="localhost:3250" ${lib.strings.trim cfg.ssh.pubkeys."klatch-tunnel_ed25519.pub"}''
       ];
     };
 
@@ -376,6 +388,14 @@
     settings = {
       PermitRootLogin = "no";
       PasswordAuthentication = false;
+
+      # Reap sessions whose peer vanished (klatch suspending, laptop lid, ISP
+      # blip). Without this, the dead tunnel keeps 3250 bound and klatch's
+      # reconnect dies on ExitOnForwardFailure until sshd notices, which can
+      # take hours.
+      ClientAliveInterval = 30;
+      ClientAliveCountMax = 3;
+
       KexAlgorithms = [
         "curve25519-sha256@libssh.org"
         "diffie-hellman-group-exchange-sha256"

@@ -1,0 +1,9 @@
+# Host keys pinned in the repo, so a freshly installed machine trusts them
+# without a trust-on-first-use prompt. This matters for unattended clients: the
+# reverse-sto-helit tunnel on klatch runs with no terminal to accept a key at,
+# and `Host *` below sets StrictHostKeyChecking yes.
+#
+# Fingerprint of the key below, as reported by sto-helit itself
+# (`ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`):
+#   256 SHA256:t1+RIBjZ95o6CUfFG4S7ukW1Hol0RaUo/dxd7WY0Coo (ED25519)
+[sto-helit.maudoux.be]:3248 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBR7TAb0l4EoYSMlBJLwlkkKBYJnmSjf1rtBRv82rbG6

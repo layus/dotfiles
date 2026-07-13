@@ -98,6 +98,12 @@ in
         "uberwald_ecdsa.pub"
         ;
     };
+
+    # The reverse-sto-helit tunnel is a `systemd --user` unit of layus, but the
+    # machine autologins as `family` and layus may never log in at all. Without
+    # lingering, layus's user manager (and so the tunnel) would only ever start
+    # by way of the ssh session it is supposed to be making possible.
+    linger = true;
   };
 
   #users.users.demo = {

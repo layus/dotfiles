@@ -20,7 +20,7 @@ Host ankh-morpork ankh-morpork.discworld.maudoux.be
     ProxyCommand ssh sto-helit.maudoux.be -W localhost:3249
 
 Host klatch klatch.discworld.maudoux.be
-    User gmaudoux
+    User layus
     ForwardX11 yes
     forwardx11Trusted yes
     ProxyCommand ssh sto-helit.maudoux.be -W localhost:3250
@@ -63,4 +63,8 @@ Host *
     ForwardX11 no
     Compression yes
     ServerAliveInterval 20
+    # New hosts are still learned into the writable first file; the second is
+    # the repo-pinned set, which is what lets a fresh machine reach sto-helit
+    # with StrictHostKeyChecking on and nobody at the keyboard.
+    UserKnownHostsFile ~/.ssh/known_hosts ~/.ssh/known_hosts.pinned
 

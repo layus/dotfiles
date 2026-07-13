@@ -68,6 +68,9 @@ in
         source = ../dotfiles/ssh/pubkeys;
         recursive = true;
       };
+      # Read-only companion to ~/.ssh/known_hosts, which stays writable for
+      # everything ssh learns the usual way. See the file's header.
+      home.file.".ssh/known_hosts.pinned".source = ../dotfiles/ssh/known_hosts;
       home.file.".ssh/id_ecdsa.pub" = lib.mkIf hasPubkey {
         source = pubkeyFile;
         force = true;
