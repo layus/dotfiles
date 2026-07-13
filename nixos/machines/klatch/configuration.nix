@@ -13,6 +13,7 @@ in
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
+    ./family.nix
     ../../common/fonts.nix
     ../../common/sound.nix
     ../../common/bluetooth.nix
@@ -163,26 +164,9 @@ in
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "26.05"; # Did you read the comment?
 
-  services.greetd =
-    let
-      sway-session = pkgs.writeShellScript "sway-session" ''
-        sway --debug 2> ~/.cache/sway/sway.errlog > ~/.cache/sway/sway.log
-      '';
-    in
-    {
-      enable = true;
-      settings = {
-        default_session = {
-          command = "${config.services.greetd.package}/bin/agreety --cmd ${sway-session}";
-        };
-        initial_session = {
-          command = "${sway-session}";
-          user = "layus";
-        };
-      };
-    };
-  systemd.services.greetd.restartIfChanged = false;
-  systemd.services.greetd.stopIfChanged = false;
-  systemd.services.greetd.reloadIfChanged = true;
+  # Login is GDM now, see ./family.nix. Sway is still offered as a session, but
+  # it is started by GDM rather than by the greetd wrapper, so it no longer logs
+  # to ~/.cache/sway/sway.log — use `journalctl --user -t sway` instead.
+
   services.mptcpify.enable = true;
 }
