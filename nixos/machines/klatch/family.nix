@@ -3,8 +3,21 @@
 # GDM boots straight into GNOME as "family", with no password prompt. Logging
 # out (or "Switch User") brings up the GDM greeter, where layus can pick Sway
 # from the session menu in the bottom-right gear.
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, homeManager, ... }:
 {
+  # Family's home is managed by the home-manager NixOS module, not by the
+  # standalone homeConfigurations layus uses: this account autologins and never
+  # opens a terminal, so there is nobody to run `home-manager switch` as them.
+  # This way `./rebuild nixos` applies their home along with the system.
+  imports = [ homeManager.nixosModules.home-manager ];
+
+  home-manager.useGlobalPkgs = true; # one nixpkgs (with our overlays), not a second one
+  home-manager.useUserPackages = true; # packages land in /etc/profiles, not a ~/.nix-profile
+  # GNOME writes its own dotfiles; without this, activation aborts the first
+  # time it wants to take over a file that already exists.
+  home-manager.backupFileExtension = "hm-bak";
+  home-manager.users.family = import ./family-home.nix;
+
   # GDM and GNOME run on Wayland, but still want the X stack around for
   # Xwayland and for the keymap that the greeter uses.
   services.xserver.enable = true;
