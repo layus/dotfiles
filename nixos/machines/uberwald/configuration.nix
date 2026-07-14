@@ -118,6 +118,12 @@ in
 
   programs.sway.enable = true;
 
+  # Steam with a dedicated gamescope session (selectable from the greeter, or
+  # started manually). The module brings the FHS sandbox and the 32-bit
+  # userspace graphics stack; gamescopeSession is gated on steam.enable.
+  programs.steam.enable = true;
+  programs.steam.gamescopeSession.enable = true;
+
   programs.kdeconnect.enable = true;
 
   # Enable sound.

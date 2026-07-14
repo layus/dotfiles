@@ -42,6 +42,10 @@
   # unfree, which allowUnfree there already covers.
   programs.steam.enable = true;
 
+  # Offer a "Steam (gamescope)" session in the GDM session picker: Steam Big
+  # Picture running fullscreen under its own compositor, no GNOME underneath.
+  programs.steam.gamescopeSession.enable = true;
+
   users.users.family = {
     isNormalUser = true;
     description = "Famille";
