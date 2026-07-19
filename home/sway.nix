@@ -48,7 +48,7 @@ let
     # Make it look like i3lock. The lock image is composed at the top-left
     # corner rather than scaled to fill; the symlink is unmanaged so the image
     # can be swapped without a rebuild (gdk-pixbuf even takes svg directly).
-    exec ${swaylock-effects}/bin/swaylock --ignore-empty-password --daemonize --clock --color 6699cc --effect-compose "0,0;northwest;$HOME/.config/sway/lockscreen.png" --indicator-radius 100
+    exec ${swaylock-effects}/bin/swaylock --ignore-empty-password --daemonize --clock --color ff9911 --effect-compose "0,0;northwest;/home/layus/.config/sway/lockscreen.png" --indicator-radius 100
   '';
 
   swayidleScript = writeShellScriptBin "swayidle" ''
