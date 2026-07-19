@@ -28,6 +28,8 @@ in
       # changes in each release.
       home.stateVersion = lib.mkDefault "21.11";
 
+      home.sessionPath = [ "$HOME/.local/bin" ];
+
       home.activation = {
         mySymlinks = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
           [ -e .terminfo -o -L .terminfo ] || run ln -sn $VERBOSE_ARG .nix-profile/share/terminfo .terminfo
