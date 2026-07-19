@@ -9,6 +9,8 @@
 , firefox
 , gammastep
 , grim
+, imagemagick
+, jq
 , way-displays
 , mako
 , networkmanagerapplet
@@ -45,10 +47,43 @@ let
   # These scripts form an extra indirection but save so much on string escape hell.
   # They need to be named like the wrapped executable to make the pkill trick in execAlwaysScript work.
   swaylockScript = writeShellScriptBin "swaylock" ''
-    # Make it look like i3lock. The lock image is composed at the top-left
-    # corner rather than scaled to fill; the symlink is unmanaged so the image
-    # can be swapped without a rebuild (gdk-pixbuf even takes svg directly).
-    exec ${swaylock-effects}/bin/swaylock --ignore-empty-password --daemonize --clock --color ff9911 --effect-compose "0,0;northwest;/home/layus/.config/sway/lockscreen.png" --indicator-radius 100
+    # Make it look like i3lock. The symlink is unmanaged so the image can be
+    # swapped without a rebuild.
+    #
+    # swaylock has no gravity/anchor option (and nixpkgs ships the jirutka fork
+    # of swaylock-effects, which removed --effect-compose), so anchor northwest
+    # ourselves: per output, paste the image at the top-left of a canvas at the
+    # output's resolution, padded with the image's own background color.
+    # Composites are cached per resolution and refreshed when the symlink
+    # target changes.
+    src=/home/layus/.config/sway/lockscreen.png
+    cache=''${XDG_CACHE_HOME:-$HOME/.cache}/swaylock
+    mkdir -p "$cache"
+    bg=$(${imagemagick}/bin/magick "$src" -gravity NorthEast -crop 1x1+0+0 +repage -format '%[pixel:p{0,0}]' info:)
+    images=()
+    while read -r name width height pct; do
+      img="$cache/''${width}x$height-$pct.png"
+      if [ "$src" -nt "$img" ]; then
+        # The source image is authored at 2x density: show it 1:1 on scale-2
+        # outputs and downscale proportionally elsewhere, so it keeps the same
+        # logical size everywhere. The source's background is semi-transparent;
+        # flatten padding and image over black alike so they render
+        # identically in swaylock.
+        ${imagemagick}/bin/magick -size "''${width}x$height" "xc:$bg" \( "$src" -resize "$pct%" \) -gravity NorthWest -composite -background black -alpha remove -alpha off "$img"
+      fi
+      images+=(--image "$name:$img")
+    done < <(${swaymsgPath} -t get_outputs | ${jq}/bin/jq -r '.[] | "\(.name) \(.current_mode.width) \(.current_mode.height) \(.scale * 50)"')
+
+    # Indicator colors sampled from the fox gradient in the lock image:
+    # ff690c deep orange, ff9b1d orange, ffc836 golden, f7d541 pale yellow.
+    exec ${swaylock-effects}/bin/swaylock --ignore-empty-password --daemonize --clock "''${images[@]}" --scaling=fill --indicator-radius 100 \
+      --ring-color ff9b1d \
+      --ring-ver-color ffc836 \
+      --ring-wrong-color ff690c \
+      --key-hl-color f7d541 \
+      --line-color 00000000 \
+      --inside-color 00000088 \
+      --separator-color 00000000
   '';
 
   swayidleScript = writeShellScriptBin "swayidle" ''
