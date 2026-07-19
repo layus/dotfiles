@@ -18,7 +18,7 @@
 , slurp
 , sway
 , swayidle
-, swaylock
+, swaylock-effects
 , systemd
 , alacritty
 , thunderbird
@@ -45,8 +45,10 @@ let
   # These scripts form an extra indirection but save so much on string escape hell.
   # They need to be named like the wrapped executable to make the pkill trick in execAlwaysScript work.
   swaylockScript = writeShellScriptBin "swaylock" ''
-    # Make it look like i3lock
-    exec ${swaylock}/bin/swaylock --ignore-empty-password --daemonize --image ~/.config/sway/lockscreen.png --scaling=fill --indicator-radius 100
+    # Make it look like i3lock. The lock image is composed at the top-left
+    # corner rather than scaled to fill; the symlink is unmanaged so the image
+    # can be swapped without a rebuild (gdk-pixbuf even takes svg directly).
+    exec ${swaylock-effects}/bin/swaylock --ignore-empty-password --daemonize --clock --color 6699cc --effect-compose "0,0;northwest;$HOME/.config/sway/lockscreen.png" --indicator-radius 100
   '';
 
   swayidleScript = writeShellScriptBin "swayidle" ''
