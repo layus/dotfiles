@@ -10,7 +10,6 @@
 , gammastep
 , grim
 , way-displays
-, lockimage
 , mako
 , networkmanagerapplet
 , pasystray
@@ -47,7 +46,7 @@ let
   # They need to be named like the wrapped executable to make the pkill trick in execAlwaysScript work.
   swaylockScript = writeShellScriptBin "swaylock" ''
     # Make it look like i3lock
-    exec ${swaylock}/bin/swaylock --ignore-empty-password --daemonize --image ${lockimage} --scaling=fill --indicator-radius 100
+    exec ${swaylock}/bin/swaylock --ignore-empty-password --daemonize --image ~/.config/sway/lockscreen.png --scaling=fill --indicator-radius 100
   '';
 
   swayidleScript = writeShellScriptBin "swayidle" ''
