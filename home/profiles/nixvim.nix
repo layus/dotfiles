@@ -347,6 +347,9 @@
               enable = true;
               package = null;
               settings.formatting.command = [ "nixpkgs-fmt" ];
+              # Fetch flake inputs automatically instead of prompting; a failed
+              # fetch just logs and evaluation proceeds without that input.
+              settings.nix.flake.autoArchive = true;
             };
             clangd = {
               enable = true;
