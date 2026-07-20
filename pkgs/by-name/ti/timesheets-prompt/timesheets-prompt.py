@@ -10,10 +10,32 @@ gi.require_version('Gtk4SessionLock', '1.0')
 
 from gi.repository import Gtk
 from gi.repository import Gdk
+from gi.repository import GLib
 from gi.repository import Gtk4SessionLock as SessionLock
 
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
+
+# The timesheet entry belongs to the day the prompt was launched for, even if
+# the screen only gets unlocked (and the prompt only becomes answerable) on a
+# later day. Capture the start day once, at import time.
+START_DATE = date.today()
+
+# When the session lock cannot be acquired (e.g. the screen is already locked by
+# another locker), retry acquiring it on a fixed interval instead of giving up.
+RETRY_INTERVAL_SECONDS = 10 * 60           # every 10 minutes
+RETRY_MAX_DURATION_SECONDS = 23 * 60 * 60  # for at most 23 hours, then bail out
+
+
+def prompt_label():
+    """Label for the prompt question.
+
+    On the same day the script was started it reads "today"; if the prompt only
+    succeeds on a later day, it names the weekday the entry is actually for.
+    """
+    if date.today() == START_DATE:
+        return "What did you do today ?"
+    return f"What did you do on {START_DATE.strftime('%A')} ?"
 
 
 class PromptWindow(Gtk.Window):
@@ -32,7 +54,7 @@ class PromptWindow(Gtk.Window):
         self.set_child(box)
 
         # Label
-        label = Gtk.Label(label="What did you do today ?")
+        label = Gtk.Label(label=prompt_label())
         box.append(label)
 
         # Scrolled TextView
@@ -131,51 +153,6 @@ class PromptWindow(Gtk.Window):
         self.button.set_sensitive(self.enough_text())
 
 
-def initialize_layer_shell(window, monitor):
-    """Perform Layer Shell-specific initialization for the given window."""
-    gi.require_version('Gtk4LayerShell', '1.0')
-    from gi.repository import Gtk4LayerShell as LayerShell
-
-    LayerShell.init_for_window(window)
-    LayerShell.set_layer(window, LayerShell.Layer.TOP)
-    LayerShell.set_anchor(window, LayerShell.Edge.TOP, True)
-    LayerShell.set_anchor(window, LayerShell.Edge.BOTTOM, True)
-    LayerShell.set_anchor(window, LayerShell.Edge.LEFT, True)
-    LayerShell.set_anchor(window, LayerShell.Edge.RIGHT, True)
-
-    # Add margins to all edges
-    LayerShell.set_margin(window, LayerShell.Edge.TOP, 40)
-    LayerShell.set_margin(window, LayerShell.Edge.BOTTOM, 40)
-    LayerShell.set_margin(window, LayerShell.Edge.LEFT, 40)
-    LayerShell.set_margin(window, LayerShell.Edge.RIGHT, 40)
-
-    # Grab keyboard focus
-    LayerShell.set_keyboard_mode(window, LayerShell.KeyboardMode.ON_DEMAND)
-    if isinstance(window, PromptWindow):
-        LayerShell.set_keyboard_mode(window, LayerShell.KeyboardMode.EXCLUSIVE)
-    LayerShell.auto_exclusive_zone_enable(window)
-    LayerShell.set_monitor(window, monitor)
-
-
-def create_layer_shell_windows_on_all_monitors():
-    """Create a Layer Shell window on all available monitors."""
-    gi.require_version('Gtk', '4.0')
-    display = Gdk.Display.get_default()
-    monitors = display.get_monitors()
-    window = None
-
-    for monitor in monitors:
-        # Create a new window for each monitor
-        if not window:
-            window = PromptWindow(lambda: app.quit())
-        else:
-            window = Gtk.Window(application=app)
-
-        # Initialize Layer Shell for the window
-        initialize_layer_shell(window, monitor)
-        window.present()
-
-
 class ScreenLock:
     def __init__(self):
         self.lock_instance = SessionLock.Instance.new()
@@ -184,6 +161,8 @@ class ScreenLock:
         self.lock_instance.connect('failed', self._on_failed)
         self.lock_instance.connect('monitor', self._on_monitor)
         self.window = None
+        # Wall-clock deadline after which we stop retrying and bail out.
+        self._retry_deadline = None
 
     def _on_locked(self, lock_instance):
         pass
@@ -192,9 +171,29 @@ class ScreenLock:
         app.quit()
 
     def _on_failed(self, lock_instance):
-        # Use a Layershell window for fallback
-        print("Session lock failed; falling back to Layer Shell.")
-        create_layer_shell_windows_on_all_monitors()
+        # Acquiring the session lock failed. This happens when another locker
+        # already holds the screen (e.g. swaylock). The old Layer Shell fallback
+        # does not work while the screen is locked, so instead we keep retrying
+        # the lock on a fixed interval, hoping the other locker eventually goes
+        # away, and give up after a bounded amount of time.
+        now = GLib.get_monotonic_time()  # microseconds, immune to clock changes
+        if self._retry_deadline is None:
+            self._retry_deadline = now + RETRY_MAX_DURATION_SECONDS * 1_000_000
+
+        if now >= self._retry_deadline:
+            print("Session lock still unavailable after 23h; giving up.")
+            app.quit()
+            return
+
+        print(
+            f"Session lock unavailable; retrying in "
+            f"{RETRY_INTERVAL_SECONDS // 60} min."
+        )
+        GLib.timeout_add_seconds(RETRY_INTERVAL_SECONDS, self._retry_lock)
+
+    def _retry_lock(self):
+        self.lock()
+        return GLib.SOURCE_REMOVE  # one-shot timer
 
     def _on_monitor(self, lock_instance, monitor):
         if not self.window:
@@ -216,6 +215,10 @@ app = Gtk.Application(application_id='com.github.wmww.gtk4-layer-shell.py-sessio
 lock = ScreenLock()
 
 def on_activate(app):
+    # Hold the application alive for the whole session. Otherwise, when the lock
+    # fails and no windows exist, GApplication would exit before the retry timer
+    # fires. Every exit path calls app.quit() explicitly, which overrides holds.
+    app.hold()
     lock.lock()
 
 app.connect('activate', on_activate)
