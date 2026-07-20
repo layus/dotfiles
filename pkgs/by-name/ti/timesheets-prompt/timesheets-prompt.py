@@ -40,7 +40,13 @@ def prompt_label():
 
 class PromptWindow(Gtk.Window):
     def __init__(self, unlock):
-        super().__init__(application=app)
+        # Deliberately NOT attached to the Gtk.Application (no application=app).
+        # gtk4-session-lock owns these windows and calls gtk_window_destroy() on
+        # them itself when the lock ends. If they are also registered with the
+        # application, that teardown drives gtk_application_window_removed ->
+        # gdk_wayland_toplevel_remove_from_session on an already-destroyed session
+        # surface, which asserts on GDK_IS_SURFACE and segfaults.
+        super().__init__()
         self.unlock = unlock
 
         self.set_title("GTK4 Input Example")
@@ -200,9 +206,19 @@ class ScreenLock:
             self.window = PromptWindow(self.unlock)
             window = self.window
         else:
-            window = Gtk.Window(application=app)
+            window = Gtk.Window()
 
-        lock_instance.assign_window_to_monitor(window, monitor)
+        # Defer assignment out of the synchronous lock() call stack. The monitor
+        # signal fires from within gtk_session_lock_instance_lock(); assigning
+        # (and thus mapping) the window inline does a Wayland roundtrip during
+        # which a rejected lock delivers "finished", tearing the window down
+        # mid-map and emitting GDK_IS_TOPLEVEL/GDK_IS_SURFACE assertions. Running
+        # the assignment from an idle callback lets lock() return first.
+        def assign():
+            lock_instance.assign_window_to_monitor(window, monitor)
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(assign)
 
     def unlock(self):
         self.lock_instance.unlock()
