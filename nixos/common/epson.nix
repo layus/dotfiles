@@ -12,6 +12,11 @@
     # upstream and only got in the way here: it kept recreating an
     # implicitclass:// queue whose backend died with NO_DEST_FOUND, shadowing
     # the working queue in the GNOME print dialog.
+    #
+    # Note `browsing` alone is not enough: it only writes `Browsing No` into
+    # cupsd.conf. The daemon itself is gated on `browsed.enable`, which
+    # defaults to true.
+    browsed.enable = false;
     browsing = false;
     defaultShared = false;
   };
