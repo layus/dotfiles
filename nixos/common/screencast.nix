@@ -13,11 +13,26 @@ rec {
     icons.enable = true;
     portal = {
       enable = true;
+      # wlr covers only ScreenCast and Screenshot; gtk is the `default`
+      # backend in sway-portals.conf and supplies everything else, notably
+      # FileChooser (Firefox's file picker on Wayland). Not redundant.
+      # xdg.portal.wlr.enable below pulls in xdg-desktop-portal-wlr itself.
       extraPortals = with pkgs; [
         xdg-desktop-portal-gtk
-        xdg-desktop-portal-wlr
       ];
-      #gtkUsePortal = true;
+
+      # Without an explicit chooser, xdg-desktop-portal-wlr falls back to
+      # probing for wofi/bemenu/fuzzel/... None are installed here (the sway
+      # launcher is fzf-in-alacritty), so every screencast request died with
+      # "wlroots: no output found" and Firefox got an empty capture.
+      # slurp -o -r lets you click the output to share instead.
+      wlr = {
+        enable = true;
+        settings.screencast = {
+          chooser_type = "simple";
+          chooser_cmd = "${pkgs.slurp}/bin/slurp -o -r -f %o";
+        };
+      };
     };
   };
 
