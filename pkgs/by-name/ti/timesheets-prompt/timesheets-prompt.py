@@ -35,7 +35,14 @@ EXIT_TEMPFAIL = 75  # EX_TEMPFAIL
 # When the session lock cannot be acquired (e.g. the screen is already locked by
 # another locker), retry acquiring it on a fixed interval instead of giving up.
 RETRY_INTERVAL_SECONDS = 10 * 60           # every 10 minutes
-RETRY_MAX_DURATION_SECONDS = 23 * 60 * 60  # for at most 23 hours, then bail out
+#
+# 23h, and it must stay under the 24h between timer firings. That is what keeps
+# one day's attempt from ever meeting the next day's: an attempt started at
+# 15:30 expires at 14:30, an hour before the timer fires again, so the retry
+# chain has always exited and cleared its state file by then. Raise this to 24h
+# or more and a still-running chain would be handed the next day's activation,
+# with no way to tell that apart from one of its own restarts.
+RETRY_MAX_DURATION_SECONDS = 23 * 60 * 60
 
 # The retry loop spans several processes (see restart_for_retry), so the two
 # facts that must outlive any one of them are kept in a small state file:
@@ -415,35 +422,24 @@ class ScreenLock:
 def check_still_wanted():
     """Bail out before touching the compositor if this attempt is obsolete.
 
-    Every process in the retry chain starts here, which is the only place that
-    catches the two ways a carried-over attempt stops being worth showing:
+    Every process in the retry chain starts here. It exists because a restart
+    can arrive long after its deadline: RestartSec counts in monotonic time,
+    which does not advance while the laptop is suspended, whereas the deadline
+    is wall-clock. Suspend on Friday evening and the retry queued for ten
+    minutes later fires on Monday morning, tens of hours past the point where
+    the prompt should have given up.
 
-    A restart can arrive long after its deadline, because RestartSec counts in
-    monotonic time and so does not advance while the laptop is suspended, while
-    the deadline is wall-clock. Suspend on Friday evening and the retry queued
-    for ten minutes later fires on Monday morning, tens of hours past the point
-    where the prompt should have given up.
-
-    A restart can also arrive on a later day than the one it was queued for. The
-    timer starting the unit while a previous day's retry loop is still going
-    does not queue behind it: systemd cancels the pending RestartSec wait and
-    starts immediately ("Scheduled restart job immediately on client request"),
-    so without this check the new day's activation would inherit the old day's
-    state and silently ask about -- and file against -- the wrong day.
+    Note there is deliberately no "is START_DATE still today?" test here. The
+    state file cannot distinguish a fresh activation from a retry -- systemd
+    offers nothing that survives a restart chain to tell them apart, and the
+    calendar cannot either, since a retry that begins at 23:55 is on a new date
+    ten minutes later while still being the same attempt. The deadline is the
+    only honest signal: an attempt is live until it expires, whatever the date
+    happens to have done in the meantime.
     """
-    global START_DATE, RETRY_DEADLINE
-
     if time.time() >= RETRY_DEADLINE:
         print(f"Deadline for {START_DATE} passed; not prompting.")
         exit_now(EXIT_DONE)
-
-    if START_DATE != date.today() and STATE_PATH.exists():
-        # A new day's timer activation landed on top of the previous day's
-        # retry loop. Abandon that entry -- its own deadline would have expired
-        # within the hour anyway -- and start a fresh budget for today rather
-        # than skipping today's prompt entirely.
-        print(f"Abandoning carried-over attempt for {START_DATE}; prompting for today.")
-        START_DATE, RETRY_DEADLINE = fresh_state()
 
 
 check_still_wanted()
