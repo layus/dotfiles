@@ -19,27 +19,97 @@ from gi.repository import Gdk
 from gi.repository import GLib
 from gi.repository import Gtk4SessionLock as SessionLock
 
+import os
+import time
 from datetime import date, datetime
 from pathlib import Path
 
+# Resolved once, at import time: restart_for_retry() re-execs this file, and by
+# then the working directory is not guaranteed to be what it was at startup.
+SCRIPT_PATH = os.path.abspath(__file__)
+
 # The timesheet entry belongs to the day the prompt was launched for, even if
 # the screen only gets unlocked (and the prompt only becomes answerable) on a
-# later day. Capture the start day once, at import time.
-START_DATE = date.today()
+# later day. Capture the start day once, at import time -- but let a re-exec
+# (see restart_for_retry) carry the original day across, so a prompt that only
+# succeeds after a restart is still filed under the day it was launched for.
+START_DATE_ENV = "TIMESHEETS_PROMPT_START_DATE"
+try:
+    START_DATE = date.fromisoformat(os.environ[START_DATE_ENV])
+except (KeyError, ValueError):
+    START_DATE = date.today()
 
 # When the session lock cannot be acquired (e.g. the screen is already locked by
 # another locker), retry acquiring it on a fixed interval instead of giving up.
 RETRY_INTERVAL_SECONDS = 10 * 60           # every 10 minutes
 RETRY_MAX_DURATION_SECONDS = 23 * 60 * 60  # for at most 23 hours, then bail out
 
+# Wall-clock instant (time.time()) after which we stop retrying, carried across
+# a re-exec so restarts cannot extend the 23h budget indefinitely.
+DEADLINE_ENV = "TIMESHEETS_PROMPT_DEADLINE"
+try:
+    RETRY_DEADLINE = float(os.environ[DEADLINE_ENV])
+except (KeyError, ValueError):
+    RETRY_DEADLINE = time.time() + RETRY_MAX_DURATION_SECONDS
+
 # gtk4-layer-shell's `monitor` signal can fire before (or without) a matching
 # `locked` signal -- e.g. right after resuming from sleep, when the compositor
 # is slow to respond to the lock request. Calling assign_window_to_monitor()
 # before the lock is confirmed logs "no current lock in place" and silently
 # produces no visible surface, leaving an invisible process running forever.
-# If neither `locked` nor `failed` shows up within this window, treat the lock
-# attempt as failed and fall into the normal retry path instead of hanging.
+# If neither `locked` nor `failed` shows up within this window, give up on this
+# *process* (see restart_for_retry) rather than on the lock attempt alone.
 LOCK_CONFIRM_TIMEOUT_SECONDS = 30
+
+
+def restart_for_retry(reason):
+    """Re-exec the script to retry the lock from a clean process.
+
+    A lock request the compositor never answers cannot be retried in-process.
+    gtk4-layer-shell tracks the in-flight lock in a process-global
+    (`current_lock` in session-lock.c) that is cleared only by the compositor's
+    reply or by session_lock_unlock() -- and the latter is not exported from
+    the shared library, so it is unreachable from Python. Until that global is
+    cleared, every further lock attempt fails immediately, on a fresh
+    GtkSessionLockInstance as much as on the original one: the very first thing
+    session_lock_lock() does is bail out if `current_lock` is non-NULL.
+
+    So the only way back to a usable state is a new process. Wait out the retry
+    interval and exec ourselves, preserving the entry's day and the overall
+    deadline through the environment.
+    """
+    remaining = RETRY_DEADLINE - time.time()
+    if remaining <= RETRY_INTERVAL_SECONDS:
+        print(f"{reason}; deadline reached, giving up.")
+        # os._exit rather than sys.exit: this runs inside a GLib signal handler,
+        # where SystemExit would be swallowed and merely logged as a traceback.
+        sys.stdout.flush()
+        os._exit(0)
+
+    print(f"{reason}; restarting in {RETRY_INTERVAL_SECONDS // 60} min.")
+
+    def do_exec():
+        env = dict(os.environ)
+        env[START_DATE_ENV] = START_DATE.isoformat()
+        env[DEADLINE_ENV] = repr(RETRY_DEADLINE)
+        sys.stdout.flush()
+        try:
+            os.execve(sys.executable, [sys.executable, SCRIPT_PATH], env)
+        except OSError as err:
+            # Nothing left to try: exec is the only way out of a wedged lock.
+            # PyGObject swallows exceptions raised out of a callback, so without
+            # this the process would sit held forever with nothing scheduled --
+            # the very failure mode all of this exists to avoid. Exit non-zero
+            # so the journal shows why the prompt disappeared.
+            print(f"Failed to restart ({err}); giving up.")
+            sys.stdout.flush()
+            os._exit(1)
+
+    # Wait on a GLib timer rather than sleeping: this is usually reached from a
+    # signal handler running inside gtk_session_lock_instance_lock(), and
+    # exec()ing from under that call stack (or blocking it for ten minutes)
+    # would tear the library down mid-call. The timer fires from the main loop.
+    GLib.timeout_add_seconds(RETRY_INTERVAL_SECONDS, do_exec)
 
 
 def prompt_label():
@@ -182,8 +252,6 @@ class ScreenLock:
         self.lock_instance.connect('failed', self._on_failed)
         self.lock_instance.connect('monitor', self._on_monitor)
         self.window = None
-        # Wall-clock deadline after which we stop retrying and bail out.
-        self._retry_deadline = None
         # True once `locked` has fired for the in-flight lock() call. Monitors
         # that arrive before that are queued rather than assigned immediately,
         # since assigning to an unconfirmed lock silently produces no surface.
@@ -210,42 +278,27 @@ class ScreenLock:
         # Acquiring the session lock failed. This happens when another locker
         # already holds the screen (e.g. swaylock). The old Layer Shell fallback
         # does not work while the screen is locked, so instead we keep retrying
-        # the lock on a fixed interval, hoping the other locker eventually goes
-        # away, and give up after a bounded amount of time.
+        # the lock, hoping the other locker eventually goes away, and give up
+        # after a bounded amount of time.
+        #
+        # The retry has to go through a fresh process: this signal can be raised
+        # by the library refusing to reuse an instance, and in every failure
+        # path the process-global in-flight lock may still be set. See
+        # restart_for_retry().
         self._locked = False
         self._pending_monitors.clear()
         self._clear_confirm_timeout()
-
-        now = GLib.get_monotonic_time()  # microseconds, immune to clock changes
-        if self._retry_deadline is None:
-            self._retry_deadline = now + RETRY_MAX_DURATION_SECONDS * 1_000_000
-
-        if now >= self._retry_deadline:
-            print("Session lock still unavailable after 23h; giving up.")
-            app.quit()
-            return
-
-        print(
-            f"Session lock unavailable; retrying in "
-            f"{RETRY_INTERVAL_SECONDS // 60} min."
-        )
-        GLib.timeout_add_seconds(RETRY_INTERVAL_SECONDS, self._retry_lock)
-
-    def _retry_lock(self):
-        self.lock()
-        return GLib.SOURCE_REMOVE  # one-shot timer
+        restart_for_retry("Session lock unavailable")
 
     def _on_confirm_timeout(self):
         # Neither `locked` nor `failed` showed up in time -- the compositor is
-        # stuck (observed right after resuming from sleep). Treat it as a
-        # failure so we fall into the normal bounded-retry path instead of
-        # sitting there forever with an unmapped, invisible window.
+        # stuck (observed right after resuming from sleep). Nothing can be
+        # retried in this process: the lock request is still in flight as far as
+        # the library is concerned, and it has no API to cancel it. Restart.
         self._confirm_timeout_id = None
-        print(
-            f"Session lock not confirmed within "
-            f"{LOCK_CONFIRM_TIMEOUT_SECONDS}s; treating as failed."
+        restart_for_retry(
+            f"Session lock not confirmed within {LOCK_CONFIRM_TIMEOUT_SECONDS}s"
         )
-        self._on_failed(self.lock_instance)
         return GLib.SOURCE_REMOVE
 
     def _on_monitor(self, lock_instance, monitor):
@@ -297,8 +350,9 @@ lock = ScreenLock()
 
 def on_activate(app):
     # Hold the application alive for the whole session. Otherwise, when the lock
-    # fails and no windows exist, GApplication would exit before the retry timer
-    # fires. Every exit path calls app.quit() explicitly, which overrides holds.
+    # fails and no windows exist, GApplication would exit before we get a chance
+    # to restart. Every exit path calls app.quit() or exec()s, both of which
+    # override holds.
     app.hold()
     lock.lock()
 
