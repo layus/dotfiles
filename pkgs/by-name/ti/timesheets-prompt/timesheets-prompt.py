@@ -36,13 +36,12 @@ EXIT_TEMPFAIL = 75  # EX_TEMPFAIL
 # another locker), retry acquiring it on a fixed interval instead of giving up.
 RETRY_INTERVAL_SECONDS = 10 * 60           # every 10 minutes
 #
-# 23h, and it must stay under the 24h between timer firings. That is what keeps
-# one day's attempt from ever meeting the next day's: an attempt started at
-# 15:30 expires at 14:30, an hour before the timer fires again, so the retry
-# chain has always exited and cleared its state file by then. Raise this to 24h
-# or more and a still-running chain would be handed the next day's activation,
-# with no way to tell that apart from one of its own restarts.
-RETRY_MAX_DURATION_SECONDS = 23 * 60 * 60
+# Must stay under the 24h between timer firings, so one day's attempt can never
+# still be going when the next day's arrives: started at 15:30 this expires at
+# 12:00, three and a half hours before the timer fires again. The margin is
+# deliberately generous, because the deadline is only *checked* when a process
+# runs, and a suspended machine may not run one for a while.
+RETRY_MAX_DURATION_SECONDS = (20 * 60 + 30) * 60  # 20h30
 
 # The retry loop spans several processes (see restart_for_retry), so the two
 # facts that must outlive any one of them are kept in a small state file:

@@ -107,10 +107,11 @@
       # count: the laptop suspends for hours at a time, so a count says nothing
       # about how long the prompt has been nagging. The script stamps a deadline
       # into $XDG_RUNTIME_DIR on its first run, carries it across restarts, and
-      # exits 0 once it passes -- 23h, deliberately shorter than the 24h between
-      # firings, so one day's retry chain always ends before the next day's
-      # activation arrives. Nothing in systemd distinguishes a fresh activation
-      # from an automatic restart, so that margin is what keeps the two apart.
+      # exits 0 once it passes -- 20h30, deliberately shorter than the 24h
+      # between firings, so one day's retry chain always ends before the next
+      # day's activation arrives. Nothing in systemd distinguishes a fresh
+      # activation from an automatic restart, so that margin is what keeps the
+      # two apart.
       #
       # That has to live in the script: systemd has no "stop restarting after a
       # wall-clock instant" knob. StartLimitIntervalSec= is a rate limit (N
