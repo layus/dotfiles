@@ -8,6 +8,13 @@ let
 in
 {
 
+  # Keep logind's hands off the power key: no poweroff on a short press, no
+  # reboot on a long one.  The key is left to the compositor to bind (or not).
+  services.logind.settings.Login = {
+    HandlePowerKey = "ignore";
+    HandlePowerKeyLongPress = "ignore";
+  };
+
   # Use symlinks to instantiate user-sleep@.service for each normal user,
   # mimicking what systemd does when resolving template instances.
   # sleep.target.requires/user-sleep@<name>.service -> ../user-sleep@.service
