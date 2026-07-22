@@ -24,33 +24,117 @@ import time
 from datetime import date, datetime
 from pathlib import Path
 
-# Resolved once, at import time: restart_for_retry() re-execs this file, and by
-# then the working directory is not guaranteed to be what it was at startup.
-SCRIPT_PATH = os.path.abspath(__file__)
-
-# The timesheet entry belongs to the day the prompt was launched for, even if
-# the screen only gets unlocked (and the prompt only becomes answerable) on a
-# later day. Capture the start day once, at import time -- but let a re-exec
-# (see restart_for_retry) carry the original day across, so a prompt that only
-# succeeds after a restart is still filed under the day it was launched for.
-START_DATE_ENV = "TIMESHEETS_PROMPT_START_DATE"
-try:
-    START_DATE = date.fromisoformat(os.environ[START_DATE_ENV])
-except (KeyError, ValueError):
-    START_DATE = date.today()
+# Exit codes the service unit keys off: EXIT_TEMPFAIL asks it to start us again
+# after RestartSec (via Restart=on-failure + RestartForceExitStatus=75), while
+# EXIT_DONE ends the retry loop for good. Exiting 75 does leave the unit
+# momentarily "failed" in the journal, which is deliberate: marking it a success
+# would stop on-failure from ever restarting us.
+EXIT_DONE = 0
+EXIT_TEMPFAIL = 75  # EX_TEMPFAIL
 
 # When the session lock cannot be acquired (e.g. the screen is already locked by
 # another locker), retry acquiring it on a fixed interval instead of giving up.
 RETRY_INTERVAL_SECONDS = 10 * 60           # every 10 minutes
 RETRY_MAX_DURATION_SECONDS = 23 * 60 * 60  # for at most 23 hours, then bail out
 
-# Wall-clock instant (time.time()) after which we stop retrying, carried across
-# a re-exec so restarts cannot extend the 23h budget indefinitely.
-DEADLINE_ENV = "TIMESHEETS_PROMPT_DEADLINE"
-try:
-    RETRY_DEADLINE = float(os.environ[DEADLINE_ENV])
-except (KeyError, ValueError):
-    RETRY_DEADLINE = time.time() + RETRY_MAX_DURATION_SECONDS
+# The retry loop spans several processes (see restart_for_retry), so the two
+# facts that must outlive any one of them are kept in a small state file:
+#
+#   * the day the entry belongs to, so a prompt that is only answered on a later
+#     day is still filed under the day it was launched for, and
+#   * the instant the retrying stops, so restarts cannot extend the 23h budget.
+#
+# It lives in XDG_RUNTIME_DIR, which is tmpfs cleared when the session ends --
+# the same lifetime the deadline is meant to have, so a logout cannot leave one
+# day's budget lying around for the next. Within a session, check_still_wanted()
+# is what keeps a carried-over attempt from outliving its day.
+STATE_PATH = Path(
+    os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+) / "timesheets-prompt.state"
+
+
+def fresh_state():
+    return date.today(), time.time() + RETRY_MAX_DURATION_SECONDS
+
+
+def load_state():
+    """Read (start date, deadline) carried over from a previous attempt.
+
+    Anything unusable -- absent file, torn write, garbage, or a deadline that
+    cannot belong to a live attempt -- is treated as "no previous attempt" and
+    starts a fresh budget. Sanity-checking the deadline matters as much as
+    parsing it: a write truncated mid-float reads back as a 1970 timestamp,
+    which would look like an expired budget and silently skip the day.
+    """
+    try:
+        raw_date, raw_deadline = STATE_PATH.read_text().split()
+        start_date = date.fromisoformat(raw_date)
+        deadline = float(raw_deadline)
+    except (OSError, ValueError):
+        return fresh_state()
+
+    # Reject a deadline no real attempt could have written -- too far ahead, or
+    # so far behind that it cannot be this session's (a float truncated by a
+    # torn write reads back as a 1970 timestamp). An expired-but-plausible one
+    # is kept deliberately: that is exactly what check_still_wanted() needs to
+    # see in order to stop, and replacing it here would hand out a fresh budget.
+    age = time.time() - deadline
+    if not -RETRY_MAX_DURATION_SECONDS <= age <= RETRY_MAX_DURATION_SECONDS:
+        return fresh_state()
+    return start_date, deadline
+
+
+START_DATE, RETRY_DEADLINE = load_state()
+
+
+def save_state():
+    """Persist the day and deadline for the process that replaces us.
+
+    Written atomically: a torn write would be read back as a bogus deadline by
+    the very next process, and the whole point of the file is that the next
+    process can trust it.
+    """
+    tmp = STATE_PATH.with_suffix(".tmp")
+    try:
+        tmp.write_text(f"{START_DATE.isoformat()} {RETRY_DEADLINE!r}\n")
+        os.replace(tmp, STATE_PATH)
+        return True
+    except OSError as err:
+        print(f"Could not save state to {STATE_PATH}: {err}")
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+        return False
+
+
+def clear_state():
+    """Drop the state file once the retry loop is over, successfully or not."""
+    try:
+        STATE_PATH.unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
+def exit_now(code):
+    """Leave the process immediately with `code`.
+
+    Every caller runs inside a GLib callback, where PyGObject swallows a raised
+    SystemExit and merely logs a traceback -- leaving the process alive and held
+    with nothing scheduled, which is the very hang this all exists to prevent.
+    """
+    if code == EXIT_TEMPFAIL:
+        # Only ask for a restart if the deadline can actually be handed on. If
+        # it cannot, every later attempt would mint a fresh 23h budget and the
+        # retrying would never end, so stop here instead.
+        if not save_state():
+            print("Cannot carry the deadline forward; giving up instead.")
+            code = EXIT_DONE
+    if code != EXIT_TEMPFAIL:
+        clear_state()
+    sys.stdout.flush()
+    os._exit(code)
+
 
 # gtk4-layer-shell's `monitor` signal can fire before (or without) a matching
 # `locked` signal -- e.g. right after resuming from sleep, when the compositor
@@ -63,7 +147,7 @@ LOCK_CONFIRM_TIMEOUT_SECONDS = 30
 
 
 def restart_for_retry(reason):
-    """Re-exec the script to retry the lock from a clean process.
+    """Exit and ask systemd to start us again later.
 
     A lock request the compositor never answers cannot be retried in-process.
     gtk4-layer-shell tracks the in-flight lock in a process-global
@@ -74,42 +158,21 @@ def restart_for_retry(reason):
     GtkSessionLockInstance as much as on the original one: the very first thing
     session_lock_lock() does is bail out if `current_lock` is non-NULL.
 
-    So the only way back to a usable state is a new process. Wait out the retry
-    interval and exec ourselves, preserving the entry's day and the overall
-    deadline through the environment.
+    So the only way back to a usable state is a new process. The service unit
+    restarts us on EXIT_TEMPFAIL after RestartSec, and the day the entry belongs
+    to plus the overall deadline are carried forward in STATE_PATH, since a
+    fresh process would otherwise re-stamp both from scratch.
+
+    Stopping is bounded by wall-clock time rather than a restart count: the
+    laptop suspends for hours at a time, so a count would say nothing about how
+    long the prompt has actually been pending.
     """
-    remaining = RETRY_DEADLINE - time.time()
-    if remaining <= RETRY_INTERVAL_SECONDS:
+    if time.time() + RETRY_INTERVAL_SECONDS >= RETRY_DEADLINE:
         print(f"{reason}; deadline reached, giving up.")
-        # os._exit rather than sys.exit: this runs inside a GLib signal handler,
-        # where SystemExit would be swallowed and merely logged as a traceback.
-        sys.stdout.flush()
-        os._exit(0)
+        exit_now(EXIT_DONE)
 
-    print(f"{reason}; restarting in {RETRY_INTERVAL_SECONDS // 60} min.")
-
-    def do_exec():
-        env = dict(os.environ)
-        env[START_DATE_ENV] = START_DATE.isoformat()
-        env[DEADLINE_ENV] = repr(RETRY_DEADLINE)
-        sys.stdout.flush()
-        try:
-            os.execve(sys.executable, [sys.executable, SCRIPT_PATH], env)
-        except OSError as err:
-            # Nothing left to try: exec is the only way out of a wedged lock.
-            # PyGObject swallows exceptions raised out of a callback, so without
-            # this the process would sit held forever with nothing scheduled --
-            # the very failure mode all of this exists to avoid. Exit non-zero
-            # so the journal shows why the prompt disappeared.
-            print(f"Failed to restart ({err}); giving up.")
-            sys.stdout.flush()
-            os._exit(1)
-
-    # Wait on a GLib timer rather than sleeping: this is usually reached from a
-    # signal handler running inside gtk_session_lock_instance_lock(), and
-    # exec()ing from under that call stack (or blocking it for ten minutes)
-    # would tear the library down mid-call. The timer fires from the main loop.
-    GLib.timeout_add_seconds(RETRY_INTERVAL_SECONDS, do_exec)
+    print(f"{reason}; exiting for restart in {RETRY_INTERVAL_SECONDS // 60} min.")
+    exit_now(EXIT_TEMPFAIL)
 
 
 def prompt_label():
@@ -272,6 +335,10 @@ class ScreenLock:
         self._pending_monitors.clear()
 
     def _on_unlocked(self, lock_instance):
+        # The prompt was answered (or dismissed): the retry loop is over, so
+        # drop the carried-over deadline rather than leaving it for a later
+        # session to trip over.
+        clear_state()
         app.quit()
 
     def _on_failed(self, lock_instance):
@@ -345,14 +412,50 @@ class ScreenLock:
         self.lock_instance.lock()
 
 
+def check_still_wanted():
+    """Bail out before touching the compositor if this attempt is obsolete.
+
+    Every process in the retry chain starts here, which is the only place that
+    catches the two ways a carried-over attempt stops being worth showing:
+
+    A restart can arrive long after its deadline, because RestartSec counts in
+    monotonic time and so does not advance while the laptop is suspended, while
+    the deadline is wall-clock. Suspend on Friday evening and the retry queued
+    for ten minutes later fires on Monday morning, tens of hours past the point
+    where the prompt should have given up.
+
+    A restart can also arrive on a later day than the one it was queued for. The
+    timer starting the unit while a previous day's retry loop is still going
+    does not queue behind it: systemd cancels the pending RestartSec wait and
+    starts immediately ("Scheduled restart job immediately on client request"),
+    so without this check the new day's activation would inherit the old day's
+    state and silently ask about -- and file against -- the wrong day.
+    """
+    global START_DATE, RETRY_DEADLINE
+
+    if time.time() >= RETRY_DEADLINE:
+        print(f"Deadline for {START_DATE} passed; not prompting.")
+        exit_now(EXIT_DONE)
+
+    if START_DATE != date.today() and STATE_PATH.exists():
+        # A new day's timer activation landed on top of the previous day's
+        # retry loop. Abandon that entry -- its own deadline would have expired
+        # within the hour anyway -- and start a fresh budget for today rather
+        # than skipping today's prompt entirely.
+        print(f"Abandoning carried-over attempt for {START_DATE}; prompting for today.")
+        START_DATE, RETRY_DEADLINE = fresh_state()
+
+
+check_still_wanted()
+
 app = Gtk.Application(application_id='com.github.wmww.gtk4-layer-shell.py-session-lock')
 lock = ScreenLock()
 
 def on_activate(app):
     # Hold the application alive for the whole session. Otherwise, when the lock
     # fails and no windows exist, GApplication would exit before we get a chance
-    # to restart. Every exit path calls app.quit() or exec()s, both of which
-    # override holds.
+    # to restart. Every exit path calls app.quit(), or exits outright, both of
+    # which override holds.
     app.hold()
     lock.lock()
 
