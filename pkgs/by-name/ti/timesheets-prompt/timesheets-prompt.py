@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+import sys
+# Run under systemd with stdout piped to the journal: without this, prints are
+# block-buffered and can be lost entirely if the process is later killed
+# (e.g. by session teardown) before the buffer flushes.
+sys.stdout.reconfigure(line_buffering=True)
+
 # For GTK4 Layer Shell to get linked before libwayland-client we must explicitly load it before importing with gi
 from ctypes import CDLL
 CDLL('libgtk4-layer-shell.so')
@@ -25,6 +31,15 @@ START_DATE = date.today()
 # another locker), retry acquiring it on a fixed interval instead of giving up.
 RETRY_INTERVAL_SECONDS = 10 * 60           # every 10 minutes
 RETRY_MAX_DURATION_SECONDS = 23 * 60 * 60  # for at most 23 hours, then bail out
+
+# gtk4-layer-shell's `monitor` signal can fire before (or without) a matching
+# `locked` signal -- e.g. right after resuming from sleep, when the compositor
+# is slow to respond to the lock request. Calling assign_window_to_monitor()
+# before the lock is confirmed logs "no current lock in place" and silently
+# produces no visible surface, leaving an invisible process running forever.
+# If neither `locked` nor `failed` shows up within this window, treat the lock
+# attempt as failed and fall into the normal retry path instead of hanging.
+LOCK_CONFIRM_TIMEOUT_SECONDS = 30
 
 
 def prompt_label():
@@ -169,9 +184,24 @@ class ScreenLock:
         self.window = None
         # Wall-clock deadline after which we stop retrying and bail out.
         self._retry_deadline = None
+        # True once `locked` has fired for the in-flight lock() call. Monitors
+        # that arrive before that are queued rather than assigned immediately,
+        # since assigning to an unconfirmed lock silently produces no surface.
+        self._locked = False
+        self._pending_monitors = []
+        self._confirm_timeout_id = None
+
+    def _clear_confirm_timeout(self):
+        if self._confirm_timeout_id is not None:
+            GLib.source_remove(self._confirm_timeout_id)
+            self._confirm_timeout_id = None
 
     def _on_locked(self, lock_instance):
-        pass
+        self._locked = True
+        self._clear_confirm_timeout()
+        for monitor in self._pending_monitors:
+            self._assign(monitor)
+        self._pending_monitors.clear()
 
     def _on_unlocked(self, lock_instance):
         app.quit()
@@ -182,6 +212,10 @@ class ScreenLock:
         # does not work while the screen is locked, so instead we keep retrying
         # the lock on a fixed interval, hoping the other locker eventually goes
         # away, and give up after a bounded amount of time.
+        self._locked = False
+        self._pending_monitors.clear()
+        self._clear_confirm_timeout()
+
         now = GLib.get_monotonic_time()  # microseconds, immune to clock changes
         if self._retry_deadline is None:
             self._retry_deadline = now + RETRY_MAX_DURATION_SECONDS * 1_000_000
@@ -201,7 +235,30 @@ class ScreenLock:
         self.lock()
         return GLib.SOURCE_REMOVE  # one-shot timer
 
+    def _on_confirm_timeout(self):
+        # Neither `locked` nor `failed` showed up in time -- the compositor is
+        # stuck (observed right after resuming from sleep). Treat it as a
+        # failure so we fall into the normal bounded-retry path instead of
+        # sitting there forever with an unmapped, invisible window.
+        self._confirm_timeout_id = None
+        print(
+            f"Session lock not confirmed within "
+            f"{LOCK_CONFIRM_TIMEOUT_SECONDS}s; treating as failed."
+        )
+        self._on_failed(self.lock_instance)
+        return GLib.SOURCE_REMOVE
+
     def _on_monitor(self, lock_instance, monitor):
+        if not self._locked:
+            # Lock not confirmed yet (or already un-confirmed by a timeout) --
+            # queue this monitor and let _on_locked assign it once/if the lock
+            # actually succeeds. Assigning now would hit "no current lock in
+            # place" and leave an invisible, unmapped window.
+            self._pending_monitors.append(monitor)
+            return
+        self._assign(monitor)
+
+    def _assign(self, monitor):
         if not self.window:
             self.window = PromptWindow(self.unlock)
             window = self.window
@@ -215,15 +272,23 @@ class ScreenLock:
         # mid-map and emitting GDK_IS_TOPLEVEL/GDK_IS_SURFACE assertions. Running
         # the assignment from an idle callback lets lock() return first.
         def assign():
-            lock_instance.assign_window_to_monitor(window, monitor)
+            if self._locked:
+                self.lock_instance.assign_window_to_monitor(window, monitor)
             return GLib.SOURCE_REMOVE
 
         GLib.idle_add(assign)
 
     def unlock(self):
+        self._clear_confirm_timeout()
         self.lock_instance.unlock()
 
     def lock(self):
+        self._locked = False
+        self._pending_monitors.clear()
+        self._clear_confirm_timeout()
+        self._confirm_timeout_id = GLib.timeout_add_seconds(
+            LOCK_CONFIRM_TIMEOUT_SECONDS, self._on_confirm_timeout
+        )
         self.lock_instance.lock()
 
 
