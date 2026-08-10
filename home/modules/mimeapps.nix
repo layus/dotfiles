@@ -31,7 +31,6 @@
       "x-scheme-handler/feed" = "thunderbird.desktop";
       "x-scheme-handler/http" = "firefox.desktop";
       "x-scheme-handler/https" = "firefox.desktop";
-      "x-scheme-handler/irc" = "hexchat.desktop";
       "x-scheme-handler/mailto" = "thunderbird.desktop";
       "x-scheme-handler/mid" = "thunderbird.desktop";
       "x-scheme-handler/net.thunderbird" = "thunderbird.desktop";

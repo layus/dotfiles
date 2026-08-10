@@ -49,7 +49,6 @@
         #typora # error: Newer versions of typora use anti-user encryption and refuse to start.
         inkscape
         #yed
-        hexchat
         vlc
         guvcview
         krita
