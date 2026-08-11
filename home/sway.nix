@@ -512,7 +512,7 @@ let
     input * {
         tap enabled
         drag_lock disabled
-        pointer_accel 0.8
+        pointer_accel 0.6
         middle_emulation enabled
         xkb_numlock enabled
         xkb_layout "be"
