@@ -188,7 +188,15 @@ let
     # XXX: We should be able to identify the variables that should be imported.
     #      There is no need to import everything.
     ${dbus}/bin/dbus-update-activation-environment --systemd --all
-    #${systemd}/bin/systemctl start graphical.target
+
+    # greetd execs sway directly (no `systemctl --user start sway-session.target`
+    # a la programs.sway's config.d/nixos.conf, which this config replaces
+    # wholesale via /etc/sway/config). Without it graphical-session.target
+    # never activates, so xdg-desktop-portal*.service fail with "Dependency
+    # failed" (Requisite=graphical-session.target) and screencast/screenshot
+    # requests from Firefox etc. silently die. sway-session.target BindsTo=
+    # graphical-session.target, so starting it pulls the latter up too.
+    ${systemd}/bin/systemctl --user start sway-session.target
 
     # These apps are restarted on each sway startup
     # It is a bit redundant to call swaymsg here, but it ensures that the app starts in background.
@@ -274,6 +282,7 @@ let
 
     exec_always ${execAlwaysScript}
     exec ${execScript}
+    exec ${swaymsgPath} -t subscribe '["shutdown"]' && ${systemd}/bin/systemctl --user stop sway-session.target
 
     ### Key bindings
 
