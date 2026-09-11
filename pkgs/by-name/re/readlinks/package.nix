@@ -2,13 +2,13 @@
 
 rustPlatform.buildRustPackage {
   pname = "readlinks";
-  version = "0.1.0-unstable-2026-06-28";
+  version = "0.1.0-unstable-2026-09-11";
 
   src = fetchFromGitHub {
     owner = "layus";
     repo = "readlinks";
-    rev = "033210ceef409e6f6b88aff905ea4b6005c14cf7";
-    hash = "sha256-a57xm1pFuRRab7viY3KAFYrNzo8KPt5QXwzV1KUfJE8=";
+    rev = "651ebfd6d9140f17a90c8fcc619fbc7ca97f06c1";
+    hash = "sha256-FG2X3LaMPuqmt1LDi8iuQgGiF5Le4e6o78moG65tIFs=";
   };
 
   cargoLock.lockFile = ./Cargo.lock;
