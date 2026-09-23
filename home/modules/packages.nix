@@ -202,7 +202,6 @@
       jq
       yq
       tmux
-      tmate
       zellij
       nixpkgs-fmt
       quilt
