@@ -60,7 +60,7 @@
         #jetbrains.pycharm-community
 
         #virtualbox
-        zotero
+        #zotero  # broken
 
         # }}}
         # {{{ Desktop environment
