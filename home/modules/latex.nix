@@ -3,10 +3,8 @@
 {
   home.packages = lib.mkIf config.custom.graphical [
     (lib.lowPrio (
-      pkgs.texlive.combine {
-        inherit (pkgs.texlive) scheme-full;
-        pkgFilter = pkg: pkg.tlType == "run" || pkg.tlType == "bin" || pkg.pname == "pgf";
-      }
+      # scheme-full without docs/sources, but with pgf docs.
+      pkgs.texliveFull.withPackages (ps: [ ps.pgf.texdoc ])
     ))
   ];
 }
