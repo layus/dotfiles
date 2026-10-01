@@ -4,7 +4,8 @@
 
     netDevices.brother-scanner = {
       model = "ADS-1700W";
-      ip = "192.168.1.53";
+      # Resolved via mDNS, so it survives DHCP/network renumbering.
+      nodename = "BR5CF3705DEABB.local";
     };
   };
 }
