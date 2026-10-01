@@ -168,7 +168,6 @@ in
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     neovim
-    rxvt-unicode-unwrapped.terminfo
     alacritty.terminfo
     android-tools
 

@@ -254,7 +254,6 @@ let
     bindsym $mod+w          exec $HOME/bin/nm_toggle
     bindsym Ctrl+Space      exec pkill -USR2 -n handy
 
-    #for_window [class="URxvt"]              border pixel 1
     for_window [app_id="^[Aa]lacritty$"]       border pixel 1
 
     for_window [title="Oz Browser"]         floating enable
