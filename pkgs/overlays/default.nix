@@ -22,6 +22,19 @@ final: prev:
     in
     goodPkgs.cantarell-fonts;
 
+  # Python 3.11.17+/3.12.15+ reject server_hostname in server mode, which breaks
+  # anyio's test_tls_connectable (https://github.com/NixOS/nixpkgs/issues/570271).
+  # Upstream fix: agronholm/anyio@818e4ac4. Drop once anyio ships a release with it.
+  pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+    (python-final: python-prev: {
+      anyio = assert final.lib.versionAtLeast "4.15.1" python-prev.anyio.version;
+        python-prev.anyio.overridePythonAttrs (oldAttrs: {
+          disabledTests = oldAttrs.disabledTests or [ ]
+            ++ final.lib.optionals (python-final.pythonOlder "3.13") [ "test_tls_connectable" ];
+        });
+    })
+  ];
+
   factorio = prev.factorio.overrideAttrs (oldAttrs: rec {
     version = "2.0.32";
     pname = "factorio";
