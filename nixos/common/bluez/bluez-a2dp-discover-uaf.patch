@@ -1,0 +1,90 @@
+From 629a8228c3f41120dce6d3dd0ee37079940fe42b Mon Sep 17 00:00:00 2001
+From: Guillaume Maudoux <guillaume.maudoux@gmail.com>
+Date: Wed, 7 Oct 2026 14:13:10 +0200
+Subject: [PATCH] a2dp: Fix use-after-free of setup in discover_cb
+
+a2dp_discover passes the setup as user_data to avdtp_discover but the
+only reference to it is owned by the caller's cb_data. If the caller
+cancels (a2dp_cancel) while the discovery is in flight and the abort
+does not clear the pending discover (e.g. setup->stream is set), the
+setup is freed and a later finalize_discovery (connection_lost on
+request timeout) calls discover_cb with a dangling pointer:
+
+  #0 discover_cb
+  #1 finalize_discovery
+  #2 connection_lost
+  #3 cancel_request
+  #4 request_timeout
+
+Keep a reference on the setup for the lifetime of the AVDTP discovery.
+---
+ profiles/audio/a2dp.c | 26 ++++++++++++++++++++++++--
+ 1 file changed, 24 insertions(+), 2 deletions(-)
+
+diff --git a/profiles/audio/a2dp.c b/profiles/audio/a2dp.c
+index c8adc3122..a7127007c 100644
+--- a/profiles/audio/a2dp.c
++++ b/profiles/audio/a2dp.c
+@@ -113,6 +113,7 @@ struct a2dp_setup {
+ 	GIOChannel *io;
+ 	guint id;
+ 	int ref;
++	gboolean discovering;
+ };
+ 
+ struct a2dp_server {
+@@ -3105,6 +3106,10 @@ static void discover_cb(struct avdtp *session, GSList *seps,
+ 	}
+ 
+ 	finalize_discover(setup);
++
++	/* Release the reference held on behalf of avdtp_discover */
++	setup->discovering = FALSE;
++	setup_unref(setup);
+ }
+ 
+ unsigned int a2dp_discover(struct avdtp *session, a2dp_discover_cb_t cb,
+@@ -3124,11 +3129,17 @@ unsigned int a2dp_discover(struct avdtp *session, a2dp_discover_cb_t cb,
+ 	cb_data->discover_cb = cb;
+ 	cb_data->user_data = user_data;
+ 
+-	if (avdtp_discover(session, discover_cb, setup) == 0) {
++	/* Hold a reference for as long as avdtp may call discover_cb, since
++	 * cancelling cb_data alone must not free the setup while the AVDTP
++	 * discovery is still pending.
++	 */
++	if (avdtp_discover(session, discover_cb, setup_ref(setup)) == 0) {
++		setup->discovering = TRUE;
+ 		setup->cb = g_slist_append(setup->cb, cb_data);
+ 		return cb_data->id;
+ 	}
+ 
++	setup_unref(setup);
+ 	setup_cb_free(cb_data);
+ 	return 0;
+ }
+@@ -3448,9 +3459,20 @@ gboolean a2dp_cancel(unsigned int id)
+ 			setup_cb_free(cb);
+ 
+ 			if (!setup->cb) {
++				int err;
++
+ 				DBG("aborting setup %p", setup);
+-				if (!avdtp_abort(setup->session, setup->stream))
++				err = avdtp_abort(setup->session, setup->stream);
++				if (!err)
+ 					return TRUE;
++
++				/* Pending discovery aborted: discover_cb will
++				 * not be called, drop its reference.
++				 */
++				if (err == -EALREADY && setup->discovering) {
++					setup->discovering = FALSE;
++					setup_unref(setup);
++				}
+ 			}
+ 
+ 			setup_unref(setup);
+-- 
+2.55.0
+
