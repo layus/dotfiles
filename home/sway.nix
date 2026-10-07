@@ -273,7 +273,7 @@ let
     #for_window [instance="sun-awt-X11-XFramePeer"] floating enable, move absolute position center
     for_window [title="(?i)Netbeans"]       floating disable
 
-    for_window [app_id="firefox" title="^Picture-in-picture$"] floating enable, sticky enable, border none
+    for_window [app_id="firefox" title="(?i)^Picture-in-Picture$"] floating enable, sticky enable, border none
     for_window [app_id="firefox" title="— Sharing Indicator$"] floating enable, sticky enable, border none
 
     assign ${thunderbirdSelector} → 1
