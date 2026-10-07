@@ -10,3 +10,7 @@
 #sidebar {
   min-width: 100px !important;
 }
+
+#sidebar-box {
+  padding-inline-start: 0 !important;
+}
