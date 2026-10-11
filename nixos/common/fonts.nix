@@ -44,7 +44,7 @@
       tempora_lgc
       terminus_font
       theano
-      ttf_bitstream_vera
+      ttf-bitstream-vera
       ubuntu-classic
       #vistafonts
       noto-fonts
