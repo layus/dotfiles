@@ -38,7 +38,7 @@ let
   # Wayland apps have only app_id to match upon
   slackSelector = ''[app_id="^[Ss]lack$"]'';
   zimSelector = ''[app_id="^[Zz]im$"]'';
-  elementSelector = ''[app_id="^[Ee]lement$"]'';
+  elementSelector = ''[app_id="^element-desktop$"]'';
   thunderbirdSelector = ''[app_id="^[Tt]hunderbird$"]'';
   firefoxSelector = ''[app_id="[Ff]irefox$"]'';
 
@@ -156,7 +156,7 @@ let
     run gammastep ${gammastep}/bin/gammastep -l 50.6:4.32 -t 5700:4500
     run Slack     ${slack}/bin/slack
     execAndScratch zim      ${zim}/bin/zim
-    execAndScratch element  ${element-desktop}/bin/element-desktop --password-store=gnome-libsecret
+    execAndScratch element-desktop ${element-desktop}/bin/element-desktop --password-store=gnome-libsecret
     #execAndScratch "Microsoft Teams - Preview" $-{teams}/bin/teams
 
     #exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
