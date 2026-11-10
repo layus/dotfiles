@@ -33,6 +33,13 @@ in
       type = "soft";
       value = "unlimited";
     }
+    # Lets sway switch itself to SCHED_RR (it resets its children to SCHED_OTHER).
+    {
+      domain = "layus";
+      item = "rtprio";
+      type = "-";
+      value = "1";
+    }
   ];
 
   services.udev.extraRules = ''
@@ -59,6 +66,8 @@ in
     max-substitution-jobs = 64
     extra-system-features = recursive-nix
   '';
+  # Builds keep a normal CPU share but don't preempt interactive tasks.
+  nix.daemonCPUSchedPolicy = "batch";
   nix.settings.trusted-users = [ "@wheel" ]; # or just your username
   nix.buildMachines = [
     # tweag remote builders
