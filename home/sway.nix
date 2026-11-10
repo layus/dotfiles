@@ -43,6 +43,7 @@ let
   firefoxSelector = ''[app_id="[Ff]irefox$"]'';
 
   swaymsgPath = lib.getExe' sway "swaymsg";
+  swaynagPath = lib.getExe' sway "swaynag";
 
   # These scripts form an extra indirection but save so much on string escape hell.
   # They need to be named like the wrapped executable to make the pkill trick in execAlwaysScript work.
@@ -437,8 +438,8 @@ let
     #bindsym $mod+Shift+W reload
     # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
     bindsym $mod+Shift+R restart
-    # exit i3 (logs you out of your X session)
-    bindsym $mod+Shift+E exit
+    # exit sway (logs you out), after confirmation
+    bindsym $mod+Shift+E exec ${swaynagPath} -t warning -m 'Exit sway? This ends your Wayland session.' -Z 'Yes, exit sway' '${swaymsgPath} exit'
 
     ### Shortcuts for scratchpad easy access ###
 
