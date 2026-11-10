@@ -208,6 +208,7 @@
       keychain
       wget
       curl
+      rtk # token-saving CLI proxy for Claude Code
 
 
       # }}}
