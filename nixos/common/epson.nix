@@ -43,6 +43,44 @@
     defaultShared = false;
   };
 
+  # Keep a *permanent* driverless queue for the ET-2850. Without one, the GTK
+  # print dialog only sees the printer through DNS-SD and asks cupsd for a
+  # temporary queue on the fly (CUPS-Create-Local-Printer). GTK then fetches
+  # the queue's PPD immediately, but cupsd builds it asynchronously (~7s), so
+  # GTK gets a 404, falls back to the half-built queue's attributes and shows
+  # generic options (no paper sizes) until the app is restarted. A permanent
+  # queue already has its PPD, so there is no race.
+  #
+  # hardware.printers.ensurePrinters is not used here because it re-runs
+  # `lpadmin -m everywhere` on every boot. That needs the printer to be
+  # reachable at that moment, so the unit fails whenever we are away from
+  # home. This one only acts when the queue is missing (or only temporary,
+  # meaning it is absent from printers.conf) and skips quietly if the
+  # printer cannot be reached.
+  systemd.services.epson-printer-queue =
+    let
+      name = "EPSON_ET_2850_Series";
+      uri = "ipp://EPSON22BF97.local:631/ipp/print";
+    in
+    {
+      description = "Ensure permanent CUPS queue for the Epson ET-2850";
+      wantedBy = [ "multi-user.target" ];
+      wants = [ "cups.service" "network-online.target" ];
+      after = [ "cups.service" "avahi-daemon.service" "network-online.target" ];
+      environment.LD_LIBRARY_PATH = config.system.nssModules.path;
+      serviceConfig.Type = "oneshot";
+      script = ''
+        if grep -qx '<\(Default\)\?Printer ${name}>' /etc/cups/printers.conf 2>/dev/null; then
+          exit 0
+        fi
+        if ${pkgs.cups}/bin/lpadmin -p ${name} -v ${uri} -m everywhere -E; then
+          ${pkgs.cups}/bin/lpadmin -d ${name}
+        else
+          echo "${uri} unreachable; leaving queue setup for next start" >&2
+        fi
+      '';
+    };
+
   services.avahi = {
     enable = true;
     nssmdns4 = true;
