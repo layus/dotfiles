@@ -75,18 +75,11 @@ in
     group = config.users.users.lighttpd.group;
     extraDomainNames = [ "marie-guillaume.maudoux.be" ];
     reloadServices = [ "lighttpd" "radicale" ];
-    postRun = ''
-      # set permission on dir
-      ${pkgs.acl}/bin/setfacl -m \
-        u:lighttpd:rx,u:radicale:rx \
-        /var/lib/acme/maudoux
-
-      # set permission on key file
-      ${pkgs.acl}/bin/setfacl -m \
-        u:lighttpd:r,u:radicale:r \
-        /var/lib/acme/maudoux/*.pem
-    '';
   };
+  # The acme module resets the cert dir to acme:<group> u=rwX,g=rX,o= on
+  # every setup (wiping ACLs), so grant radicale read access via the group.
+  systemd.services.radicale.serviceConfig.SupplementaryGroups =
+    [ config.security.acme.certs."maudoux".group ];
 
   # services.fail2ban.enable = true;
   # services.fail2ban.jails = {
