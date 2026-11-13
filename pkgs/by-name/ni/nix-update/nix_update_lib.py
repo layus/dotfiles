@@ -519,6 +519,9 @@ class App:
         if status == "dirty":
             print(f"{target}: build was from a dirty tree - refusing to activate. Commit and rebuild first.")
             return 1
+        if status == "current":
+            print(f"{target}: already up to date.")
+            return 0
         if status != "ready" and not (target == "os" and do_switch and status == "pending"):
             print(f"{target}: status is '{status}', not 'ready'. Nothing to apply.")
             return 1

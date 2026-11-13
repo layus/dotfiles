@@ -12,6 +12,7 @@ in
     (nixpkgs + "/nixos/modules/installer/scan/not-detected.nix")
     #/home/layus/projects/inginious.nix
     ../../common/ssh.nix
+    ../../common/nix-update.nix
     ./lighttpd.nix
     ./wireguard.nix
     ./ovh-configuration.nix
@@ -113,9 +114,8 @@ in
 
   ## Nix
 
-  system.autoUpgrade.enable = true;
-  system.autoUpgrade.flags = [ "--override-input" "nixpkgs" "github:NixOS/nixpkgs/nixos-unstable" "--impure" ];
-  system.autoUpgrade.flake = "${config.users.extraUsers.layus.home or "/home/layus"}/.config/nixpkgs";
+  # Daily fetch + input bump + build + switch (replaces system.autoUpgrade).
+  services.nix-update.autoUpgrade = true;
 
   system.stateVersion = "21.11";
 
@@ -508,7 +508,7 @@ in
       Type = "oneshot";
     };
   };
-  systemd.services.nixos-upgrade.onFailure = [ "status-email-user@%n.service" ];
+  systemd.services.nix-update-os.onFailure = [ "status-email-user@%n.service" ];
   systemd.services.urlwatch.onFailure = [ "status-email-user@%n.service" ];
 
   programs.zsh.enable = true;
