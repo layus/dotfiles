@@ -2,13 +2,18 @@
 # ./wireguard.nix).  The firewall is NOT opened on the public interface.
 #
 # Clients connect to 10.100.0.1:6667 with server password
-# "layus/libera:<password>".  No TLS on the listener: the WireGuard tunnel
+# "layus/hackint:<password>".  No TLS on the listener: the WireGuard tunnel
 # already encrypts and authenticates the link.
 #
 # The configuration is immutable (rebuilt from Nix on every start), so
 # declare channels below rather than relying on /join persisting.
-# SASL for Libera is set once at runtime and kept in ZNC's moddata:
+#
+# Credentials stay out of Nix: module data (users/layus/networks/*/moddata)
+# is not part of znc.conf and survives restarts.  Set them once at runtime:
 #   /msg *sasl Set <account> <password>
+#   /msg *sasl Mechanism PLAIN
+# (or CertFP: put a PEM at .../networks/hackint/moddata/cert/user.pem and
+# load the `cert` module instead of `sasl`).
 let
   wgAddress = "10.100.0.1";
   port = 6667;
@@ -43,8 +48,8 @@ in
           Salt = "uLcTm7C6lvcbPWVln2ED";
         };
 
-        Network.libera = {
-          Server = "irc.libera.chat +6697";
+        Network.hackint = {
+          Server = "irc.eu.hackint.org +6697";
           LoadModule = [ "sasl" ];
           JoinDelay = 2; # Let SASL/NickServ finish before joining channels.
           Chan = { };

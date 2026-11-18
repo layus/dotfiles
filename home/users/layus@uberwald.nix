@@ -13,10 +13,10 @@
   # IRC through the ZNC bouncer on sto-helit, over the WireGuard bridge
   # (nixos/machines/{sto-helit/znc.nix,uberwald/wireguard.nix}).
   # The password file is not managed by Nix; it holds the ZNC server password
-  # "layus/libera:<password>" on a single line, mode 600.
+  # "layus/hackint:<password>" on a single line, mode 600.
   programs.halloy = {
     enable = true;
-    settings.servers.libera = {
+    settings.servers.hackint = {
       nickname = "layus";
       alt_nicks = [ "layus_" ];
       server = "10.100.0.1";
