@@ -41,6 +41,11 @@ in
           publicKey = "LDAMmPt3aYAA2C61sZwQIIYMyCy62yZbaJkEle8mkhg=";
           allowedIPs = [ "10.100.0.11/32" ];
         }
+        {
+          # Guillaume @ uberwald (see ../uberwald/wireguard.nix)
+          publicKey = "lqARnrA2+NxEyTdmAyPVSPNYAzlMwmbwsPHm9RZ7o1E=";
+          allowedIPs = [ "10.100.0.12/32" ];
+        }
       ];
     };
     #wg-escape-hatch = {
