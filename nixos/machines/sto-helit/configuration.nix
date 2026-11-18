@@ -15,6 +15,7 @@ in
     ../../common/nix-update.nix
     ./lighttpd.nix
     ./wireguard.nix
+    ./znc.nix
     ./ovh-configuration.nix
     ./hardware-configuration.nix
     #./hardware-configuration.nix
