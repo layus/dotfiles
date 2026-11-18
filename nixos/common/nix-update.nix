@@ -52,14 +52,9 @@ in
       # nix-update invokes `sudo` for the activation steps.
       path = [ "/run/wrappers" ];
 
-      environment = {
-        GIT_TERMINAL_PROMPT = "0";
-        # No usable SSH key in an unattended service: fetch the (public)
-        # upstream anonymously over HTTPS instead.
-        GIT_CONFIG_COUNT = "1";
-        GIT_CONFIG_KEY_0 = "url.https://github.com/.insteadOf";
-        GIT_CONFIG_VALUE_0 = "git@github.com:";
-      };
+      # No interactive git credential prompts.  (Without an SSH key, nix-update
+      # itself falls back to fetching the public upstream over HTTPS.)
+      environment.GIT_TERMINAL_PROMPT = "0";
 
       serviceConfig = {
         Type = "oneshot";

@@ -27,6 +27,23 @@ from pathlib import Path
 from nix_update_lib import App as CoreApp, NixUpdateError
 
 
+def ssh_to_https_prefix(url: str) -> tuple[str, str] | None:
+    """Map an SSH remote URL to an (ssh_prefix, https_prefix) insteadOf pair.
+
+    Handles `user@host:path` and `ssh://user@host[:port]/path`; returns None
+    for anything else (HTTPS, local paths, ...).
+    """
+    if url.startswith("ssh://"):
+        authority = url[len("ssh://"):].split("/", 1)[0]
+        host = authority.rsplit("@", 1)[-1].split(":", 1)[0]
+        return f"ssh://{authority}/", f"https://{host}/"
+    if "://" not in url and ":" in url.split("/", 1)[0]:
+        authority = url.split(":", 1)[0]
+        host = authority.rsplit("@", 1)[-1]
+        return f"{authority}:", f"https://{host}/"
+    return None
+
+
 class App(CoreApp):
     """Core engine plus the interactive / waybar / network features."""
 
@@ -45,7 +62,7 @@ class App(CoreApp):
             return
 
         print(f"==> Fetching {upstream} ...")
-        self._git("fetch", "--quiet")
+        self._fetch()
 
         local = self._git("rev-parse", "HEAD").strip()
         remote = self._git("rev-parse", "@{u}").strip()
@@ -69,6 +86,42 @@ class App(CoreApp):
         ).returncode
         if rc != 0:
             raise NixUpdateError(f"ERROR: Fast-forward to {upstream} failed.")
+
+    def _fetch(self) -> None:
+        """`git fetch`, falling back to anonymous HTTPS for SSH remotes.
+
+        Unattended runs (timers, headless hosts) usually have no SSH key or
+        agent.  When the SSH fetch fails, retry once with the remote's SSH URL
+        rewritten to HTTPS, which works for public repositories.
+        """
+        try:
+            self._git("fetch", "--quiet")
+            return
+        except NixUpdateError as ssh_err:
+            branch = self._git("symbolic-ref", "--quiet", "--short", "HEAD", check=False).strip()
+            remote = self._git("config", "--get", f"branch.{branch}.remote", check=False).strip()
+            url = self._git("remote", "get-url", remote, check=False).strip() if remote else ""
+            rewrite = ssh_to_https_prefix(url)
+            if rewrite is None:
+                raise
+            ssh_prefix, https_prefix = rewrite
+            print(f"==> SSH fetch failed; retrying anonymously over {https_prefix} ...")
+            proc = subprocess.run(
+                [
+                    "git", "-C", str(self.flake_dir),
+                    "-c", f"url.{https_prefix}.insteadOf={ssh_prefix}",
+                    "fetch", "--quiet", remote,
+                ],
+                env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
+                check=False,
+                text=True,
+                stderr=subprocess.PIPE,
+            )
+            if proc.returncode != 0:
+                raise NixUpdateError(
+                    f"{ssh_err}\nHTTPS fallback also failed ({proc.returncode}):\n"
+                    f"{proc.stderr.strip()}"
+                ) from None
 
     def _status_icon(self, status: str) -> str:
         return {
