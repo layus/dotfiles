@@ -397,6 +397,7 @@
         markdown-preview.enable = true;
         web-devicons.enable = true;
         lazygit.enable = true;
+        fugitive.enable = true;
         rainbow-delimiters.enable = true;
       };
 
