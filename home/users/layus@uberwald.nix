@@ -10,6 +10,23 @@
 
   programs.helix.enable = true;
 
+  # IRC through the ZNC bouncer on sto-helit, over the WireGuard bridge
+  # (nixos/machines/{sto-helit/znc.nix,uberwald/wireguard.nix}).
+  # The password file is not managed by Nix; it holds the ZNC server password
+  # "layus/libera:<password>" on a single line, mode 600.
+  programs.halloy = {
+    enable = true;
+    settings.servers.libera = {
+      nickname = "layus";
+      alt_nicks = [ "layus_" ];
+      server = "10.100.0.1";
+      port = 6667;
+      use_tls = false; # The WireGuard tunnel already encrypts the link.
+      password_file = "${config.xdg.configHome}/halloy/znc.pass";
+      password_file_first_line_only = true;
+    };
+  };
+
   programs.git = {
     settings.user.name = "Guillaume Maudoux";
     settings.user.email = "guillaume.maudoux@tweag.io";
