@@ -61,6 +61,22 @@ final: prev:
     patches = oldAttrs.patches or [ ] ++ [ ./sway-sticky-monitor-borders.patch ];
   });
 
+  # Clicking a sway workspace button switches with `workspace number N`, which
+  # picks the wrong one when names share a number ("1" on eDP-1, "1'" on DP-3)
+  # and bounces back via workspace_auto_back_and_forth. Switch by (quoted)
+  # name instead: https://github.com/Alexays/Waybar/pull/5514
+  # Drop once a waybar release (> 0.16.0) includes it.
+  waybar = assert final.lib.versionAtLeast "0.16.0" prev.waybar.version;
+    prev.waybar.overrideAttrs (oldAttrs: {
+      patches = oldAttrs.patches or [ ] ++ [
+        (final.fetchpatch {
+          name = "waybar-sway-workspaces-switch-by-quoted-name.patch";
+          url = "https://github.com/Alexays/Waybar/commit/6b03add88dc93757077ba79cc10335bed6d12bd6.patch";
+          hash = "sha256-+Rv4z1SvAssA8J293sGsrPftc8sU9ma8ymI+C4qSn78=";
+        })
+      ];
+    });
+
   slurp = assert builtins.compareVersions "1.3.2" prev.slurp.version <= 0;
     prev.slurp.overrideAttrs (oldAttrs: {
       src = prev.fetchFromGitHub {
