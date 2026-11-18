@@ -506,7 +506,7 @@ in
 
   programs.zsh.enable = true;
   programs.fish.enable = true;
-  documentation.man.generateCaches = false; # man-cache does not build properly
+  documentation.man.cache.enable = false; # man-cache does not build properly
 
   programs.bash.completion.enable = true;
 
@@ -633,10 +633,6 @@ in
   #  #debug.log-request-handling = "enable"
   #  #debug.log-condition-handling = "enable"
   #'';
-
-  # Postgres (who needs this ?)
-  services.postgresql.enable = true;
-  services.postgresql.package = pkgs.postgresql_14;
 
   # OwnCloud
   #services.cron.systemCronJobs = [
